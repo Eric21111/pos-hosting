@@ -18,6 +18,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@sendgrid/mail": "^8.1.6",
     "apicache": "^1.6.3",
     "bcryptjs": "^3.0.3",
     "body-parser": "^1.20.2",

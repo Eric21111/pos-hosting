@@ -1,4 +1,16 @@
 const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
+
+// Determine which email service to use
+const usesSendGrid = () => !!process.env.SENDGRID_API_KEY;
+
+// Initialize SendGrid if API key is available
+if (process.env.SENDGRID_API_KEY) {
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    console.log('[EmailService] Using SendGrid for emails');
+} else {
+    console.log('[EmailService] Using Nodemailer/Gmail for emails');
+}
 
 // Create transporter once and reuse across all emails (avoids opening a new SMTP connection per email)
 let transporter = null;
@@ -17,6 +29,22 @@ const getTransporter = () => {
 
 const sendEmail = async (to, subject, text, html) => {
     try {
+        // Use SendGrid if available (works on Render free tier)
+        if (usesSendGrid()) {
+            const msg = {
+                to,
+                from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+                subject,
+                text,
+                html
+            };
+            
+            await sgMail.send(msg);
+            console.log('[EmailService] Email sent via SendGrid to:', to);
+            return { success: true };
+        }
+        
+        // Fallback to Nodemailer/Gmail (for local development)
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to,

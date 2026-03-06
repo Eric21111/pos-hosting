@@ -1,6 +1,15 @@
 const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 
-// Create reusable transporter
+// Determine which email service to use
+const usesSendGrid = () => !!process.env.SENDGRID_API_KEY;
+
+// Initialize SendGrid if API key is available
+if (process.env.SENDGRID_API_KEY) {
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
+
+// Create reusable transporter (for Gmail fallback)
 const createTransporter = () => {
   return nodemailer.createTransport({
     service: 'gmail',
@@ -122,14 +131,33 @@ const sendLowStockAlert = async (ownerEmail, lowStockItems) => {
     </html>
   `;
 
-  const mailOptions = {
-    from: `"${process.env.STORE_NAME || 'Create Your Style'} POS" <${process.env.EMAIL_USER}>`,
-    to: ownerEmail,
-    subject: `🔔 Stock Alert: ${outOfStockItems.length} out of stock, ${lowItems.length} low stock items`,
-    html: htmlContent
-  };
+  const fromEmail = process.env.EMAIL_FROM || process.env.EMAIL_USER;
+  const subject = `🔔 Stock Alert: ${outOfStockItems.length} out of stock, ${lowItems.length} low stock items`;
 
   try {
+    // Use SendGrid if available (works on Render free tier)
+    if (usesSendGrid()) {
+      const msg = {
+        to: ownerEmail,
+        from: fromEmail,
+        subject,
+        html: htmlContent
+      };
+      
+      await sgMail.send(msg);
+      console.log(`[EmailService] Low stock alert sent via SendGrid to ${ownerEmail}`);
+      return { success: true };
+    }
+    
+    // Fallback to Nodemailer/Gmail
+    const transporter = createTransporter();
+    const mailOptions = {
+      from: `"${process.env.STORE_NAME || 'Create Your Style'} POS" <${process.env.EMAIL_USER}>`,
+      to: ownerEmail,
+      subject,
+      html: htmlContent
+    };
+
     const info = await transporter.sendMail(mailOptions);
     console.log(`[EmailService] Low stock alert sent to ${ownerEmail}. Message ID: ${info.messageId}`);
     return { success: true, messageId: info.messageId };
