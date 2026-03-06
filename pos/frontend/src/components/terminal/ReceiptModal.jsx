@@ -313,11 +313,6 @@ const ReceiptModal = ({
 
             {/* Action Buttons */}
             <div className="space-y-3">
-              {printError && (
-                <div className={`p-3 rounded-lg text-sm ${theme === 'dark' ? 'bg-red-900/30 text-red-400' : 'bg-red-50 text-red-600'}`}>
-                  {printError}
-                </div>
-              )}
               <button
                 onClick={handlePrint}
                 className="w-full py-3 px-6 rounded-lg font-semibold text-white bg-blue-500 hover:bg-blue-600 transition-all flex items-center justify-center gap-2"
