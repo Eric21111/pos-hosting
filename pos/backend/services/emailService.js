@@ -1,22 +1,23 @@
 const nodemailer = require('nodemailer');
 
-// Brevo (Sendinblue) SDK
-let brevoClient = null;
-let brevoApiInstance = null;
-
 // Determine which email service to use
 const usesBrevo = () => !!process.env.BREVO_API_KEY;
 
-// Initialize Brevo if API key is available
-if (process.env.BREVO_API_KEY) {
-    const brevo = require('@getbrevo/brevo');
-    brevoClient = brevo;
-    brevoApiInstance = new brevo.TransactionalEmailsApi();
-    brevoApiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY.trim());
-}
+// Create Brevo SMTP transporter
+const createBrevoTransporter = () => {
+  return nodemailer.createTransport({
+    host: 'smtp-relay.brevo.com',
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_FROM || process.env.BREVO_SMTP_USER,
+      pass: process.env.BREVO_API_KEY
+    }
+  });
+};
 
-// Create reusable transporter (for Gmail fallback)
-const createTransporter = () => {
+// Create Gmail transporter (fallback for local dev)
+const createGmailTransporter = () => {
   return nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -138,36 +139,29 @@ const sendLowStockAlert = async (ownerEmail, lowStockItems) => {
   `;
 
   const fromEmail = process.env.EMAIL_FROM || process.env.EMAIL_USER;
+  const storeName = process.env.STORE_NAME || 'Create Your Style';
   const subject = `🔔 Stock Alert: ${outOfStockItems.length} out of stock, ${lowItems.length} low stock items`;
 
   try {
-    // Use Brevo if available (works on Render free tier)
-    if (usesBrevo() && brevoApiInstance) {
-      const sendSmtpEmail = new brevoClient.SendSmtpEmail();
-      sendSmtpEmail.subject = subject;
-      sendSmtpEmail.htmlContent = htmlContent;
-      sendSmtpEmail.sender = { 
-        email: fromEmail,
-        name: process.env.STORE_NAME || 'POS System'
-      };
-      sendSmtpEmail.to = [{ email: ownerEmail }];
-      
-      await brevoApiInstance.sendTransacEmail(sendSmtpEmail);
-      console.log(`[EmailService] Low stock alert sent via Brevo to ${ownerEmail}`);
-      return { success: true };
-    }
-    
-    // Fallback to Nodemailer/Gmail
-    const transporter = createTransporter();
     const mailOptions = {
-      from: `"${process.env.STORE_NAME || 'Create Your Style'} POS" <${process.env.EMAIL_USER}>`,
+      from: `"${storeName} POS" <${fromEmail}>`,
       to: ownerEmail,
       subject,
       html: htmlContent
     };
 
+    // Use Brevo SMTP if available (works on Render free tier)
+    if (usesBrevo()) {
+      const transporter = createBrevoTransporter();
+      const info = await transporter.sendMail(mailOptions);
+      console.log(`[EmailService] Low stock alert sent via Brevo to ${ownerEmail}. Message ID: ${info.messageId}`);
+      return { success: true, messageId: info.messageId };
+    }
+    
+    // Fallback to Gmail (for local development)
+    const transporter = createGmailTransporter();
     const info = await transporter.sendMail(mailOptions);
-    console.log(`[EmailService] Low stock alert sent to ${ownerEmail}. Message ID: ${info.messageId}`);
+    console.log(`[EmailService] Low stock alert sent via Gmail to ${ownerEmail}. Message ID: ${info.messageId}`);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('[EmailService] Failed to send low stock alert:', error.message);

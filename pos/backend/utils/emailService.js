@@ -1,67 +1,65 @@
 const nodemailer = require('nodemailer');
 
-// Brevo (Sendinblue) SDK
-let brevoClient = null;
-let brevoApiInstance = null;
-
 // Determine which email service to use
 const usesBrevo = () => !!process.env.BREVO_API_KEY;
 
-// Initialize Brevo if API key is available
-if (process.env.BREVO_API_KEY) {
-    const brevo = require('@getbrevo/brevo');
-    brevoClient = brevo;
-    brevoApiInstance = new brevo.TransactionalEmailsApi();
-    brevoApiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY.trim());
-    console.log('[EmailService] Using Brevo for emails. Key starts with:', process.env.BREVO_API_KEY.substring(0, 10) + '...');
-} else {
-    console.log('[EmailService] Using Nodemailer/Gmail for emails');
-}
+// Create Brevo SMTP transporter
+let brevoTransporter = null;
+const getBrevoTransporter = () => {
+    if (!brevoTransporter) {
+        brevoTransporter = nodemailer.createTransport({
+            host: 'smtp-relay.brevo.com',
+            port: 587,
+            secure: false,
+            auth: {
+                user: process.env.EMAIL_FROM || process.env.BREVO_SMTP_USER,
+                pass: process.env.BREVO_API_KEY
+            }
+        });
+        console.log('[EmailService] Using Brevo SMTP for emails');
+    }
+    return brevoTransporter;
+};
 
-// Create transporter once and reuse across all emails (avoids opening a new SMTP connection per email)
-let transporter = null;
-const getTransporter = () => {
-    if (!transporter) {
-        transporter = nodemailer.createTransport({
+// Create Gmail transporter (fallback for local dev)
+let gmailTransporter = null;
+const getGmailTransporter = () => {
+    if (!gmailTransporter) {
+        gmailTransporter = nodemailer.createTransport({
             service: process.env.EMAIL_SERVICE || 'gmail',
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS
             }
         });
+        console.log('[EmailService] Using Gmail for emails');
     }
-    return transporter;
+    return gmailTransporter;
 };
 
 const sendEmail = async (to, subject, text, html) => {
     try {
-        // Use Brevo if available (works on Render free tier)
-        if (usesBrevo() && brevoApiInstance) {
-            const sendSmtpEmail = new brevoClient.SendSmtpEmail();
-            sendSmtpEmail.subject = subject;
-            sendSmtpEmail.htmlContent = html || `<p>${text}</p>`;
-            sendSmtpEmail.sender = { 
-                email: process.env.EMAIL_FROM || 'noreply@example.com',
-                name: process.env.STORE_NAME || 'POS System'
-            };
-            sendSmtpEmail.to = [{ email: to }];
-            
-            await brevoApiInstance.sendTransacEmail(sendSmtpEmail);
-            console.log('[EmailService] Email sent via Brevo to:', to);
-            return { success: true };
-        }
+        const fromEmail = process.env.EMAIL_FROM || process.env.EMAIL_USER;
+        const storeName = process.env.STORE_NAME || 'POS System';
         
-        // Fallback to Nodemailer/Gmail (for local development)
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: `"${storeName}" <${fromEmail}>`,
             to,
             subject,
             text,
             html
         };
 
-        const info = await getTransporter().sendMail(mailOptions);
-        console.log('Email sent: ' + info.response);
+        // Use Brevo if API key is available
+        if (usesBrevo()) {
+            const info = await getBrevoTransporter().sendMail(mailOptions);
+            console.log('[EmailService] Email sent via Brevo to:', to);
+            return { success: true, info };
+        }
+        
+        // Fallback to Gmail (for local development)
+        const info = await getGmailTransporter().sendMail(mailOptions);
+        console.log('[EmailService] Email sent via Gmail to:', to);
         return { success: true, info };
     } catch (error) {
         console.error('Error sending email:', error);
