@@ -74,6 +74,7 @@ const ManageEmployees = () => {
           ...emp,
           image: emp.profileImage || defaultAvatar,
           id: emp._id,
+          contactNumber: emp.contactNo || emp.contactNumber || '', // Map contactNo to contactNumber
         }));
         setEmployees(employeesWithImages);
       }
