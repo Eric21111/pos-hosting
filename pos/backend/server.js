@@ -115,9 +115,6 @@ app.use(cors({
     }
     
     console.warn(`[CORS] Blocked request from origin: ${origin}`);
-      return callback(null, true);
-    }
-    console.warn(`[CORS] Blocked request from origin: ${origin}`);
     return callback(new Error("Not allowed by CORS"));
   },
   credentials: true,
