@@ -1,15 +1,19 @@
 const nodemailer = require('nodemailer');
-const sgMail = require('@sendgrid/mail');
+
+// Brevo (Sendinblue) SDK
+let brevoClient = null;
+let brevoApiInstance = null;
 
 // Determine which email service to use
-const usesSendGrid = () => !!process.env.SENDGRID_API_KEY;
+const usesBrevo = () => !!process.env.BREVO_API_KEY;
 
-// Initialize SendGrid if API key is available
-if (process.env.SENDGRID_API_KEY) {
-    const apiKey = process.env.SENDGRID_API_KEY.trim();
-    sgMail.setApiKey(apiKey);
-    // Log first 10 chars for debugging (safe to show)
-    console.log('[EmailService] Using SendGrid for emails. Key starts with:', apiKey.substring(0, 10) + '...');
+// Initialize Brevo if API key is available
+if (process.env.BREVO_API_KEY) {
+    const brevo = require('@getbrevo/brevo');
+    brevoClient = brevo;
+    brevoApiInstance = new brevo.TransactionalEmailsApi();
+    brevoApiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY.trim());
+    console.log('[EmailService] Using Brevo for emails. Key starts with:', process.env.BREVO_API_KEY.substring(0, 10) + '...');
 } else {
     console.log('[EmailService] Using Nodemailer/Gmail for emails');
 }
@@ -31,18 +35,19 @@ const getTransporter = () => {
 
 const sendEmail = async (to, subject, text, html) => {
     try {
-        // Use SendGrid if available (works on Render free tier)
-        if (usesSendGrid()) {
-            const msg = {
-                to,
-                from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-                subject,
-                text,
-                html
+        // Use Brevo if available (works on Render free tier)
+        if (usesBrevo() && brevoApiInstance) {
+            const sendSmtpEmail = new brevoClient.SendSmtpEmail();
+            sendSmtpEmail.subject = subject;
+            sendSmtpEmail.htmlContent = html || `<p>${text}</p>`;
+            sendSmtpEmail.sender = { 
+                email: process.env.EMAIL_FROM || 'noreply@example.com',
+                name: process.env.STORE_NAME || 'POS System'
             };
+            sendSmtpEmail.to = [{ email: to }];
             
-            await sgMail.send(msg);
-            console.log('[EmailService] Email sent via SendGrid to:', to);
+            await brevoApiInstance.sendTransacEmail(sendSmtpEmail);
+            console.log('[EmailService] Email sent via Brevo to:', to);
             return { success: true };
         }
         
@@ -64,4 +69,4 @@ const sendEmail = async (to, subject, text, html) => {
     }
 };
 
-module.exports = { sendEmail };
+module.exports = { sendEmail, usesBrevo };

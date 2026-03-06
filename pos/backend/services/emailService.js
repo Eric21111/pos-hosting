@@ -1,12 +1,18 @@
 const nodemailer = require('nodemailer');
-const sgMail = require('@sendgrid/mail');
+
+// Brevo (Sendinblue) SDK
+let brevoClient = null;
+let brevoApiInstance = null;
 
 // Determine which email service to use
-const usesSendGrid = () => !!process.env.SENDGRID_API_KEY;
+const usesBrevo = () => !!process.env.BREVO_API_KEY;
 
-// Initialize SendGrid if API key is available
-if (process.env.SENDGRID_API_KEY) {
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+// Initialize Brevo if API key is available
+if (process.env.BREVO_API_KEY) {
+    const brevo = require('@getbrevo/brevo');
+    brevoClient = brevo;
+    brevoApiInstance = new brevo.TransactionalEmailsApi();
+    brevoApiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY.trim());
 }
 
 // Create reusable transporter (for Gmail fallback)
@@ -135,17 +141,19 @@ const sendLowStockAlert = async (ownerEmail, lowStockItems) => {
   const subject = `🔔 Stock Alert: ${outOfStockItems.length} out of stock, ${lowItems.length} low stock items`;
 
   try {
-    // Use SendGrid if available (works on Render free tier)
-    if (usesSendGrid()) {
-      const msg = {
-        to: ownerEmail,
-        from: fromEmail,
-        subject,
-        html: htmlContent
+    // Use Brevo if available (works on Render free tier)
+    if (usesBrevo() && brevoApiInstance) {
+      const sendSmtpEmail = new brevoClient.SendSmtpEmail();
+      sendSmtpEmail.subject = subject;
+      sendSmtpEmail.htmlContent = htmlContent;
+      sendSmtpEmail.sender = { 
+        email: fromEmail,
+        name: process.env.STORE_NAME || 'POS System'
       };
+      sendSmtpEmail.to = [{ email: ownerEmail }];
       
-      await sgMail.send(msg);
-      console.log(`[EmailService] Low stock alert sent via SendGrid to ${ownerEmail}`);
+      await brevoApiInstance.sendTransacEmail(sendSmtpEmail);
+      console.log(`[EmailService] Low stock alert sent via Brevo to ${ownerEmail}`);
       return { success: true };
     }
     
