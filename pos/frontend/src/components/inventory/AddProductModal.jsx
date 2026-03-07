@@ -963,43 +963,6 @@ const AddProductModal = ({
                                 </label>
                               </div>
 
-                              <div className="mb-3">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={
-                                      newProduct.differentVariantsPerSize ||
-                                      false
-                                    }
-                                    onChange={(e) => {
-                                      setNewProduct((prev) => {
-                                        const newSizeVariants = {};
-                                        if (e.target.checked) {
-                                          prev.selectedSizes.forEach((size) => {
-                                            newSizeVariants[size] =
-                                              prev.variant || "";
-                                          });
-                                          // Clear main variant when this is checked to avoid confusion?
-                                          // Or keep it as a fallback? Let's keep it.
-                                        }
-                                        return {
-                                          ...prev,
-                                          differentVariantsPerSize:
-                                            e.target.checked,
-                                          sizeVariants: e.target.checked
-                                            ? newSizeVariants
-                                            : {},
-                                        };
-                                      });
-                                    }}
-                                    className="w-4 h-4 text-[#AD7F65] border-gray-300 rounded focus:ring-[#AD7F65]"
-                                  />
-                                  <span className="text-sm text-gray-700">
-                                    Different variants each sizes?
-                                  </span>
-                                </label>
-                              </div>
-
                               {/* Quantity per Size - Show variant breakdown if variants selected */}
                               <div
                                 className={`space-y-2 mt-3 p-3 rounded-lg ${theme === "dark" ? "bg-[#1E1B18]" : "bg-gray-50"}`}
@@ -1026,8 +989,8 @@ const AddProductModal = ({
                                           </span>
                                         </div>
                                         
-                                        {/* Cost Price and Selling Price - shown when using different prices per size AND NOT using different prices per variant */}
-                                        {newProduct.differentPricesPerSize && !differentPricesPerVariant[size] && (
+                                        {/* Cost Price and Selling Price - shown when NOT using different prices per variant */}
+                                        {!differentPricesPerVariant[size] && (
                                           <div className="grid grid-cols-2 gap-2 mb-3">
                                             <div>
                                               <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
@@ -1083,12 +1046,11 @@ const AddProductModal = ({
                                           </div>
                                         )}
                                         
-                                        {/* Checkbox for different prices per variant in this size - only show when differentPricesPerSize is enabled */}
-                                        {newProduct.differentPricesPerSize && (
-                                          <label className="flex items-center gap-2 cursor-pointer mb-3">
-                                            <input
-                                              type="checkbox"
-                                              checked={differentPricesPerVariant[size] || false}
+                                        {/* Checkbox for different prices per variant in this size */}
+                                        <label className="flex items-center gap-2 cursor-pointer mb-3">
+                                          <input
+                                            type="checkbox"
+                                            checked={differentPricesPerVariant[size] || false}
                                               onChange={(e) => {
                                                 setDifferentPricesPerVariant((prev) => ({
                                                   ...prev,
@@ -1120,7 +1082,6 @@ const AddProductModal = ({
                                               Different prices each variant?
                                             </span>
                                           </label>
-                                        )}
                                         
                                         <div className={differentPricesPerVariant[size] ? "space-y-2" : "grid grid-cols-2 gap-2"}>
                                           {selectedVariants.map((variant) => (

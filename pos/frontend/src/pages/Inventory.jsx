@@ -611,6 +611,11 @@ const Inventory = () => {
         return;
       }
 
+      // Check if any size has different prices per variant enabled
+      const hasAnyVariantPricing = newProduct.selectedSizes?.some(
+        (size) => newProduct.differentPricesPerVariant?.[size]
+      );
+
       // Validate size prices if different prices per size is enabled
       if (
         newProduct.differentPricesPerSize &&
@@ -641,8 +646,37 @@ const Inventory = () => {
           );
           return;
         }
+      } else if (!newProduct.differentPricesPerSize && hasAnyVariantPricing) {
+        // Different prices per size is NOT enabled, but some sizes have variant pricing
+        const missingPrices = newProduct.selectedSizes.filter((size) => {
+          const hasDifferentPricesPerVariant = newProduct.differentPricesPerVariant?.[size];
+          
+          if (hasDifferentPricesPerVariant) {
+            // Check if variant prices are set for this size
+            const variantPricesForSize = newProduct.variantPrices?.[size];
+            if (!variantPricesForSize || Object.keys(variantPricesForSize).length === 0) {
+              return true; // Missing variant prices
+            }
+            // Check if all variants have prices > 0
+            return Object.values(variantPricesForSize).some((price) => !price || parseFloat(price) <= 0);
+          }
+          return false; // Size doesn't have variant pricing, will use global price
+        });
+
+        if (missingPrices.length > 0) {
+          alert(
+            `Please enter prices for all variants in sizes: ${missingPrices.join(", ")}`,
+          );
+          return;
+        }
+        
+        // Also require global price for sizes without variant pricing
+        if (!newProduct.itemPrice || parseFloat(newProduct.itemPrice) <= 0) {
+          alert("Please enter a selling price.");
+          return;
+        }
       } else if (!newProduct.differentPricesPerSize) {
-        // Only require itemPrice if different prices per size is not enabled
+        // Only require itemPrice if different prices per size is not enabled and no variant pricing
         if (!newProduct.itemPrice || parseFloat(newProduct.itemPrice) <= 0) {
           alert("Please enter a selling price.");
           return;
