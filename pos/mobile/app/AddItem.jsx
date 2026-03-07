@@ -159,6 +159,12 @@ function AddItem({ onBack, item, isEditing = false }) {
   );
   const [variant, setVariant] = useState(item?.variant || "");
   const [customVariant, setCustomVariant] = useState(""); // For custom color input
+  const [selectedVariants, setSelectedVariants] = useState([]); // Multi-select variants (like web)
+  const [showVariantDropdown, setShowVariantDropdown] = useState(false); // Dropdown visibility
+  const [variantQuantities, setVariantQuantities] = useState({}); // Track quantity per variant per size: { "S": { "Blue": 5, "White": 7 } }
+  const [differentPricesPerVariant, setDifferentPricesPerVariant] = useState({}); // Track if size has different prices per variant: { "S": true }
+  const [variantPrices, setVariantPrices] = useState({}); // Track price per variant per size: { "S": { "Blue": 100 } }
+  const [variantCostPrices, setVariantCostPrices] = useState({}); // Track cost price per variant per size
   const [differentVariantsPerSize, setDifferentVariantsPerSize] =
     useState(false);
   const [sizeVariants, setSizeVariants] = useState({});
@@ -537,24 +543,45 @@ function AddItem({ onBack, item, isEditing = false }) {
       });
 
     // Calculate total stock from size quantities if sizes are selected
+    // For variant quantities, sum up all variant quantities per size
     const totalSizeStock = hasSizesSelected
-      ? selectedSizes.reduce(
-        (sum, size) => sum + (parseInt(sizeQuantities[size]) || 0),
-        0,
-      )
+      ? selectedSizes.reduce((sum, size) => {
+          if (selectedVariants.length > 0 && variantQuantities[size]) {
+            // Sum variant quantities for this size
+            return sum + Object.values(variantQuantities[size]).reduce((vSum, q) => vSum + (parseInt(q) || 0), 0);
+          }
+          return sum + (parseInt(sizeQuantities[size]) || 0);
+        }, 0)
       : 0;
 
+    // Check if variant quantities have any stock
+    const hasVariantQuantities = selectedVariants.length > 0 && 
+      Object.values(variantQuantities).some(sizeVars => 
+        Object.values(sizeVars || {}).some(qty => parseInt(qty) > 0)
+      );
+    
+    // Check if any variant has prices
+    const hasVariantPrices = Object.values(variantPrices).some(sizeVars => 
+      Object.values(sizeVars || {}).some(price => parseFloat(price) > 0)
+    );
+
     // Validation
-    if (!itemName || !itemCategory || !sellingPrice) {
-      Alert.alert("Error", "Please fill in all required fields");
+    if (!itemName || !itemCategory) {
+      Alert.alert("Error", "Please fill in item name and category");
+      return;
+    }
+    
+    // Only require selling price if no variant pricing is being used
+    if (!sellingPrice && !hasVariantPrices) {
+      Alert.alert("Error", "Please enter a selling price");
       return;
     }
 
     // If sizes are selected, validate quantities; otherwise validate single stock
-    if (hasSizesSelected && !hasValidSizeQuantities) {
+    if (hasSizesSelected && !hasValidSizeQuantities && !hasVariantQuantities) {
       Alert.alert(
         "Error",
-        "Please enter quantity for at least one selected size",
+        "Please enter quantity for at least one selected size or variant",
       );
       return;
     }
@@ -564,8 +591,8 @@ function AddItem({ onBack, item, isEditing = false }) {
       return;
     }
 
-    if (parseFloat(sellingPrice) <= 0) {
-      Alert.alert("Error", "Selling price must be greater than 0");
+    if (sellingPrice && parseFloat(sellingPrice) < 0) {
+      Alert.alert("Error", "Selling price cannot be negative");
       return;
     }
 
@@ -606,21 +633,96 @@ function AddItem({ onBack, item, isEditing = false }) {
               variantValue = sizeVariants[size] || "";
             }
           } else {
-            // Use global variant (with custom support)
-            variantValue = variant === "Custom" ? customVariant : variant || "";
+            // Use global variant (with custom support) or selected variants
+            variantValue = selectedVariants.length > 0 
+              ? selectedVariants.join(", ")
+              : (variant === "Custom" ? customVariant : variant || "");
           }
 
-          sizesObject[size] = {
-            quantity: parseInt(sizeQuantities[size]) || 0,
-            price: differentPricesPerSize
-              ? parseFloat(sizePrices[size]) || 0
-              : parseFloat(sellingPrice) || 0,
-            costPrice: differentPricesPerSize
-              ? parseFloat(sizeCostPrices[size]) || 0
-              : parseFloat(costPrice) || 0,
-            variant: variantValue,
-          };
+          // Check if this size has variant-level pricing
+          const hasDifferentPricesPerVariant = differentPricesPerVariant[size];
+          
+          if (hasDifferentPricesPerVariant && selectedVariants.length > 0 && variantQuantities[size]) {
+            // Variant-level pricing: store each variant with its own qty/price/cost
+            const variants = {};
+            selectedVariants.forEach(variantName => {
+              const qty = parseInt(variantQuantities[size]?.[variantName]) || 0;
+              const price = parseFloat(variantPrices[size]?.[variantName]) || parseFloat(sellingPrice) || 0;
+              const costPriceVal = parseFloat(variantCostPrices[size]?.[variantName]) || parseFloat(costPrice) || 0;
+              if (qty > 0 || price > 0) {
+                variants[variantName] = {
+                  quantity: qty,
+                  price: price,
+                  costPrice: costPriceVal,
+                };
+              }
+            });
+            
+            // Calculate total quantity for this size
+            const totalQty = Object.values(variants).reduce((sum, v) => sum + (v.quantity || 0), 0);
+            
+            sizesObject[size] = {
+              quantity: totalQty,
+              variants: variants,
+              hasDifferentPricesPerVariant: true,
+            };
+          } else if (selectedVariants.length > 0 && variantQuantities[size]) {
+            // Has variant quantities but no variant-specific pricing
+            const variants = {};
+            selectedVariants.forEach(variantName => {
+              const qty = parseInt(variantQuantities[size]?.[variantName]) || 0;
+              if (qty > 0) {
+                variants[variantName] = {
+                  quantity: qty,
+                  price: differentPricesPerSize 
+                    ? (parseFloat(sizePrices[size]) || parseFloat(sellingPrice) || 0)
+                    : (parseFloat(sellingPrice) || 0),
+                  costPrice: differentPricesPerSize
+                    ? (parseFloat(sizeCostPrices[size]) || parseFloat(costPrice) || 0)
+                    : (parseFloat(costPrice) || 0),
+                };
+              }
+            });
+            
+            const totalQty = Object.values(variants).reduce((sum, v) => sum + (v.quantity || 0), 0);
+            
+            sizesObject[size] = {
+              quantity: totalQty,
+              price: differentPricesPerSize
+                ? parseFloat(sizePrices[size]) || 0
+                : parseFloat(sellingPrice) || 0,
+              costPrice: differentPricesPerSize
+                ? parseFloat(sizeCostPrices[size]) || 0
+                : parseFloat(costPrice) || 0,
+              variant: variantValue,
+              variants: variants,
+            };
+          } else {
+            // Simple size quantity (no variants)
+            sizesObject[size] = {
+              quantity: parseInt(sizeQuantities[size]) || 0,
+              price: differentPricesPerSize
+                ? parseFloat(sizePrices[size]) || 0
+                : parseFloat(sellingPrice) || 0,
+              costPrice: differentPricesPerSize
+                ? parseFloat(sizeCostPrices[size]) || 0
+                : parseFloat(costPrice) || 0,
+              variant: variantValue,
+            };
+          }
         });
+      }
+
+      // Get default itemPrice from variant prices if needed
+      let defaultItemPrice = parseFloat(sellingPrice) || 0;
+      if (!defaultItemPrice && variantPrices) {
+        const firstSizeWithVariantPrices = Object.keys(variantPrices)[0];
+        if (firstSizeWithVariantPrices) {
+          const firstVariantPrice = Object.values(variantPrices[firstSizeWithVariantPrices])[0];
+          if (firstVariantPrice) {
+            defaultItemPrice = parseFloat(firstVariantPrice) || 0;
+          }
+        }
       }
 
       // Prepare the item data aligned with backend schema
@@ -629,17 +731,26 @@ function AddItem({ onBack, item, isEditing = false }) {
         itemName: itemName.trim(),
         category: normalizedCategory,
         brandName: brand,
-        itemPrice: parseFloat(sellingPrice) || 0,
+        itemPrice: defaultItemPrice,
         currentStock: hasSizesSelected
           ? totalSizeStock
           : parseInt(itemStock) || 0,
         costPrice: parseFloat(costPrice) || 0,
-        variant:
-          variant === "Custom"
-            ? customVariant
-            : variant || customEssentialType || itemSize || "",
+        variant: selectedVariants.length > 0
+          ? selectedVariants.join(", ")
+          : (variant === "Custom" ? customVariant : variant || customEssentialType || itemSize || ""),
         size: itemSize,
         sizes: hasSizesSelected ? sizesObject : {},
+        // Include variant data for backend processing
+        selectedSizes: hasSizesSelected ? selectedSizes : [],
+        sizeQuantities: hasSizesSelected ? sizeQuantities : {},
+        variantQuantities: variantQuantities,
+        variantPrices: variantPrices,
+        variantCostPrices: variantCostPrices,
+        differentPricesPerVariant: differentPricesPerVariant,
+        differentPricesPerSize: differentPricesPerSize,
+        sizePrices: sizePrices,
+        sizeCostPrices: sizeCostPrices,
         waistSize,
         accessoryType,
         makeupBrand,
@@ -960,54 +1071,117 @@ function AddItem({ onBack, item, isEditing = false }) {
           </View>
         </View>
 
-        {/* Variant (Optional) */}
+        {/* Variant (Optional) - Multi-select like web */}
         {itemCategory && (
           <View style={styles.inputContainer}>
             <Text style={styles.label}>
               Variant{" "}
               <Text style={{ color: "#9ca3af", fontWeight: "400" }}>
-                Optional
+                Optional - Select multiple colors
               </Text>
             </Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={variant}
-                onValueChange={(itemValue) => {
-                  setVariant(itemValue);
-                  if (itemValue !== "Custom") {
-                    setCustomVariant(""); // Clear custom input if not custom
-                  }
-                }}
-                enabled={!differentVariantsPerSize}
-                style={[
-                  styles.picker,
-                  differentVariantsPerSize && styles.disabledPicker,
-                ]}
-                dropdownIconColor={
-                  differentVariantsPerSize ? "#ccc" : "#6b7280"
-                }
-                mode="dropdown"
-              >
-                <Picker.Item
-                  label={
-                    differentVariantsPerSize
-                      ? "Multiple variants selected"
-                      : "Select a color"
-                  }
-                  value=""
-                />
-                {COMMON_COLORS.map((color) => (
-                  <Picker.Item key={color} label={color} value={color} />
+            
+            {/* Selected variants chips */}
+            {selectedVariants.length > 0 && (
+              <View style={styles.variantChipsContainer}>
+                {selectedVariants.map((v, index) => (
+                  <View key={index} style={styles.variantChip}>
+                    <Text style={styles.variantChipText}>{v}</Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setSelectedVariants(selectedVariants.filter((_, i) => i !== index));
+                        // Also clear variant quantities for this variant
+                        const newVarQty = { ...variantQuantities };
+                        const newVarPrices = { ...variantPrices };
+                        const newVarCostPrices = { ...variantCostPrices };
+                        Object.keys(newVarQty).forEach(size => {
+                          if (newVarQty[size]?.[v]) delete newVarQty[size][v];
+                        });
+                        Object.keys(newVarPrices).forEach(size => {
+                          if (newVarPrices[size]?.[v]) delete newVarPrices[size][v];
+                        });
+                        Object.keys(newVarCostPrices).forEach(size => {
+                          if (newVarCostPrices[size]?.[v]) delete newVarCostPrices[size][v];
+                        });
+                        setVariantQuantities(newVarQty);
+                        setVariantPrices(newVarPrices);
+                        setVariantCostPrices(newVarCostPrices);
+                      }}
+                    >
+                      <Ionicons name="close-circle" size={16} color="#666" />
+                    </TouchableOpacity>
+                  </View>
                 ))}
-              </Picker>
-            </View>
-            {variant === "Custom" && !differentVariantsPerSize && (
-              <TextInput
-                style={[styles.input, { marginTop: 8 }]}
-                placeholder="Enter custom color"
-                value={customVariant}
-                onChangeText={setCustomVariant}
+              </View>
+            )}
+            
+            {/* Dropdown to add variants */}
+            <TouchableOpacity
+              style={styles.variantDropdownButton}
+              onPress={() => setShowVariantDropdown(!showVariantDropdown)}
+            >
+              <Text style={styles.variantDropdownButtonText}>
+                {selectedVariants.length > 0 
+                  ? `${selectedVariants.length} colors selected` 
+                  : "Select colors"}
+              </Text>
+              <Ionicons 
+                name={showVariantDropdown ? "chevron-up" : "chevron-down"} 
+                size={20} 
+                color="#6b7280" 
               />
+            </TouchableOpacity>
+            
+            {showVariantDropdown && (
+              <View style={styles.variantDropdownList}>
+                <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled>
+                  {COMMON_COLORS.filter(c => c !== "Custom" && !selectedVariants.includes(c)).map((color) => (
+                    <TouchableOpacity
+                      key={color}
+                      style={styles.variantDropdownItem}
+                      onPress={() => {
+                        setSelectedVariants([...selectedVariants, color]);
+                        setShowVariantDropdown(false);
+                      }}
+                    >
+                      <Text style={styles.variantDropdownItemText}>{color}</Text>
+                    </TouchableOpacity>
+                  ))}
+                  {/* Custom color option */}
+                  <TouchableOpacity
+                    style={styles.variantDropdownItem}
+                    onPress={() => {
+                      setVariant("Custom");
+                      setShowVariantDropdown(false);
+                    }}
+                  >
+                    <Text style={[styles.variantDropdownItemText, { color: '#AD7F65' }]}>+ Add Custom Color</Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </View>
+            )}
+            
+            {variant === "Custom" && (
+              <View style={{ flexDirection: 'row', marginTop: 8, gap: 8 }}>
+                <TextInput
+                  style={[styles.input, { flex: 1 }]}
+                  placeholder="Enter custom color"
+                  value={customVariant}
+                  onChangeText={setCustomVariant}
+                />
+                <TouchableOpacity
+                  style={styles.addCustomVariantButton}
+                  onPress={() => {
+                    if (customVariant.trim() && !selectedVariants.includes(customVariant.trim())) {
+                      setSelectedVariants([...selectedVariants, customVariant.trim()]);
+                      setCustomVariant("");
+                      setVariant("");
+                    }
+                  }}
+                >
+                  <Ionicons name="add" size={20} color="#fff" />
+                </TouchableOpacity>
+              </View>
             )}
           </View>
         )}
@@ -1237,27 +1411,179 @@ function AddItem({ onBack, item, isEditing = false }) {
 
                     <View style={styles.sizeQuantityContainer}>
                       <Text style={styles.sizeQuantityTitle}>
-                        Quantity per Size:
+                        {selectedVariants.length > 0 
+                          ? "Quantity per Variant per Size:"
+                          : "Quantity per Size:"}
                       </Text>
-                      <View style={styles.sizeQuantityGrid}>
-                        {selectedSizes.map((size) => (
-                          <View key={size} style={styles.sizeQuantityItem}>
-                            <Text style={styles.sizeQuantityLabel}>{size}</Text>
-                            <TextInput
-                              style={styles.sizeQuantityInput}
-                              placeholder="0"
-                              keyboardType="numeric"
-                              value={sizeQuantities[size]?.toString() || ""}
-                              onChangeText={(value) => {
-                                setSizeQuantities((prev) => ({
-                                  ...prev,
-                                  [size]: value,
-                                }));
-                              }}
-                            />
-                          </View>
-                        ))}
-                      </View>
+                      
+                      {/* If variants are selected, show matrix of size x variant */}
+                      {selectedVariants.length > 0 ? (
+                        <View style={{ gap: 16 }}>
+                          {selectedSizes.map((size) => (
+                            <View key={size} style={styles.sizeVariantBlock}>
+                              <View style={styles.sizeVariantHeader}>
+                                <Text style={styles.sizeVariantTitle}>{size}</Text>
+                                <Text style={styles.sizeVariantTotal}>
+                                  Total: {Object.values(variantQuantities[size] || {}).reduce((sum, q) => sum + (parseInt(q) || 0), 0)}
+                                </Text>
+                              </View>
+                              
+                              {/* Different prices per variant checkbox */}
+                              <TouchableOpacity
+                                style={[styles.differentPricesRow, { marginVertical: 8 }]}
+                                onPress={() => {
+                                  const newVal = !differentPricesPerVariant[size];
+                                  setDifferentPricesPerVariant(prev => ({
+                                    ...prev,
+                                    [size]: newVal,
+                                  }));
+                                  // Initialize prices when enabled
+                                  if (newVal) {
+                                    const defaultPrice = parseFloat(sizePrices[size]) || parseFloat(sellingPrice) || 0;
+                                    const defaultCostPrice = parseFloat(sizeCostPrices[size]) || parseFloat(costPrice) || 0;
+                                    const initialPrices = {};
+                                    const initialCostPrices = {};
+                                    selectedVariants.forEach((v) => {
+                                      initialPrices[v] = defaultPrice;
+                                      initialCostPrices[v] = defaultCostPrice;
+                                    });
+                                    setVariantPrices(prev => ({ ...prev, [size]: initialPrices }));
+                                    setVariantCostPrices(prev => ({ ...prev, [size]: initialCostPrices }));
+                                  }
+                                }}
+                              >
+                                <View style={[styles.checkbox, differentPricesPerVariant[size] && styles.checkboxChecked]}>
+                                  {differentPricesPerVariant[size] && (
+                                    <Ionicons name="checkmark" size={14} color="#fff" />
+                                  )}
+                                </View>
+                                <Text style={[styles.differentPricesLabel, { fontSize: 13 }]}>
+                                  Different prices each variant?
+                                </Text>
+                              </TouchableOpacity>
+                              
+                              {/* Cost Price and Selling Price for size (when no variant pricing) */}
+                              {!differentPricesPerVariant[size] && 
+                               (differentPricesPerSize || Object.values(differentPricesPerVariant).some(v => v)) && (
+                                <View style={styles.sizePriceRow}>
+                                  <View style={styles.sizePriceInput}>
+                                    <Text style={styles.sizePriceLabel}>Cost</Text>
+                                    <TextInput
+                                      style={styles.sizeQuantityInput}
+                                      placeholder="₱"
+                                      keyboardType="numeric"
+                                      value={sizeCostPrices[size]?.toString() || ""}
+                                      onChangeText={(value) => {
+                                        setSizeCostPrices(prev => ({ ...prev, [size]: value }));
+                                      }}
+                                    />
+                                  </View>
+                                  <View style={styles.sizePriceInput}>
+                                    <Text style={styles.sizePriceLabel}>Price</Text>
+                                    <TextInput
+                                      style={styles.sizeQuantityInput}
+                                      placeholder="₱"
+                                      keyboardType="numeric"
+                                      value={sizePrices[size]?.toString() || ""}
+                                      onChangeText={(value) => {
+                                        setSizePrices(prev => ({ ...prev, [size]: value }));
+                                      }}
+                                    />
+                                  </View>
+                                </View>
+                              )}
+                              
+                              {/* Variant quantities (and prices if enabled) */}
+                              <View style={differentPricesPerVariant[size] ? { gap: 8 } : styles.variantQuantityGrid}>
+                                {selectedVariants.map((variantName) => (
+                                  <View 
+                                    key={variantName} 
+                                    style={differentPricesPerVariant[size] 
+                                      ? styles.variantRowWithPrices 
+                                      : styles.variantQuantityItem}
+                                  >
+                                    <View style={styles.variantBadge}>
+                                      <Text style={styles.variantBadgeText}>{variantName}</Text>
+                                    </View>
+                                    <TextInput
+                                      style={[styles.sizeQuantityInput, { width: differentPricesPerVariant[size] ? 60 : 70 }]}
+                                      placeholder="Qty"
+                                      keyboardType="numeric"
+                                      value={variantQuantities[size]?.[variantName]?.toString() || ""}
+                                      onChangeText={(value) => {
+                                        setVariantQuantities(prev => ({
+                                          ...prev,
+                                          [size]: {
+                                            ...(prev[size] || {}),
+                                            [variantName]: value,
+                                          },
+                                        }));
+                                      }}
+                                    />
+                                    {differentPricesPerVariant[size] && (
+                                      <>
+                                        <Text style={styles.variantPriceLabel}>Cost:</Text>
+                                        <TextInput
+                                          style={[styles.sizeQuantityInput, { width: 70 }]}
+                                          placeholder="₱"
+                                          keyboardType="numeric"
+                                          value={variantCostPrices[size]?.[variantName]?.toString() || ""}
+                                          onChangeText={(value) => {
+                                            setVariantCostPrices(prev => ({
+                                              ...prev,
+                                              [size]: {
+                                                ...(prev[size] || {}),
+                                                [variantName]: value,
+                                              },
+                                            }));
+                                          }}
+                                        />
+                                        <Text style={styles.variantPriceLabel}>Price:</Text>
+                                        <TextInput
+                                          style={[styles.sizeQuantityInput, { width: 70 }]}
+                                          placeholder="₱"
+                                          keyboardType="numeric"
+                                          value={variantPrices[size]?.[variantName]?.toString() || ""}
+                                          onChangeText={(value) => {
+                                            setVariantPrices(prev => ({
+                                              ...prev,
+                                              [size]: {
+                                                ...(prev[size] || {}),
+                                                [variantName]: value,
+                                              },
+                                            }));
+                                          }}
+                                        />
+                                      </>
+                                    )}
+                                  </View>
+                                ))}
+                              </View>
+                            </View>
+                          ))}
+                        </View>
+                      ) : (
+                        /* Original simple quantity per size */
+                        <View style={styles.sizeQuantityGrid}>
+                          {selectedSizes.map((size) => (
+                            <View key={size} style={styles.sizeQuantityItem}>
+                              <Text style={styles.sizeQuantityLabel}>{size}</Text>
+                              <TextInput
+                                style={styles.sizeQuantityInput}
+                                placeholder="0"
+                                keyboardType="numeric"
+                                value={sizeQuantities[size]?.toString() || ""}
+                                onChangeText={(value) => {
+                                  setSizeQuantities((prev) => ({
+                                    ...prev,
+                                    [size]: value,
+                                  }));
+                                }}
+                              />
+                            </View>
+                          ))}
+                        </View>
+                      )}
                     </View>
 
                     {/* Variants per size - only show when differentVariantsPerSize is true */}
@@ -2152,6 +2478,113 @@ const styles = StyleSheet.create({
   },
   sizePriceItem: {
     flex: 1,
+  },
+  sizePriceInput: {
+    flex: 1,
+  },
+  sizePriceLabel: {
+    fontSize: 11,
+    color: "#6b7280",
+    marginBottom: 4,
+  },
+  // Variant dropdown styles
+  variantDropdownButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: "#fff",
+  },
+  variantDropdownButtonText: {
+    fontSize: 14,
+    color: "#374151",
+  },
+  variantDropdownList: {
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    maxHeight: 200,
+  },
+  variantDropdownItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f3f4f6",
+  },
+  variantDropdownItemText: {
+    fontSize: 14,
+    color: "#374151",
+  },
+  addCustomVariantButton: {
+    backgroundColor: "#AD7F65",
+    borderRadius: 8,
+    padding: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  // Size variant block styles (for variant pricing)
+  sizeVariantBlock: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  sizeVariantHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  sizeVariantTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#374151",
+  },
+  sizeVariantTotal: {
+    fontSize: 12,
+    color: "#6b7280",
+  },
+  variantQuantityGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  variantQuantityItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 8,
+  },
+  variantRowWithPrices: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 6,
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f3f4f6",
+  },
+  variantBadge: {
+    backgroundColor: "rgba(173, 127, 101, 0.15)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    minWidth: 50,
+    alignItems: "center",
+  },
+  variantBadgeText: {
+    fontSize: 12,
+    color: "#AD7F65",
+    fontWeight: "500",
+  },
+  variantPriceLabel: {
+    fontSize: 10,
+    color: "#6b7280",
   },
   helperText: {
     fontSize: 12,
