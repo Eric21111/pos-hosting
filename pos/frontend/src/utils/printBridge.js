@@ -352,7 +352,7 @@ const buildReceiptHTML = (receipt) => {
 
 /**
  * Print receipt by sending to the local print server at localhost:9100
- * Falls back to window.print() if the print server is not available
+ * No fallback - requires the PowerShell print server to be running
  */
 export async function sendReceiptToPrinter(receipt) {
   if (!receipt) throw new Error('No receipt payload provided');
@@ -393,55 +393,21 @@ export async function sendReceiptToPrinter(receipt) {
     change: receipt.change,
   };
 
-  try {
-    // Try to send to the local print server first
-    const response = await fetch('http://localhost:9100/print', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(printData),
-    });
+  // Send to the local print server
+  const response = await fetch('http://localhost:9100/print', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(printData),
+  });
 
-    const result = await response.json();
+  const result = await response.json();
 
-    if (result.success) {
-      return { success: true, message: 'Receipt printed successfully' };
-    } else {
-      throw new Error(result.error || 'Print failed');
-    }
-  } catch (error) {
-    console.warn('Print server not available, falling back to window.print()', error);
-    
-    // Fallback to window.print() if print server is not available
-    return new Promise((resolve, reject) => {
-      try {
-        // Build the receipt HTML
-        const receiptHTML = buildReceiptHTML(receipt);
-        
-        // Open a new window for printing
-        const printWindow = window.open('', '_blank', 'width=300,height=600');
-        
-        if (!printWindow) {
-          throw new Error('Unable to open print window. Please allow pop-ups for this site.');
-        }
-
-        // Write the receipt HTML to the new window
-        printWindow.document.write(receiptHTML);
-        printWindow.document.close();
-        
-        // Focus the print window
-        printWindow.focus();
-
-        // Resolve after a short delay to allow the print dialog to open
-        setTimeout(() => {
-          resolve({ success: true, message: 'Print dialog opened (fallback)' });
-        }, 500);
-
-      } catch (fallbackError) {
-        reject(fallbackError);
-      }
-    });
+  if (result.ok) {
+    return { success: true, message: 'Receipt printed successfully' };
+  } else {
+    throw new Error(result.message || 'Print failed');
   }
 }
 
