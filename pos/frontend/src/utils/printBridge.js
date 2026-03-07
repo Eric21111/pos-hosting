@@ -357,25 +357,40 @@ const buildReceiptHTML = (receipt) => {
 export async function sendReceiptToPrinter(receipt) {
   if (!receipt) throw new Error('No receipt payload provided');
 
-  // Format the receipt data for the ESC/POS print server
+  // Send the receipt data in your original format
   const printData = {
-    transaction_id: receipt.receiptNo || '000000',
-    created_at: new Date().toISOString(),
-    beeper_number: receipt.orderNumber || null,
-    cashier_name: receipt.cashier || receipt.performedByName || 'N/A',
+    // Store info
+    storeName: receipt.storeName || 'Create Your Style',
+    contactNumber: receipt.contactNumber || '+631112224444',
+    location: receipt.location || 'Pasonanca, Zamboanga City',
+    
+    // Receipt info
+    receiptNo: receipt.receiptNo || '000000',
+    referenceNo: receipt.referenceNo || receipt.reference || '-',
+    date: receipt.date || new Date().toLocaleDateString(),
+    time: receipt.time || new Date().toLocaleTimeString(),
+    
+    // Cashier
+    cashier: receipt.cashier || receipt.performedByName || 'N/A',
+    
+    // Items
     items: (receipt.items || []).map(item => ({
       name: item.name || item.itemName || 'Item',
-      quantity: item.qty || item.quantity || 1,
-      unit_price: item.price || item.itemPrice || 0,
+      qty: item.qty || item.quantity || 1,
+      price: item.price || item.itemPrice || 0,
+      total: (item.price || item.itemPrice || 0) * (item.qty || item.quantity || 1),
+      size: item.size || item.selectedSize || '',
+      variant: item.variant || '',
     })),
+    
+    // Payment
+    paymentMethod: receipt.paymentMethod || 'CASH',
     subtotal: receipt.subtotal || 0,
-    discount_amount: receipt.discount || 0,
-    discount_name: receipt.discounts?.length > 0 
-      ? receipt.discounts.map(d => d.title).join(', ') 
-      : null,
-    total_amount: receipt.total || 0,
-    cash_tendered: receipt.cash || null,
-    change_due: receipt.change || null,
+    discount: receipt.discount || 0,
+    discounts: receipt.discounts || [],
+    total: receipt.total || 0,
+    cash: receipt.cash,
+    change: receipt.change,
   };
 
   try {
@@ -429,5 +444,6 @@ export async function sendReceiptToPrinter(receipt) {
     });
   }
 }
+
 
 
