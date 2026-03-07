@@ -17,6 +17,7 @@ import {
 const StockOutModal = ({ visible, onClose, product, onConfirm, loading }) => {
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [sizeQuantities, setSizeQuantities] = useState({});
+  const [variantQuantities, setVariantQuantities] = useState({}); // { "S": { "Blue": 5, "White": 3 } }
   const [quantity, setQuantity] = useState("");
   const [reason, setReason] = useState("Sold");
   const [otherReason, setOtherReason] = useState("");
@@ -31,17 +32,10 @@ const StockOutModal = ({ visible, onClose, product, onConfirm, loading }) => {
     "Other",
   ];
 
-  useEffect(() => {
-    if (visible && product) {
-      setSelectedSizes([]);
-      setSizeQuantities({});
-      setQuantity("");
-      setReason("Sold");
-      setOtherReason("");
-    }
-  }, [visible, product]);
-
-  if (!visible || !product) return null;
+  const hasSizes =
+    product?.sizes &&
+    typeof product.sizes === "object" &&
+    Object.keys(product.sizes).length > 0;
 
   // Helper to get quantity from size data
   const getSizeQuantity = (sizeData) => {
@@ -55,10 +49,34 @@ const StockOutModal = ({ visible, onClose, product, onConfirm, loading }) => {
     return typeof sizeData === "number" ? sizeData : 0;
   };
 
-  const hasSizes =
-    product.sizes &&
-    typeof product.sizes === "object" &&
-    Object.keys(product.sizes).length > 0;
+  // Helper to check if a size has variants
+  const getSizeVariants = (size) => {
+    if (
+      hasSizes &&
+      product.sizes[size] &&
+      typeof product.sizes[size] === "object" &&
+      product.sizes[size].variants
+    ) {
+      return product.sizes[size].variants;
+    }
+    return null;
+  };
+
+  // Get all unique variants from the product
+  const getAllVariants = () => {
+    const variantSet = new Set();
+    if (hasSizes) {
+      Object.values(product.sizes).forEach((sizeData) => {
+        if (typeof sizeData === "object" && sizeData?.variants) {
+          Object.keys(sizeData.variants).forEach((v) => variantSet.add(v));
+        }
+      });
+    }
+    return Array.from(variantSet);
+  };
+
+  const allVariants = hasSizes ? getAllVariants() : [];
+  const hasVariants = allVariants.length > 0;
 
   const availableSizes = hasSizes
     ? Object.keys(product.sizes).filter(
@@ -66,32 +84,62 @@ const StockOutModal = ({ visible, onClose, product, onConfirm, loading }) => {
       )
     : [];
 
+  // Get current variant quantity for a size
+  const getVariantCurrentQty = (size, variant) => {
+    const variants = getSizeVariants(size);
+    if (variants && variants[variant]) {
+      return variants[variant].quantity || 0;
+    }
+    return 0;
+  };
+
+  useEffect(() => {
+    if (visible && product) {
+      setSelectedSizes([]);
+      setSizeQuantities({});
+      setVariantQuantities({});
+      setQuantity("");
+      setReason("Sold");
+      setOtherReason("");
+    }
+  }, [visible, product]);
+
+  if (!visible || !product) return null;
+
   const toggleSize = (size) => {
     if (selectedSizes.includes(size)) {
       setSelectedSizes((prev) => prev.filter((s) => s !== size));
       const newQuantities = { ...sizeQuantities };
       delete newQuantities[size];
       setSizeQuantities(newQuantities);
+      const newVariantQtys = { ...variantQuantities };
+      delete newVariantQtys[size];
+      setVariantQuantities(newVariantQtys);
     } else {
       setSelectedSizes((prev) => [...prev, size]);
       setSizeQuantities((prev) => ({ ...prev, [size]: "" }));
+      if (hasVariants) {
+        setVariantQuantities((prev) => ({ ...prev, [size]: {} }));
+      }
     }
   };
 
   const handleQuantityChange = (size, qty) => {
-    // Only allow numeric input
     const numericQty = qty.replace(/[^0-9]/g, "");
-    const maxQty =
-      product.sizes && product.sizes[size]
-        ? getSizeQuantity(product.sizes[size])
-        : 0;
-
-    // Warn if exceeds available stock ?? logic is in handler or submit?
-    // Let's enforce in UI as well but definitely validation on submit
-
     setSizeQuantities((prev) => ({
       ...prev,
       [size]: numericQty ? parseInt(numericQty) : "",
+    }));
+  };
+
+  const handleVariantQuantityChange = (size, variant, qty) => {
+    const numericQty = qty.replace(/[^0-9]/g, "");
+    setVariantQuantities((prev) => ({
+      ...prev,
+      [size]: {
+        ...(prev[size] || {}),
+        [variant]: numericQty ? parseInt(numericQty) : "",
+      },
     }));
   };
 
@@ -132,6 +180,51 @@ const StockOutModal = ({ visible, onClose, product, onConfirm, loading }) => {
       return;
     }
 
+    // Check if product has variants - validate variant quantities
+    if (hasVariants) {
+      const hasValidVariantQuantities = selectedSizes.some((size) => {
+        const sizeVariantQtys = variantQuantities[size] || {};
+        return Object.values(sizeVariantQtys).some((qty) => qty > 0);
+      });
+
+      if (!hasValidVariantQuantities) {
+        Alert.alert("Error", "Please enter quantities for at least one variant");
+        return;
+      }
+
+      // Validate variant quantities don't exceed available stock
+      const invalidVariants = [];
+      selectedSizes.forEach((size) => {
+        const sizeVariantQtys = variantQuantities[size] || {};
+        Object.entries(sizeVariantQtys).forEach(([variant, qty]) => {
+          if (qty > 0) {
+            const availableQty = getVariantCurrentQty(size, variant);
+            if (qty > availableQty) {
+              invalidVariants.push(`${size} - ${variant} (max: ${availableQty})`);
+            }
+          }
+        });
+      });
+
+      if (invalidVariants.length > 0) {
+        Alert.alert(
+          "Error",
+          `Cannot remove more than available stock for:\n${invalidVariants.join("\n")}`,
+        );
+        return;
+      }
+
+      onConfirm({
+        sizes: sizeQuantities,
+        variantQuantities: variantQuantities,
+        selectedSizes: selectedSizes,
+        reason: finalReason,
+        hasVariants: true,
+      });
+      return;
+    }
+
+    // Product with sizes but no variants
     const hasValidQuantities = selectedSizes.some((size) => {
       const qty = sizeQuantities[size];
       return typeof qty === "number" && qty > 0;
@@ -279,12 +372,60 @@ const StockOutModal = ({ visible, onClose, product, onConfirm, loading }) => {
 
                 {selectedSizes.length > 0 && (
                   <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Quantity to Remove</Text>
+                    <Text style={styles.sectionTitle}>
+                      {hasVariants ? "Quantity per Variant" : "Quantity to Remove"}
+                    </Text>
                     {selectedSizes.map((size) => {
                       const maxQty =
                         product.sizes && product.sizes[size]
                           ? getSizeQuantity(product.sizes[size])
                           : 0;
+                      const sizeVariants = getSizeVariants(size);
+
+                      // If product has variants, show variant inputs
+                      if (hasVariants && sizeVariants) {
+                        return (
+                          <View key={size} style={styles.variantSizeContainer}>
+                            <Text style={styles.variantSizeTitle}>
+                              {size} <Text style={styles.variantSizeStock}>(Total: {maxQty})</Text>
+                            </Text>
+                            <View style={styles.variantGrid}>
+                              {Object.keys(sizeVariants).map((variant) => {
+                                const currentVariantQty = getVariantCurrentQty(size, variant);
+                                const requestedQty = variantQuantities[size]?.[variant] || 0;
+                                const isError = requestedQty > currentVariantQty;
+                                return (
+                                  <View key={`${size}-${variant}`} style={styles.variantInputContainer}>
+                                    <Text style={styles.variantLabel}>
+                                      {variant}{" "}
+                                      <Text style={styles.variantStock}>({currentVariantQty})</Text>
+                                    </Text>
+                                    <TextInput
+                                      style={[
+                                        styles.variantInput,
+                                        isError && styles.inputError,
+                                      ]}
+                                      value={variantQuantities[size]?.[variant]?.toString() || ""}
+                                      onChangeText={(text) =>
+                                        handleVariantQuantityChange(size, variant, text)
+                                      }
+                                      placeholder="0"
+                                      keyboardType="numeric"
+                                    />
+                                    {isError && (
+                                      <Text style={styles.variantErrorText}>
+                                        Max: {currentVariantQty}
+                                      </Text>
+                                    )}
+                                  </View>
+                                );
+                              })}
+                            </View>
+                          </View>
+                        );
+                      }
+
+                      // No variants - show simple quantity input
                       const enteredQty = sizeQuantities[size];
                       const isError = enteredQty > maxQty;
 
@@ -558,6 +699,56 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
     marginLeft: 60,
+  },
+  // Variant styles
+  variantSizeContainer: {
+    backgroundColor: "#f9f9f9",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+  },
+  variantSizeTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 12,
+  },
+  variantSizeStock: {
+    fontSize: 14,
+    fontWeight: "400",
+    color: "#888",
+  },
+  variantGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  variantInputContainer: {
+    width: "48%",
+    marginBottom: 8,
+  },
+  variantLabel: {
+    fontSize: 13,
+    color: "#555",
+    marginBottom: 4,
+  },
+  variantStock: {
+    fontSize: 12,
+    color: "#888",
+  },
+  variantInput: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 14,
+    backgroundColor: "#fff",
+  },
+  variantErrorText: {
+    color: "#e74c3c",
+    fontSize: 11,
+    marginTop: 2,
   },
   pickerContainer: {
     borderWidth: 1,
