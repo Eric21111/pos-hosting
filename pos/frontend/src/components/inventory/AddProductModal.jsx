@@ -70,15 +70,11 @@ const AddProductModal = ({
   const [sizeMultiVariants, setSizeMultiVariants] = useState({});
   const [selectedVariants, setSelectedVariants] = useState([]); // Multi-select variants
   const [showVariantDropdown, setShowVariantDropdown] = useState(false); // Dropdown visibility
+  const [customColorInput, setCustomColorInput] = useState(""); // Custom color input
+  const [showCustomInput, setShowCustomInput] = useState(false); // Show custom input field
 
   // Handle variant selection toggle
   const handleVariantToggle = (color) => {
-    if (color === "Custom") {
-      // Handle custom color separately
-      setNewProduct((prev) => ({ ...prev, variant: "Custom" }));
-      return;
-    }
-    
     setSelectedVariants((prev) => {
       const newVariants = prev.includes(color)
         ? prev.filter((v) => v !== color)
@@ -90,6 +86,26 @@ const AddProductModal = ({
       
       return newVariants;
     });
+  };
+
+  // Add custom color to selected variants
+  const addCustomColor = () => {
+    const trimmedColor = customColorInput.trim();
+    if (trimmedColor && !selectedVariants.includes(trimmedColor)) {
+      const newVariants = [...selectedVariants, trimmedColor];
+      setSelectedVariants(newVariants);
+      const variantString = newVariants.join(", ");
+      setNewProduct((prevProduct) => ({ ...prevProduct, variant: variantString }));
+      setCustomColorInput("");
+    }
+  };
+
+  // Handle Enter key for custom color input
+  const handleCustomColorKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addCustomColor();
+    }
   };
 
   // Remove a selected variant
@@ -116,7 +132,7 @@ const AddProductModal = ({
       setShowDraftNotice(hasData);
       
       // Initialize selectedVariants from existing variant string (for draft recovery)
-      if (newProduct.variant && newProduct.variant !== "Custom") {
+      if (newProduct.variant) {
         const variants = newProduct.variant.split(", ").filter(v => v.trim());
         setSelectedVariants(variants);
       } else {
@@ -126,6 +142,8 @@ const AddProductModal = ({
       // Reset when modal closes
       setSelectedVariants([]);
       setShowVariantDropdown(false);
+      setCustomColorInput("");
+      setShowCustomInput(false);
     } else {
       setShowDraftNotice(false);
     }
@@ -539,19 +557,43 @@ const AddProductModal = ({
                                 )}
                               </div>
                             ))}
-                            {/* Custom option */}
+                            {/* Custom color input inside dropdown */}
                             <div
-                              onClick={() => {
-                                setNewProduct((prev) => ({ ...prev, variant: "Custom" }));
-                                setShowVariantDropdown(false);
-                              }}
-                              className={`px-3 py-2 text-sm cursor-pointer border-t ${
+                              className={`px-3 py-2 border-t ${
                                 theme === "dark"
-                                  ? "hover:bg-[#3A3734] border-gray-600"
-                                  : "hover:bg-gray-100 border-gray-200"
+                                  ? "border-gray-600"
+                                  : "border-gray-200"
                               }`}
+                              onClick={(e) => e.stopPropagation()}
                             >
-                              <span className="italic">+ Add custom color</span>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  value={customColorInput}
+                                  onChange={(e) => setCustomColorInput(e.target.value)}
+                                  onKeyDown={handleCustomColorKeyDown}
+                                  placeholder="Add custom color..."
+                                  className={`flex-1 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
+                                    theme === "dark"
+                                      ? "bg-[#1E1B18] border-gray-600 text-white"
+                                      : "bg-gray-50 border-gray-300"
+                                  }`}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={addCustomColor}
+                                  disabled={!customColorInput.trim()}
+                                  className={`px-3 py-1 text-sm rounded font-medium transition-colors ${
+                                    customColorInput.trim()
+                                      ? "bg-[#AD7F65] text-white hover:bg-[#8B6553]"
+                                      : theme === "dark"
+                                        ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                  }`}
+                                >
+                                  Add
+                                </button>
+                              </div>
                             </div>
                           </div>
                         )}
@@ -563,22 +605,6 @@ const AddProductModal = ({
                             onClick={() => setShowVariantDropdown(false)}
                           />
                         )}
-                        
-                        {/* Custom variant input */}
-                        {newProduct.variant === "Custom" &&
-                          !newProduct.differentVariantsPerSize && (
-                            <input
-                              type="text"
-                              value={customVariant}
-                              onChange={(e) => setCustomVariant(e.target.value)}
-                              placeholder="Enter custom color"
-                              className={`w-full px-3 py-2 text-sm border rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
-                                theme === "dark"
-                                  ? "bg-[#1E1B18] border-gray-600 text-white"
-                                  : "bg-gray-50 border-gray-300"
-                              }`}
-                            />
-                          )}
                       </div>
                     </div>
 
