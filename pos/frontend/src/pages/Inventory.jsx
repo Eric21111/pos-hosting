@@ -206,7 +206,7 @@ const Inventory = () => {
   // Fetch active categories from API
   const fetchCategories = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/categories");
+      const response = await fetch(`${API_BASE_URL}/api/categories`);
       const data = await response.json();
 
       if (data.success && Array.isArray(data.data)) {
@@ -239,7 +239,7 @@ const Inventory = () => {
 
   const fetchBrandPartners = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/brand-partners");
+      const response = await fetch(`${API_BASE_URL}/api/brand-partners`);
       const data = await response.json();
       if (data.success) {
         setBrandPartners(data.data || []);
@@ -463,7 +463,7 @@ const Inventory = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:5000/api/products");
+      const response = await fetch(`${API_BASE_URL}/api/products`);
       const data = await response.json();
 
       if (data.success) {
@@ -696,8 +696,8 @@ const Inventory = () => {
     try {
       setLoading(true);
       const url = editingProduct
-        ? `http://localhost:5000/api/products/${editingProduct._id}`
-        : "http://localhost:5000/api/products";
+        ? `${API_BASE_URL}/api/products/${editingProduct._id}`
+        : `${API_BASE_URL}/api/products`;
 
       const method = editingProduct ? "PUT" : "POST";
 
@@ -967,7 +967,7 @@ const Inventory = () => {
 
     try {
       setLoading(true);
-      const url = `http://localhost:5000/api/products/${editingProduct._id}`;
+      const url = `${API_BASE_URL}/api/products/${editingProduct._id}`;
 
       // Prepare payload - exclude sizes and stock when editing
       // Ensure displayInTerminal is explicitly set: true = show in terminal, false = don't show
@@ -1062,7 +1062,7 @@ const Inventory = () => {
     // Fetch full product details (including sizes) in the background
     try {
       const response = await fetch(
-        `http://localhost:5000/api/products/${product._id}`,
+        `${API_BASE_URL}/api/products/${product._id}`,
       );
       const data = await response.json();
       if (data.success && data.data) {
@@ -1086,7 +1086,7 @@ const Inventory = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `http://localhost:5000/api/products/${productToDelete}`,
+        `${API_BASE_URL}/api/products/${productToDelete}`,
         {
           method: "DELETE",
         },
@@ -1137,7 +1137,7 @@ const Inventory = () => {
       // Don't explicitly set displayInTerminal - let backend auto-update it based on stock
       // Backend will set it to false if stock reaches 0
       const response = await fetch(
-        `http://localhost:5000/api/products/${editingProduct._id}`,
+        `${API_BASE_URL}/api/products/${editingProduct._id}`,
         {
           method: "PUT",
           headers: {
@@ -1195,7 +1195,7 @@ const Inventory = () => {
           (editingProduct.currentStock || 0) + stockData.quantity;
 
         response = await fetch(
-          `http://localhost:5000/api/products/${editingProduct._id}`,
+          `${API_BASE_URL}/api/products/${editingProduct._id}`,
           {
             method: "PUT",
             headers: {
@@ -1277,7 +1277,7 @@ const Inventory = () => {
         });
 
         response = await fetch(
-          `http://localhost:5000/api/products/${editingProduct._id}`,
+          `${API_BASE_URL}/api/products/${editingProduct._id}`,
           {
             method: "PUT",
             headers: {
@@ -1357,7 +1357,7 @@ const Inventory = () => {
         totalQuantityRemoved = stockData.quantity;
 
         response = await fetch(
-          `http://localhost:5000/api/products/${editingProduct._id}`,
+          `${API_BASE_URL}/api/products/${editingProduct._id}`,
           {
             method: "PUT",
             headers: {
@@ -1439,7 +1439,7 @@ const Inventory = () => {
         });
 
         response = await fetch(
-          `http://localhost:5000/api/products/${editingProduct._id}`,
+          `${API_BASE_URL}/api/products/${editingProduct._id}`,
           {
             method: "PUT",
             headers: {
@@ -1473,7 +1473,7 @@ const Inventory = () => {
             : "";
 
           try {
-            await fetch("http://localhost:5000/api/archive", {
+            await fetch(`${API_BASE_URL}/api/archive`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -1786,7 +1786,7 @@ const Inventory = () => {
           }
 
           // Send to backend
-          const response = await fetch("http://localhost:5000/api/products", {
+          const response = await fetch(`${API_BASE_URL}/api/products`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
