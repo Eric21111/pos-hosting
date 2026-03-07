@@ -24,6 +24,86 @@ const DEFAULT_BT_ADDRESS = process.env.PRINTER_BT_ADDRESS || '00:00:00:00:00:00'
 const DEFAULT_BT_CHANNEL = Number(process.env.PRINTER_BT_CHANNEL || 1);
 const MAX_LINE_CHARS = Number(process.env.PRINTER_LINE_CHARS || 32); // 58 mm 
 
+// Format currency for receipt
+const formatCurrency = value => `PHP ${Number(value || 0).toFixed(2)}`;
+
+// Pad line with left and right text
+const padLine = (left, right = '') => {
+  const cleanLeft = String(left ?? '').trim();
+  const cleanRight = String(right ?? '').trim();
+  const available = MAX_LINE_CHARS - (cleanLeft.length + cleanRight.length);
+  const spacer = available > 0 ? ' '.repeat(available) : ' ';
+  return (cleanLeft + spacer + cleanRight).slice(0, MAX_LINE_CHARS);
+};
+
+// Build receipt lines from receipt object (matching frontend printBridge.js format)
+const buildReceiptLines = receipt => {
+  const lines = [];
+  const storeName = receipt.storeName || 'Create Your Style';
+  const contactNumber = receipt.contactNumber || '+631112224444';
+  const location = receipt.location || 'Pasonanca, Zamboanga City';
+  const issueTime = receipt.time || '12:00PM';
+  const referenceNo = receipt.referenceNo || receipt.reference || '-';
+
+  // Header
+  lines.push(storeName);
+  lines.push(padLine(issueTime, contactNumber));
+  lines.push(location);
+  lines.push('-'.repeat(MAX_LINE_CHARS));
+
+  // Receipt No
+  lines.push('Receipt No:');
+  lines.push(`#${receipt.receiptNo || '000000'}`);
+  lines.push('-'.repeat(MAX_LINE_CHARS));
+
+  // Item table headers (Item: 20, Qty: 3, Price: 9 = 32 chars)
+  const itemCol = 'Item'.padEnd(20);
+  const qtyCol = 'Qty'.padStart(3);
+  const priceCol = 'Price'.padStart(9);
+  lines.push(`${itemCol}${qtyCol}${priceCol}`);
+  lines.push('-'.repeat(MAX_LINE_CHARS));
+
+  // Items
+  (receipt.items || []).forEach(item => {
+    const itemName = (item.name || item.itemName || 'Item').toString();
+    const qty = item.qty || item.quantity || 1;
+    const price = item.price || item.itemPrice || 0;
+
+    const itemNameLine = itemName.substring(0, 20).padEnd(20);
+    const qtyStr = qty.toString().padStart(3);
+    const priceStr = formatCurrency(price).padStart(9);
+    lines.push(`${itemNameLine}${qtyStr}${priceStr}`);
+  });
+
+  lines.push('-'.repeat(MAX_LINE_CHARS));
+
+  // Payment summary
+  lines.push(padLine('Transaction/Reference', referenceNo));
+  lines.push(padLine('Payment Method', receipt.paymentMethod || 'CASH'));
+  lines.push(padLine('Subtotal', formatCurrency(receipt.subtotal || 0)));
+  lines.push('-'.repeat(MAX_LINE_CHARS));
+  lines.push(padLine('Discount', formatCurrency(receipt.discount || 0)));
+  lines.push('-'.repeat(MAX_LINE_CHARS));
+  lines.push(padLine('Total', formatCurrency(receipt.total || 0)));
+
+  if (receipt.cash !== undefined) {
+    lines.push(padLine('Cash', formatCurrency(receipt.cash)));
+  }
+
+  if (receipt.change !== undefined) {
+    lines.push(padLine('Change', formatCurrency(receipt.change)));
+  }
+
+  lines.push('-'.repeat(MAX_LINE_CHARS));
+  lines.push('This is not an official receipt');
+  
+  // Add cashier if available
+  if (receipt.cashier) {
+    lines.push(padLine('Cashier', receipt.cashier));
+  }
+
+  return lines;
+};
 
 const normalizeLines = rawLines => {
   const expandedLines = [];
@@ -127,9 +207,18 @@ function startPrintServer({
   });
 
   app.post('/print', async (req, res) => {
-    const { lines } = req.body || {};
-    if (!Array.isArray(lines) || lines.length === 0) {
-      return res.status(400).json({ message: '`lines` array is required' });
+    const body = req.body || {};
+    let lines;
+
+    // Check if this is a receipt object (has storeName or items) or direct lines array
+    if (body.storeName || body.items || body.receiptNo) {
+      // Receipt object format - build lines from it
+      lines = buildReceiptLines(body);
+    } else if (Array.isArray(body.lines) && body.lines.length > 0) {
+      // Direct lines array format (backward compatibility)
+      lines = body.lines;
+    } else {
+      return res.status(400).json({ message: 'Receipt object or `lines` array is required' });
     }
 
     try {
