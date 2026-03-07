@@ -275,6 +275,18 @@ const ViewProductModal = ({
                             sizeData.price !== undefined
                               ? sizeData.price
                               : null;
+                          const variants =
+                            typeof sizeData === "object" &&
+                            sizeData !== null &&
+                            sizeData.variants
+                              ? sizeData.variants
+                              : null;
+                          const variantPrices =
+                            typeof sizeData === "object" &&
+                            sizeData !== null &&
+                            sizeData.variantPrices
+                              ? sizeData.variantPrices
+                              : null;
                           return (
                             <div
                               key={size}
@@ -301,6 +313,28 @@ const ViewProductModal = ({
                                 <span className="text-[10px] text-gray-500 mt-1">
                                   ₱{parseFloat(price).toFixed(2)}
                                 </span>
+                              )}
+                              {/* Show variants with quantities */}
+                              {variants && Object.keys(variants).length > 0 && (
+                                <div className="mt-2 w-full border-t border-gray-200 dark:border-gray-600 pt-2">
+                                  {Object.entries(variants).map(([variantName, qty]) => (
+                                    <div key={variantName} className="flex items-center justify-between gap-2 text-[10px] py-0.5">
+                                      <span className={`${theme === "dark" ? "text-[#AD7F65]" : "text-[#8B6553]"}`}>
+                                        {variantName}
+                                      </span>
+                                      <div className="flex items-center gap-1">
+                                        <span className={`font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                                          ×{qty}
+                                        </span>
+                                        {variantPrices && variantPrices[variantName] !== undefined && (
+                                          <span className="text-gray-400">
+                                            (₱{parseFloat(variantPrices[variantName]).toFixed(2)})
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
                               )}
                             </div>
                           );
