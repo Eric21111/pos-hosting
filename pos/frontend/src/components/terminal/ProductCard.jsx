@@ -16,7 +16,39 @@ export default function ProductCard({ product, onToggleExpand }) {
     return typeof sizeData === "number" ? sizeData : 0;
   };
 
-  // Helper function to get price from size data
+  // Helper function to get all prices from size data (handles variant pricing)
+  const getAllPricesFromSizeData = (sizeData) => {
+    const prices = [];
+    
+    if (typeof sizeData !== "object" || sizeData === null) {
+      return prices;
+    }
+    
+    // Check for direct price on size
+    if (sizeData.price !== undefined && sizeData.price > 0) {
+      prices.push(sizeData.price);
+    }
+    
+    // Check for variant prices (variantPrices object)
+    if (sizeData.variantPrices && typeof sizeData.variantPrices === "object") {
+      Object.values(sizeData.variantPrices).forEach(price => {
+        if (price > 0) prices.push(price);
+      });
+    }
+    
+    // Check for variants with prices (variants object with price property)
+    if (sizeData.variants && typeof sizeData.variants === "object") {
+      Object.values(sizeData.variants).forEach(variantData => {
+        if (typeof variantData === "object" && variantData !== null && variantData.price > 0) {
+          prices.push(variantData.price);
+        }
+      });
+    }
+    
+    return prices;
+  };
+
+  // Helper function to get price from size data (for backward compatibility)
   const getSizePrice = (sizeData) => {
     if (
       typeof sizeData === "object" &&
@@ -34,9 +66,14 @@ export default function ProductCard({ product, onToggleExpand }) {
       const prices = [];
 
       Object.values(product.sizes).forEach((sizeData) => {
-        const price = getSizePrice(sizeData);
-        if (price !== null) {
-          prices.push(price);
+        // Get all prices including variant prices
+        const sizePrices = getAllPricesFromSizeData(sizeData);
+        prices.push(...sizePrices);
+        
+        // Also check simple price format
+        const simplePrice = getSizePrice(sizeData);
+        if (simplePrice !== null && simplePrice > 0 && !prices.includes(simplePrice)) {
+          prices.push(simplePrice);
         }
       });
 
@@ -51,6 +88,7 @@ export default function ProductCard({ product, onToggleExpand }) {
       }
     }
 
+    // Fallback to itemPrice
     return {
       min: product.itemPrice || 0,
       max: product.itemPrice || 0,
