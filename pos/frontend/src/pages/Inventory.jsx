@@ -688,6 +688,10 @@ const Inventory = () => {
       if (!editingProduct) {
         payload.currentStock = totalStock;
         if (newProduct.selectedSizes.length > 0) {
+          // Check if we have variant quantities (quantity per variant per size)
+          const hasVariantQuantities = newProduct.variantQuantities && 
+            Object.keys(newProduct.variantQuantities).length > 0;
+
           // If different prices per size, include size prices in sizes object
           if (
             newProduct.differentPricesPerSize &&
@@ -713,11 +717,21 @@ const Inventory = () => {
                 variantValue = newProduct.variant || "";
               }
 
-              sizesWithPrices[size] = {
-                quantity: newProduct.sizeQuantities[size] || 0,
-                price: sizePrice || defaultItemPrice || 0,
-                variant: variantValue,
-              };
+              // If we have variant quantities, store them in the variants field
+              if (hasVariantQuantities && newProduct.variantQuantities[size]) {
+                sizesWithPrices[size] = {
+                  quantity: Object.values(newProduct.variantQuantities[size]).reduce((sum, q) => sum + (parseInt(q) || 0), 0),
+                  price: sizePrice || defaultItemPrice || 0,
+                  variant: variantValue,
+                  variants: newProduct.variantQuantities[size], // { "Blue": 5, "White": 7 }
+                };
+              } else {
+                sizesWithPrices[size] = {
+                  quantity: newProduct.sizeQuantities[size] || 0,
+                  price: sizePrice || defaultItemPrice || 0,
+                  variant: variantValue,
+                };
+              }
             });
             payload.sizes = sizesWithPrices;
           } else {
@@ -740,10 +754,19 @@ const Inventory = () => {
                 variantValue = newProduct.variant || "";
               }
 
-              sizesObject[size] = {
-                quantity: newProduct.sizeQuantities[size] || 0,
-                variant: variantValue,
-              };
+              // If we have variant quantities, store them in the variants field
+              if (hasVariantQuantities && newProduct.variantQuantities[size]) {
+                sizesObject[size] = {
+                  quantity: Object.values(newProduct.variantQuantities[size]).reduce((sum, q) => sum + (parseInt(q) || 0), 0),
+                  variant: variantValue,
+                  variants: newProduct.variantQuantities[size], // { "Blue": 5, "White": 7 }
+                };
+              } else {
+                sizesObject[size] = {
+                  quantity: newProduct.sizeQuantities[size] || 0,
+                  variant: variantValue,
+                };
+              }
             });
             payload.sizes = sizesObject;
           }

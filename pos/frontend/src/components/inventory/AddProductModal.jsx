@@ -72,6 +72,27 @@ const AddProductModal = ({
   const [showVariantDropdown, setShowVariantDropdown] = useState(false); // Dropdown visibility
   const [customColorInput, setCustomColorInput] = useState(""); // Custom color input
   const [showCustomInput, setShowCustomInput] = useState(false); // Show custom input field
+  const [variantQuantities, setVariantQuantities] = useState({}); // Track quantity per variant per size: { "S": { "Blue": 5, "White": 7 }, "M": { "Blue": 3 } }
+
+  // Handle variant quantity change for a specific size and variant
+  const handleVariantQuantityChange = (size, variant, quantity) => {
+    const qty = parseInt(quantity) || 0;
+    setVariantQuantities((prev) => ({
+      ...prev,
+      [size]: {
+        ...(prev[size] || {}),
+        [variant]: qty,
+      },
+    }));
+    
+    // Also update the total sizeQuantities for this size
+    const updatedSizeVariants = {
+      ...(variantQuantities[size] || {}),
+      [variant]: qty,
+    };
+    const totalForSize = Object.values(updatedSizeVariants).reduce((sum, q) => sum + q, 0);
+    handleSizeQuantityChange(size, totalForSize.toString());
+  };
 
   // Handle variant selection toggle
   const handleVariantToggle = (color) => {
@@ -144,6 +165,7 @@ const AddProductModal = ({
       setShowVariantDropdown(false);
       setCustomColorInput("");
       setShowCustomInput(false);
+      setVariantQuantities({});
     } else {
       setShowDraftNotice(false);
     }
@@ -175,6 +197,14 @@ const AddProductModal = ({
         ...prev,
         sizeMultiVariants: sizeMultiVariants,
         multipleVariantsPerSize: multipleVariantsPerSize,
+      }));
+    }
+
+    // Store variant quantities in newProduct for parent to access
+    if (Object.keys(variantQuantities).length > 0) {
+      setNewProduct((prev) => ({
+        ...prev,
+        variantQuantities: variantQuantities,
       }));
     }
 
@@ -839,39 +869,90 @@ const AddProductModal = ({
                                 </label>
                               </div>
 
+                              {/* Quantity per Size - Show variant breakdown if variants selected */}
                               <div
                                 className={`space-y-2 mt-3 p-3 rounded-lg ${theme === "dark" ? "bg-[#1E1B18]" : "bg-gray-50"}`}
                               >
                                 <label
                                   className={`block text-xs font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}
                                 >
-                                  Quantity per Size:
+                                  {selectedVariants.length > 0 
+                                    ? "Quantity per Variant per Size:"
+                                    : "Quantity per Size:"}
                                 </label>
-                                <div className="grid grid-cols-2 gap-3">
-                                  {newProduct.selectedSizes.map((size) => (
-                                    <div key={size}>
-                                      <label className="block text-xs text-gray-600 mb-1">
-                                        {size}
-                                      </label>
-                                      <input
-                                        type="number"
-                                        min="0"
-                                        value={
-                                          newProduct.sizeQuantities?.[size] ||
-                                          ""
-                                        }
-                                        onChange={(e) =>
-                                          handleSizeQuantityChange(
-                                            size,
-                                            e.target.value,
-                                          )
-                                        }
-                                        placeholder="Enter quantity"
-                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent"
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
+                                
+                                {/* If variants are selected, show matrix of size x variant */}
+                                {selectedVariants.length > 0 ? (
+                                  <div className="space-y-4">
+                                    {newProduct.selectedSizes.map((size) => (
+                                      <div key={size} className={`p-3 rounded-lg border ${theme === "dark" ? "bg-[#2A2724] border-gray-600" : "bg-white border-gray-200"}`}>
+                                        <div className="flex items-center justify-between mb-2">
+                                          <label className="block text-sm font-medium text-gray-700">
+                                            {size}
+                                          </label>
+                                          <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                                            Total: {Object.values(variantQuantities[size] || {}).reduce((sum, q) => sum + (parseInt(q) || 0), 0)}
+                                          </span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                          {selectedVariants.map((variant) => (
+                                            <div key={variant} className="flex items-center gap-2">
+                                              <span 
+                                                className={`text-xs px-2 py-1 rounded-full flex-shrink-0 ${
+                                                  theme === "dark"
+                                                    ? "bg-[#AD7F65]/20 text-[#AD7F65]"
+                                                    : "bg-[#AD7F65]/10 text-[#AD7F65]"
+                                                }`}
+                                                style={{ minWidth: '60px', textAlign: 'center' }}
+                                              >
+                                                {variant}
+                                              </span>
+                                              <input
+                                                type="number"
+                                                min="0"
+                                                value={variantQuantities[size]?.[variant] || ""}
+                                                onChange={(e) => handleVariantQuantityChange(size, variant, e.target.value)}
+                                                placeholder="Qty"
+                                                className={`flex-1 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
+                                                  theme === "dark"
+                                                    ? "bg-[#1E1B18] border-gray-600 text-white"
+                                                    : "bg-gray-50 border-gray-300"
+                                                }`}
+                                              />
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  /* Original simple quantity per size */
+                                  <div className="grid grid-cols-2 gap-3">
+                                    {newProduct.selectedSizes.map((size) => (
+                                      <div key={size}>
+                                        <label className="block text-xs text-gray-600 mb-1">
+                                          {size}
+                                        </label>
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          value={
+                                            newProduct.sizeQuantities?.[size] ||
+                                            ""
+                                          }
+                                          onChange={(e) =>
+                                            handleSizeQuantityChange(
+                                              size,
+                                              e.target.value,
+                                            )
+                                          }
+                                          placeholder="Enter quantity"
+                                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent"
+                                        />
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
 
                               {newProduct.differentVariantsPerSize && (
