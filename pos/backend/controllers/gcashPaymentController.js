@@ -160,7 +160,7 @@ exports.createGCashPayment = async (req, res) => {
       paymentMethod: "gcash",
       amountReceived: 0,
       changeGiven: 0,
-      status: "Completed", // Will be the final status — gcashStatus tracks payment lifecycle
+      status: "Pending", // Will be updated to Completed when payment is confirmed
       merchantOrderId,
       gcashStatus: "PENDING",
       gcashExpiresAt: expiresAt,
@@ -180,6 +180,7 @@ exports.createGCashPayment = async (req, res) => {
     } catch (gatewayError) {
       // If gateway fails, mark transaction as FAILED
       transaction.gcashStatus = "FAILED";
+      transaction.status = "Failed";
       await transaction.save();
 
       console.error(
@@ -418,6 +419,7 @@ exports.handleWebhook = async (req, res) => {
         merchantOrderId,
       });
       transaction.gcashStatus = "FAILED";
+      transaction.status = "Failed";
       await transaction.save();
       return res.status(400).json({ message: "Amount mismatch" });
     }
@@ -439,6 +441,7 @@ exports.handleWebhook = async (req, res) => {
         paymentError.message,
       );
       transaction.gcashStatus = "FAILED";
+      transaction.status = "Failed";
       await transaction.save();
 
       notifyPaymentUpdate(merchantOrderId, {

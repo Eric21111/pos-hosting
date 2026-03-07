@@ -25,8 +25,29 @@ router.post("/gcash/cancel/:merchantOrderId", cancelPayment);
 
 // GET /api/payments/gcash/redirect — Customer redirect after GCash payment
 // This is where PayMongo sends the customer after they pay/cancel in GCash app
-router.get("/gcash/redirect", (req, res) => {
+router.get("/gcash/redirect", async (req, res) => {
   const { status, order } = req.query;
+  
+  // If payment failed/cancelled, update the transaction status
+  if (status === "failed" && order) {
+    try {
+      const SalesTransaction = require("../models/SalesTransaction");
+      const transaction = await SalesTransaction.findOne({
+        merchantOrderId: order,
+        gcashStatus: { $in: ["PENDING", "CHARGEABLE"] }
+      });
+      
+      if (transaction) {
+        transaction.gcashStatus = "FAILED";
+        transaction.status = "Failed";
+        await transaction.save();
+        console.log("[GCash Redirect] Payment failed/cancelled for order:", order);
+      }
+    } catch (err) {
+      console.error("[GCash Redirect] Error updating failed transaction:", err.message);
+    }
+  }
+  
   const message =
     status === "success"
       ? "Payment successful! You can close this page and return to the store."

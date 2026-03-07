@@ -375,7 +375,7 @@ const Transaction = () => {
   }, [transactions]);
 
   const filteredTransactions = useMemo(() => {
-    // Filter out return transactions and voided transactions from the main list
+    // Filter out return transactions, voided transactions, and pending/failed GCash transactions from the main list
     // Voided transactions should only appear in void logs, not in transactions page
     const filtered = transactions.filter((trx) => {
       // Skip return transactions in the main list
@@ -385,6 +385,11 @@ const Transaction = () => {
 
       // Skip voided transactions - they should only appear in void logs
       if (trx.status === "Voided") {
+        return false;
+      }
+
+      // Skip pending or failed GCash transactions - they are not completed sales
+      if (trx.status === "Pending" || trx.status === "Failed") {
         return false;
       }
 

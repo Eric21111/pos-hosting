@@ -71,7 +71,7 @@ const salesTransactionSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Completed", "Returned", "Partially Returned", "Voided"],
+      enum: ["Completed", "Returned", "Partially Returned", "Voided", "Pending", "Failed"],
       default: "Completed",
     },
     checkedOutAt: {
