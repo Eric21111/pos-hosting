@@ -8,6 +8,8 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
   const [quantity, setQuantity] = useState("");
   const [reason, setReason] = useState("Restock");
   const [otherReason, setOtherReason] = useState("");
+  const [newVariantInputs, setNewVariantInputs] = useState({}); // { "S": "Red" } - input for new variant per size
+  const [addedVariants, setAddedVariants] = useState([]); // New variants added by user
   const { theme } = useTheme();
 
   const allSizes = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Free Size"];
@@ -44,7 +46,7 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
     return null;
   };
 
-  // Get all unique variants from the product
+  // Get all unique variants from the product (including newly added ones)
   const getAllVariants = () => {
     const variantSet = new Set();
     if (hasSizes) {
@@ -54,6 +56,8 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
         }
       });
     }
+    // Add newly added variants
+    addedVariants.forEach((v) => variantSet.add(v));
     return Array.from(variantSet);
   };
 
@@ -70,6 +74,8 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
       setQuantity("");
       setReason("Restock");
       setOtherReason("");
+      setNewVariantInputs({});
+      setAddedVariants([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, product?._id]);
@@ -83,6 +89,8 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
     setQuantity("");
     setReason("Restock");
     setOtherReason("");
+    setNewVariantInputs({});
+    setAddedVariants([]);
     onClose();
   };
 
@@ -140,6 +148,35 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
       return variants[variant].quantity || 0;
     }
     return 0;
+  };
+
+  // Handle new variant input change
+  const handleNewVariantInputChange = (size, value) => {
+    setNewVariantInputs((prev) => ({
+      ...prev,
+      [size]: value,
+    }));
+  };
+
+  // Add a new variant
+  const handleAddNewVariant = (size) => {
+    const variantName = (newVariantInputs[size] || "").trim();
+    if (!variantName) {
+      alert("Please enter a variant name");
+      return;
+    }
+    // Check if variant already exists
+    if (allVariants.includes(variantName)) {
+      alert("This variant already exists");
+      return;
+    }
+    // Add to addedVariants
+    setAddedVariants((prev) => [...prev, variantName]);
+    // Clear the input
+    setNewVariantInputs((prev) => ({
+      ...prev,
+      [size]: "",
+    }));
   };
 
   const handleSubmit = (e) => {
@@ -403,15 +440,20 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
                                   <div className="grid grid-cols-2 gap-2">
                                     {allVariants.map((variant) => {
                                       const currentVariantQty = getVariantCurrentQty(size, variant);
+                                      const isNewVariant = addedVariants.includes(variant);
                                       return (
                                         <div key={`${size}-${variant}`}>
                                           <label
                                             className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
                                           >
                                             {variant}{" "}
-                                            <span className="text-gray-500">
-                                              ({currentVariantQty})
-                                            </span>
+                                            {isNewVariant ? (
+                                              <span className="text-green-500">(New)</span>
+                                            ) : (
+                                              <span className="text-gray-500">
+                                                ({currentVariantQty})
+                                              </span>
+                                            )}
                                           </label>
                                           <input
                                             type="number"
@@ -431,6 +473,40 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
                                       );
                                     })}
                                   </div>
+                                  
+                                  {/* Add New Variant Section */}
+                                  <div className={`mt-3 pt-3 border-t ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
+                                    <label
+                                      className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
+                                    >
+                                      Add New Variant
+                                    </label>
+                                    <div className="flex gap-2">
+                                      <input
+                                        type="text"
+                                        value={newVariantInputs[size] || ""}
+                                        onChange={(e) =>
+                                          handleNewVariantInputChange(size, e.target.value)
+                                        }
+                                        placeholder="e.g. Red, Green..."
+                                        className={`flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#2A2724] border-gray-700 text-white placeholder-gray-500" : "bg-gray-50 border-gray-300 text-gray-900"}`}
+                                        onKeyDown={(e) => {
+                                          if (e.key === "Enter") {
+                                            e.preventDefault();
+                                            handleAddNewVariant(size);
+                                          }
+                                        }}
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => handleAddNewVariant(size)}
+                                        className="px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                      >
+                                        +
+                                      </button>
+                                    </div>
+                                  </div>
+                                  
                                   {Object.keys(variantQuantities[size] || {}).length > 0 && (
                                     <p className={`text-xs mt-2 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
                                       Adding: {Object.values(variantQuantities[size] || {}).reduce((sum, q) => sum + (parseInt(q) || 0), 0)} units
@@ -440,9 +516,9 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
                               );
                             }
                             
-                            // No variants - show simple quantity input
+                            // No variants - show simple quantity input with option to add variants
                             return (
-                              <div key={size}>
+                              <div key={size} className={hasVariants ? "" : ""}>
                                 <label
                                   className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
                                 >
@@ -464,6 +540,34 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
                                   placeholder="Enter quantity"
                                   className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-700 text-white placeholder-gray-500" : "bg-white border-gray-300 text-gray-900"}`}
                                 />
+                                
+                                {/* Option to add variant for products without variants */}
+                                <div className={`mt-2`}>
+                                  <div className="flex gap-2">
+                                    <input
+                                      type="text"
+                                      value={newVariantInputs[size] || ""}
+                                      onChange={(e) =>
+                                        handleNewVariantInputChange(size, e.target.value)
+                                      }
+                                      placeholder="Add variant (e.g. Blue)"
+                                      className={`flex-1 px-3 py-1.5 text-xs border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#2A2724] border-gray-700 text-white placeholder-gray-500" : "bg-gray-50 border-gray-300 text-gray-900"}`}
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                          e.preventDefault();
+                                          handleAddNewVariant(size);
+                                        }
+                                      }}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAddNewVariant(size)}
+                                      className="px-2 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                </div>
                               </div>
                             );
                           })
