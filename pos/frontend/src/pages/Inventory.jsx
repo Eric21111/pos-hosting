@@ -667,13 +667,15 @@ const Inventory = () => {
           );
           return;
         }
-      } else if (!newProduct.differentPricesPerSize) {
-        // Only require itemPrice if different prices per size is not enabled and no variant pricing
+      } else if (!newProduct.differentPricesPerSize && !hasAnyVariantPricing) {
+        // Only require itemPrice if different prices per size is not enabled AND no variant pricing at all
         if (!newProduct.itemPrice || parseFloat(newProduct.itemPrice) <= 0) {
           alert("Please enter a selling price.");
           return;
         }
       }
+      // If hasAnyVariantPricing is true and differentPricesPerSize is false, 
+      // no global itemPrice is needed - prices come from variants
 
       setShowConfirmModal(true);
     } else {
