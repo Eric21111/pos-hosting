@@ -1080,16 +1080,16 @@ const AddProductModal = ({
                                             </span>
                                           </label>
                                         
-                                        <div className={differentPricesPerVariant[size] ? "space-y-2" : "grid grid-cols-2 gap-2"}>
+                                        <div className={differentPricesPerVariant[size] ? "space-y-2" : "grid grid-cols-3 gap-2"}>
                                           {selectedVariants.map((variant) => (
-                                            <div key={variant} className={differentPricesPerVariant[size] ? "flex items-center gap-2 flex-wrap" : "flex items-center gap-2"}>
+                                            <div key={variant} className={differentPricesPerVariant[size] ? "flex items-center gap-2 flex-wrap" : "flex items-center gap-1"}>
                                               <span 
                                                 className={`text-xs px-2 py-1 rounded-full flex-shrink-0 ${
                                                   theme === "dark"
                                                     ? "bg-[#AD7F65]/20 text-[#AD7F65]"
                                                     : "bg-[#AD7F65]/10 text-[#AD7F65]"
                                                 }`}
-                                                style={{ minWidth: '60px', textAlign: 'center' }}
+                                                style={{ minWidth: '50px', textAlign: 'center' }}
                                               >
                                                 {variant}
                                               </span>
@@ -1099,7 +1099,7 @@ const AddProductModal = ({
                                                 value={variantQuantities[size]?.[variant] || ""}
                                                 onChange={(e) => handleVariantQuantityChange(size, variant, e.target.value)}
                                                 placeholder="Qty"
-                                                className={`${differentPricesPerVariant[size] ? 'w-16' : 'flex-1'} px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
+                                                className={`${differentPricesPerVariant[size] ? 'w-16' : 'w-20'} px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
                                                   theme === "dark"
                                                     ? "bg-[#1E1B18] border-gray-600 text-white"
                                                     : "bg-gray-50 border-gray-300"
