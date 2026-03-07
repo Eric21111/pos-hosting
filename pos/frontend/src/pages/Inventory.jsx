@@ -691,6 +691,10 @@ const Inventory = () => {
           // Check if we have variant quantities (quantity per variant per size)
           const hasVariantQuantities = newProduct.variantQuantities && 
             Object.keys(newProduct.variantQuantities).length > 0;
+          
+          // Check if we have variant prices (different prices per variant)
+          const hasVariantPrices = newProduct.variantPrices && 
+            Object.keys(newProduct.variantPrices).length > 0;
 
           // If different prices per size, include size prices in sizes object
           if (
@@ -725,6 +729,10 @@ const Inventory = () => {
                   variant: variantValue,
                   variants: newProduct.variantQuantities[size], // { "Blue": 5, "White": 7 }
                 };
+                // Add variant prices if different prices per variant is enabled for this size
+                if (hasVariantPrices && newProduct.differentPricesPerVariant?.[size] && newProduct.variantPrices[size]) {
+                  sizesWithPrices[size].variantPrices = newProduct.variantPrices[size]; // { "Blue": 100, "White": 120 }
+                }
               } else {
                 sizesWithPrices[size] = {
                   quantity: newProduct.sizeQuantities[size] || 0,
@@ -761,6 +769,10 @@ const Inventory = () => {
                   variant: variantValue,
                   variants: newProduct.variantQuantities[size], // { "Blue": 5, "White": 7 }
                 };
+                // Add variant prices if different prices per variant is enabled for this size
+                if (hasVariantPrices && newProduct.differentPricesPerVariant?.[size] && newProduct.variantPrices[size]) {
+                  sizesObject[size].variantPrices = newProduct.variantPrices[size]; // { "Blue": 100, "White": 120 }
+                }
               } else {
                 sizesObject[size] = {
                   quantity: newProduct.sizeQuantities[size] || 0,

@@ -73,6 +73,20 @@ const AddProductModal = ({
   const [customColorInput, setCustomColorInput] = useState(""); // Custom color input
   const [showCustomInput, setShowCustomInput] = useState(false); // Show custom input field
   const [variantQuantities, setVariantQuantities] = useState({}); // Track quantity per variant per size: { "S": { "Blue": 5, "White": 7 }, "M": { "Blue": 3 } }
+  const [differentPricesPerVariant, setDifferentPricesPerVariant] = useState({}); // Track if size has different prices per variant: { "S": true, "M": false }
+  const [variantPrices, setVariantPrices] = useState({}); // Track price per variant per size: { "S": { "Blue": 100, "White": 120 }, "M": { "Blue": 95 } }
+
+  // Handle variant price change for a specific size and variant
+  const handleVariantPriceChange = (size, variant, price) => {
+    const priceValue = parseFloat(price) || 0;
+    setVariantPrices((prev) => ({
+      ...prev,
+      [size]: {
+        ...(prev[size] || {}),
+        [variant]: priceValue,
+      },
+    }));
+  };
 
   // Handle variant quantity change for a specific size and variant
   const handleVariantQuantityChange = (size, variant, quantity) => {
@@ -208,6 +222,15 @@ const AddProductModal = ({
       }));
     }
 
+    // Store variant prices in newProduct for parent to access
+    if (Object.keys(variantPrices).length > 0) {
+      setNewProduct((prev) => ({
+        ...prev,
+        variantPrices: variantPrices,
+        differentPricesPerVariant: differentPricesPerVariant,
+      }));
+    }
+
     // Call the parent's handleAddProduct with a slight delay to ensure state updates
     setTimeout(() => handleAddProduct(e), 10);
   };
@@ -331,6 +354,8 @@ const AddProductModal = ({
                             setSelectedVariants([]);
                             setCustomColorInput("");
                             setVariantQuantities({});
+                            setVariantPrices({});
+                            setDifferentPricesPerVariant({});
 
                             // Reset foodSubtype when category changes
                             if (e.target.value !== "Foods") {
@@ -985,9 +1010,40 @@ const AddProductModal = ({
                                             Total: {Object.values(variantQuantities[size] || {}).reduce((sum, q) => sum + (parseInt(q) || 0), 0)}
                                           </span>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-2">
+                                        
+                                        {/* Checkbox for different prices per variant in this size */}
+                                        <label className="flex items-center gap-2 cursor-pointer mb-3">
+                                          <input
+                                            type="checkbox"
+                                            checked={differentPricesPerVariant[size] || false}
+                                            onChange={(e) => {
+                                              setDifferentPricesPerVariant((prev) => ({
+                                                ...prev,
+                                                [size]: e.target.checked,
+                                              }));
+                                              // Initialize prices with default price when enabled
+                                              if (e.target.checked) {
+                                                const defaultPrice = parseFloat(newProduct.sizePrices?.[size]) || parseFloat(newProduct.itemPrice) || 0;
+                                                const initialPrices = {};
+                                                selectedVariants.forEach((v) => {
+                                                  initialPrices[v] = defaultPrice;
+                                                });
+                                                setVariantPrices((prev) => ({
+                                                  ...prev,
+                                                  [size]: initialPrices,
+                                                }));
+                                              }
+                                            }}
+                                            className="w-4 h-4 text-[#AD7F65] border-gray-300 rounded focus:ring-[#AD7F65]"
+                                          />
+                                          <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                                            Different prices each variant?
+                                          </span>
+                                        </label>
+                                        
+                                        <div className={differentPricesPerVariant[size] ? "space-y-2" : "grid grid-cols-2 gap-2"}>
                                           {selectedVariants.map((variant) => (
-                                            <div key={variant} className="flex items-center gap-2">
+                                            <div key={variant} className={differentPricesPerVariant[size] ? "flex items-center gap-2" : "flex items-center gap-2"}>
                                               <span 
                                                 className={`text-xs px-2 py-1 rounded-full flex-shrink-0 ${
                                                   theme === "dark"
@@ -1004,12 +1060,30 @@ const AddProductModal = ({
                                                 value={variantQuantities[size]?.[variant] || ""}
                                                 onChange={(e) => handleVariantQuantityChange(size, variant, e.target.value)}
                                                 placeholder="Qty"
-                                                className={`flex-1 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
+                                                className={`${differentPricesPerVariant[size] ? 'w-20' : 'flex-1'} px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
                                                   theme === "dark"
                                                     ? "bg-[#1E1B18] border-gray-600 text-white"
                                                     : "bg-gray-50 border-gray-300"
                                                 }`}
                                               />
+                                              {differentPricesPerVariant[size] && (
+                                                <div className="flex items-center gap-1 flex-1">
+                                                  <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>₱</span>
+                                                  <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.01"
+                                                    value={variantPrices[size]?.[variant] || ""}
+                                                    onChange={(e) => handleVariantPriceChange(size, variant, e.target.value)}
+                                                    placeholder="Price"
+                                                    className={`flex-1 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
+                                                      theme === "dark"
+                                                        ? "bg-[#1E1B18] border-gray-600 text-white"
+                                                        : "bg-gray-50 border-gray-300"
+                                                    }`}
+                                                  />
+                                                </div>
+                                              )}
                                             </div>
                                           ))}
                                         </div>
