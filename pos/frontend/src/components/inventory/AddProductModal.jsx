@@ -235,15 +235,13 @@ const AddProductModal = ({
       }));
     }
 
-    // Store variant prices in newProduct for parent to access
-    if (Object.keys(variantPrices).length > 0 || Object.keys(variantCostPrices).length > 0) {
-      setNewProduct((prev) => ({
-        ...prev,
-        variantPrices: variantPrices,
-        variantCostPrices: variantCostPrices,
-        differentPricesPerVariant: differentPricesPerVariant,
-      }));
-    }
+    // Always sync differentPricesPerVariant state, and sync prices if they exist
+    setNewProduct((prev) => ({
+      ...prev,
+      differentPricesPerVariant: differentPricesPerVariant,
+      ...(Object.keys(variantPrices).length > 0 && { variantPrices: variantPrices }),
+      ...(Object.keys(variantCostPrices).length > 0 && { variantCostPrices: variantCostPrices }),
+    }));
 
     // Call the parent's handleAddProduct with a slight delay to ensure state updates
     setTimeout(() => handleAddProduct(e), 10);
