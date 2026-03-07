@@ -989,8 +989,8 @@ const AddProductModal = ({
                                           </span>
                                         </div>
                                         
-                                        {/* Cost Price and Selling Price - shown when NOT using different prices per variant */}
-                                        {!differentPricesPerVariant[size] && (
+                                        {/* Cost Price and Selling Price - shown when differentPricesPerSize is enabled AND NOT using different prices per variant */}
+                                        {newProduct.differentPricesPerSize && !differentPricesPerVariant[size] && (
                                           <div className="grid grid-cols-2 gap-2 mb-3">
                                             <div>
                                               <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
