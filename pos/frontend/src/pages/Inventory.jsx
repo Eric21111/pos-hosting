@@ -1226,29 +1226,72 @@ const Inventory = () => {
           return null;
         };
 
-        stockData.selectedSizes.forEach((size) => {
-          const currentSizeData = updatedSizes[size];
-          const currentQty = getSizeQty(currentSizeData);
-          const currentPrice = getSizePrice(currentSizeData);
-          const addQty = stockData.sizes[size] || 0;
-          const newQty = currentQty + addQty;
+        // Check if we're adding stock with variant quantities
+        if (stockData.hasVariants && stockData.variantQuantities) {
+          // Update variant quantities for each size
+          stockData.selectedSizes.forEach((size) => {
+            const currentSizeData = updatedSizes[size] || {};
+            const currentVariants = (typeof currentSizeData === "object" && currentSizeData.variants) || {};
+            const addVariantQtys = stockData.variantQuantities[size] || {};
+            
+            // Create new variants object with updated quantities
+            const newVariants = { ...currentVariants };
+            Object.entries(addVariantQtys).forEach(([variant, addQty]) => {
+              if (addQty > 0) {
+                if (newVariants[variant]) {
+                  newVariants[variant] = {
+                    ...newVariants[variant],
+                    quantity: (newVariants[variant].quantity || 0) + addQty,
+                  };
+                } else {
+                  // New variant - use default prices
+                  newVariants[variant] = {
+                    quantity: addQty,
+                    price: currentSizeData.price || editingProduct.itemPrice || 0,
+                    costPrice: currentSizeData.costPrice || editingProduct.costPrice || 0,
+                  };
+                }
+              }
+            });
 
-          // Preserve price structure if it exists
-          if (
-            currentPrice !== null ||
-            (typeof currentSizeData === "object" && currentSizeData !== null)
-          ) {
+            // Calculate new total quantity for this size
+            const newTotalQty = Object.values(newVariants).reduce(
+              (sum, v) => sum + (v.quantity || 0), 0
+            );
+
             updatedSizes[size] = {
-              quantity: newQty,
-              price:
-                currentPrice !== null
-                  ? currentPrice
-                  : editingProduct.itemPrice || 0,
+              ...currentSizeData,
+              quantity: newTotalQty,
+              variants: newVariants,
             };
-          } else {
-            updatedSizes[size] = newQty;
-          }
-        });
+          });
+        } else {
+          // Standard size-only stock in (no variants)
+          stockData.selectedSizes.forEach((size) => {
+            const currentSizeData = updatedSizes[size];
+            const currentQty = getSizeQty(currentSizeData);
+            const currentPrice = getSizePrice(currentSizeData);
+            const addQty = stockData.sizes[size] || 0;
+            const newQty = currentQty + addQty;
+
+            // Preserve price structure if it exists
+            if (
+              currentPrice !== null ||
+              (typeof currentSizeData === "object" && currentSizeData !== null)
+            ) {
+              updatedSizes[size] = {
+                ...currentSizeData,
+                quantity: newQty,
+                price:
+                  currentPrice !== null
+                    ? currentPrice
+                    : editingProduct.itemPrice || 0,
+              };
+            } else {
+              updatedSizes[size] = newQty;
+            }
+          });
+        }
 
         const totalStock = Object.values(updatedSizes).reduce(
           (sum, sizeData) => sum + getSizeQty(sizeData),
@@ -1257,12 +1300,22 @@ const Inventory = () => {
 
         // Calculate size quantities that were added
         const sizeQuantitiesAdded = {};
-        stockData.selectedSizes.forEach((size) => {
-          const addQty = stockData.sizes[size] || 0;
-          if (addQty > 0) {
-            sizeQuantitiesAdded[size] = addQty;
-          }
-        });
+        if (stockData.hasVariants && stockData.variantQuantities) {
+          stockData.selectedSizes.forEach((size) => {
+            const variantQtys = stockData.variantQuantities[size] || {};
+            const totalForSize = Object.values(variantQtys).reduce((sum, q) => sum + (parseInt(q) || 0), 0);
+            if (totalForSize > 0) {
+              sizeQuantitiesAdded[size] = totalForSize;
+            }
+          });
+        } else {
+          stockData.selectedSizes.forEach((size) => {
+            const addQty = stockData.sizes[size] || 0;
+            if (addQty > 0) {
+              sizeQuantitiesAdded[size] = addQty;
+            }
+          });
+        }
 
         response = await fetch(
           `${API_BASE_URL}/api/products/${editingProduct._id}`,
@@ -1388,43 +1441,87 @@ const Inventory = () => {
           return null;
         };
 
-        stockData.selectedSizes.forEach((size) => {
-          const currentSizeData = updatedSizes[size];
-          const currentQty = getSizeQty(currentSizeData);
-          const currentPrice = getSizePrice(currentSizeData);
-          const removeQty = stockData.sizes[size] || 0;
-          const newQty = Math.max(0, currentQty - removeQty);
+        // Check if we're removing stock with variant quantities
+        if (stockData.hasVariants && stockData.variantQuantities) {
+          // Update variant quantities for each size
+          stockData.selectedSizes.forEach((size) => {
+            const currentSizeData = updatedSizes[size] || {};
+            const currentVariants = (typeof currentSizeData === "object" && currentSizeData.variants) || {};
+            const removeVariantQtys = stockData.variantQuantities[size] || {};
+            
+            // Create new variants object with updated quantities
+            const newVariants = { ...currentVariants };
+            Object.entries(removeVariantQtys).forEach(([variant, removeQty]) => {
+              if (removeQty > 0 && newVariants[variant]) {
+                newVariants[variant] = {
+                  ...newVariants[variant],
+                  quantity: Math.max(0, (newVariants[variant].quantity || 0) - removeQty),
+                };
+              }
+            });
 
-          // Preserve price structure if it exists
-          if (
-            currentPrice !== null ||
-            (typeof currentSizeData === "object" && currentSizeData !== null)
-          ) {
+            // Calculate new total quantity for this size
+            const newTotalQty = Object.values(newVariants).reduce(
+              (sum, v) => sum + (v.quantity || 0), 0
+            );
+
             updatedSizes[size] = {
-              quantity: newQty,
-              price:
-                currentPrice !== null
-                  ? currentPrice
-                  : editingProduct.itemPrice || 0,
+              ...currentSizeData,
+              quantity: newTotalQty,
+              variants: newVariants,
             };
-          } else {
-            updatedSizes[size] = newQty;
-          }
-        });
+          });
+
+          // Calculate removed quantities for stock movement
+          stockData.selectedSizes.forEach((size) => {
+            const variantQtys = stockData.variantQuantities[size] || {};
+            const totalForSize = Object.values(variantQtys).reduce((sum, q) => sum + (parseInt(q) || 0), 0);
+            if (totalForSize > 0) {
+              sizeQuantitiesRemoved[size] = totalForSize;
+              totalQuantityRemoved += totalForSize;
+            }
+          });
+        } else {
+          // Standard size-only stock out (no variants)
+          stockData.selectedSizes.forEach((size) => {
+            const currentSizeData = updatedSizes[size];
+            const currentQty = getSizeQty(currentSizeData);
+            const currentPrice = getSizePrice(currentSizeData);
+            const removeQty = stockData.sizes[size] || 0;
+            const newQty = Math.max(0, currentQty - removeQty);
+
+            // Preserve price structure if it exists
+            if (
+              currentPrice !== null ||
+              (typeof currentSizeData === "object" && currentSizeData !== null)
+            ) {
+              updatedSizes[size] = {
+                ...currentSizeData,
+                quantity: newQty,
+                price:
+                  currentPrice !== null
+                    ? currentPrice
+                    : editingProduct.itemPrice || 0,
+              };
+            } else {
+              updatedSizes[size] = newQty;
+            }
+          });
+
+          // Calculate size quantities that were removed
+          stockData.selectedSizes.forEach((size) => {
+            const removeQty = stockData.sizes[size] || 0;
+            if (removeQty > 0) {
+              sizeQuantitiesRemoved[size] = removeQty;
+              totalQuantityRemoved += removeQty;
+            }
+          });
+        }
 
         const totalStock = Object.values(updatedSizes).reduce(
           (sum, sizeData) => sum + getSizeQty(sizeData),
           0,
         );
-
-        // Calculate size quantities that were removed
-        stockData.selectedSizes.forEach((size) => {
-          const removeQty = stockData.sizes[size] || 0;
-          if (removeQty > 0) {
-            sizeQuantitiesRemoved[size] = removeQty;
-            totalQuantityRemoved += removeQty;
-          }
-        });
 
         response = await fetch(
           `${API_BASE_URL}/api/products/${editingProduct._id}`,

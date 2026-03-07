@@ -4,6 +4,7 @@ import { useTheme } from "../../context/ThemeContext";
 const StockOutModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [sizeQuantities, setSizeQuantities] = useState({});
+  const [variantQuantities, setVariantQuantities] = useState({}); // { "S": { "Blue": 5, "White": 3 } }
   const [quantity, setQuantity] = useState("");
   const [reason, setReason] = useState("Sold");
   const [otherReason, setOtherReason] = useState("");
@@ -31,10 +32,39 @@ const StockOutModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
     return typeof sizeData === "number" ? sizeData : 0;
   };
 
+  // Helper to check if a size has variants
+  const getSizeVariants = (size) => {
+    if (
+      hasSizes &&
+      product.sizes[size] &&
+      typeof product.sizes[size] === "object" &&
+      product.sizes[size].variants
+    ) {
+      return product.sizes[size].variants;
+    }
+    return null;
+  };
+
+  // Get all unique variants from the product
+  const getAllVariants = () => {
+    const variantSet = new Set();
+    if (hasSizes) {
+      Object.values(product.sizes).forEach((sizeData) => {
+        if (typeof sizeData === "object" && sizeData?.variants) {
+          Object.keys(sizeData.variants).forEach((v) => variantSet.add(v));
+        }
+      });
+    }
+    return Array.from(variantSet);
+  };
+
   const hasSizes =
     product.sizes &&
     typeof product.sizes === "object" &&
     Object.keys(product.sizes).length > 0;
+
+  const allVariants = hasSizes ? getAllVariants() : [];
+  const hasVariants = allVariants.length > 0;
 
   const availableSizes = hasSizes
     ? Object.keys(product.sizes).filter(
@@ -42,10 +72,20 @@ const StockOutModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
       )
     : [];
 
+  // Get current variant quantity for a size
+  const getVariantCurrentQty = (size, variant) => {
+    const variants = getSizeVariants(size);
+    if (variants && variants[variant]) {
+      return variants[variant].quantity || 0;
+    }
+    return 0;
+  };
+
   useEffect(() => {
     if (isOpen && product) {
       setSelectedSizes([]);
       setSizeQuantities({});
+      setVariantQuantities({});
       setQuantity("");
       setReason("Sold");
       setOtherReason("");
@@ -58,6 +98,7 @@ const StockOutModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
   const handleClose = () => {
     setSelectedSizes([]);
     setSizeQuantities({});
+    setVariantQuantities({});
     setQuantity("");
     setReason("Sold");
     setOtherReason("");
@@ -73,12 +114,24 @@ const StockOutModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
         delete newQuantities[size];
         return newQuantities;
       });
+      setVariantQuantities((prev) => {
+        const newQuantities = { ...prev };
+        delete newQuantities[size];
+        return newQuantities;
+      });
     } else {
       setSelectedSizes((prev) => [...prev, size]);
       setSizeQuantities((prev) => ({
         ...prev,
         [size]: "",
       }));
+      // Initialize variant quantities for this size if product has variants
+      if (hasVariants) {
+        setVariantQuantities((prev) => ({
+          ...prev,
+          [size]: {},
+        }));
+      }
     }
   };
 
@@ -86,6 +139,16 @@ const StockOutModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
     setSizeQuantities((prev) => ({
       ...prev,
       [size]: parseInt(qty) || 0,
+    }));
+  };
+
+  const handleVariantQuantityChange = (size, variant, qty) => {
+    setVariantQuantities((prev) => ({
+      ...prev,
+      [size]: {
+        ...(prev[size] || {}),
+        [variant]: parseInt(qty) || 0,
+      },
     }));
   };
 
@@ -128,6 +191,50 @@ const StockOutModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
       return;
     }
 
+    // Check if product has variants - validate variant quantities
+    if (hasVariants) {
+      const hasValidVariantQuantities = selectedSizes.some((size) => {
+        const sizeVariantQtys = variantQuantities[size] || {};
+        return Object.values(sizeVariantQtys).some((qty) => qty > 0);
+      });
+
+      if (!hasValidVariantQuantities) {
+        alert("Please enter quantities for at least one variant");
+        return;
+      }
+
+      // Validate variant quantities don't exceed available stock
+      const invalidVariants = [];
+      selectedSizes.forEach((size) => {
+        const sizeVariantQtys = variantQuantities[size] || {};
+        Object.entries(sizeVariantQtys).forEach(([variant, qty]) => {
+          if (qty > 0) {
+            const availableQty = getVariantCurrentQty(size, variant);
+            if (qty > availableQty) {
+              invalidVariants.push(`${size} - ${variant} (max: ${availableQty})`);
+            }
+          }
+        });
+      });
+
+      if (invalidVariants.length > 0) {
+        alert(
+          `Cannot remove more than available stock for:\n${invalidVariants.join("\n")}`,
+        );
+        return;
+      }
+
+      onConfirm({
+        sizes: sizeQuantities,
+        variantQuantities: variantQuantities,
+        selectedSizes: selectedSizes,
+        reason: finalReason,
+        hasVariants: true,
+      });
+      return;
+    }
+
+    // Product with sizes but no variants
     const hasValidQuantities = selectedSizes.some((size) => {
       const qty = sizeQuantities[size] || 0;
       return qty > 0;
@@ -323,15 +430,78 @@ const StockOutModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
                       <label
                         className={`block text-xs font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}
                       >
-                        Quantity per Size:
+                        {hasVariants ? "Quantity per Variant:" : "Quantity per Size:"}
                       </label>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className={hasVariants ? "space-y-4" : "grid grid-cols-2 gap-3"}>
                         {selectedSizes.length > 0 ? (
                           selectedSizes.map((size) => {
                             const currentQty =
                               product.sizes && product.sizes[size]
                                 ? getSizeQuantity(product.sizes[size])
                                 : 0;
+                            const sizeVariants = getSizeVariants(size);
+                            
+                            // If product has variants, show variant inputs
+                            if (hasVariants && sizeVariants) {
+                              return (
+                                <div key={size} className={`p-3 rounded-lg ${theme === "dark" ? "bg-[#1E1B18]" : "bg-white"}`}>
+                                  <label
+                                    className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-200" : "text-gray-800"}`}
+                                  >
+                                    {size}{" "}
+                                    <span className="text-gray-500 font-normal">
+                                      (Current Total: {currentQty})
+                                    </span>
+                                  </label>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {Object.keys(sizeVariants).map((variant) => {
+                                      const currentVariantQty = getVariantCurrentQty(size, variant);
+                                      const requestedQty = variantQuantities[size]?.[variant] || 0;
+                                      const isOverLimit = requestedQty > currentVariantQty;
+                                      return (
+                                        <div key={`${size}-${variant}`}>
+                                          <label
+                                            className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
+                                          >
+                                            {variant}{" "}
+                                            <span className="text-gray-500">
+                                              ({currentVariantQty})
+                                            </span>
+                                          </label>
+                                          <input
+                                            type="number"
+                                            min="0"
+                                            max={currentVariantQty}
+                                            value={variantQuantities[size]?.[variant] || ""}
+                                            onChange={(e) =>
+                                              handleVariantQuantityChange(
+                                                size,
+                                                variant,
+                                                e.target.value,
+                                              )
+                                            }
+                                            placeholder="0"
+                                            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#2A2724] border-gray-700 text-white placeholder-gray-500" : "bg-gray-50 border-gray-300 text-gray-900"} ${isOverLimit ? "border-red-500" : ""}`}
+                                          />
+                                          {isOverLimit && (
+                                            <p className="text-xs text-red-500 mt-1">
+                                              Max: {currentVariantQty}
+                                            </p>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                  {Object.keys(variantQuantities[size] || {}).length > 0 && (
+                                    <p className={`text-xs mt-2 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                                      Removing: {Object.values(variantQuantities[size] || {}).reduce((sum, q) => sum + (parseInt(q) || 0), 0)} units
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            }
+                            
+                            // No variants - show simple quantity input
                             const maxQty = currentQty;
                             return (
                               <div key={size}>
