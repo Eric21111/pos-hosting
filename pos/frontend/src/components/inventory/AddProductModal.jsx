@@ -327,6 +327,11 @@ const AddProductModal = ({
 
                             handleInputChange(e);
 
+                            // Reset variants when category changes
+                            setSelectedVariants([]);
+                            setCustomColorInput("");
+                            setVariantQuantities({});
+
                             // Reset foodSubtype when category changes
                             if (e.target.value !== "Foods") {
                               setNewProduct((prev) => ({
@@ -495,145 +500,231 @@ const AddProductModal = ({
                           className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
                         >
                           Variant{" "}
-                          <span className="text-gray-400">Optional - Select multiple colors</span>
+                          <span className="text-gray-400">
+                            {newProduct.category === "Foods" || newProduct.category === "Makeup"
+                              ? "Optional - Add variants (e.g., Strawberry, Vanilla)"
+                              : "Optional - Select multiple colors"}
+                          </span>
                         </label>
                         
-                        {/* Multi-select dropdown trigger */}
-                        <div
-                          onClick={() => !newProduct.differentVariantsPerSize && setShowVariantDropdown(!showVariantDropdown)}
-                          className={`w-full px-3 py-2 text-sm border rounded-lg cursor-pointer flex items-center justify-between ${
-                            newProduct.differentVariantsPerSize
-                              ? theme === "dark"
-                                ? "bg-[#1E1B18] border-gray-600 text-gray-500 cursor-not-allowed"
-                                : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                              : theme === "dark"
-                                ? "bg-[#1E1B18] border-gray-600 text-white hover:border-[#AD7F65]"
-                                : "bg-gray-50 border-gray-300 hover:border-[#AD7F65]"
-                          }`}
-                        >
-                          <span className={selectedVariants.length === 0 ? "text-gray-400" : ""}>
-                            {newProduct.differentVariantsPerSize
-                              ? "Multiple variants selected"
-                              : selectedVariants.length === 0
-                                ? "Select colors..."
-                                : `${selectedVariants.length} color${selectedVariants.length > 1 ? 's' : ''} selected`}
-                          </span>
-                          <svg
-                            className={`w-4 h-4 transition-transform ${showVariantDropdown ? 'rotate-180' : ''}`}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </div>
-                        
-                        {/* Selected variants pills */}
-                        {selectedVariants.length > 0 && !newProduct.differentVariantsPerSize && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {selectedVariants.map((color) => (
-                              <span
-                                key={color}
-                                className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
-                                  theme === "dark"
-                                    ? "bg-[#AD7F65]/20 text-[#AD7F65] border border-[#AD7F65]/30"
-                                    : "bg-[#AD7F65]/10 text-[#AD7F65] border border-[#AD7F65]/20"
-                                }`}
-                              >
-                                {color}
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    removeVariant(color);
-                                  }}
-                                  className="hover:text-red-500 transition-colors"
-                                >
-                                  ×
-                                </button>
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                        
-                        {/* Dropdown menu */}
-                        {showVariantDropdown && !newProduct.differentVariantsPerSize && (
-                          <div
-                            className={`absolute z-50 w-full mt-1 max-h-48 overflow-y-auto border rounded-lg shadow-lg ${
-                              theme === "dark"
-                                ? "bg-[#2A2724] border-gray-600"
-                                : "bg-white border-gray-200"
-                            }`}
-                          >
-                            {COMMON_COLORS.filter(c => c !== "Custom").map((color) => (
-                              <div
-                                key={color}
-                                onClick={() => handleVariantToggle(color)}
-                                className={`px-3 py-2 text-sm cursor-pointer flex items-center justify-between ${
-                                  selectedVariants.includes(color)
+                        {/* Stackable text input for Foods and Makeup categories */}
+                        {(newProduct.category === "Foods" || newProduct.category === "Makeup") ? (
+                          <>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={customColorInput}
+                                onChange={(e) => setCustomColorInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    if (customColorInput.trim() && !selectedVariants.includes(customColorInput.trim())) {
+                                      setSelectedVariants([...selectedVariants, customColorInput.trim()]);
+                                      setCustomColorInput("");
+                                    }
+                                  }
+                                }}
+                                placeholder={newProduct.category === "Foods" ? "e.g., Strawberry, Chocolate..." : "e.g., Nude, Red, Coral..."}
+                                disabled={newProduct.differentVariantsPerSize}
+                                className={`flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
+                                  newProduct.differentVariantsPerSize
                                     ? theme === "dark"
-                                      ? "bg-[#AD7F65]/20 text-[#AD7F65]"
-                                      : "bg-[#AD7F65]/10 text-[#AD7F65]"
+                                      ? "bg-[#1E1B18] border-gray-600 text-gray-500 cursor-not-allowed"
+                                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
                                     : theme === "dark"
-                                      ? "hover:bg-[#3A3734]"
-                                      : "hover:bg-gray-100"
-                                }`}
-                              >
-                                <span>{color}</span>
-                                {selectedVariants.includes(color) && (
-                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                  </svg>
-                                )}
-                              </div>
-                            ))}
-                            {/* Custom color input inside dropdown */}
-                            <div
-                              className={`px-3 py-2 border-t ${
-                                theme === "dark"
-                                  ? "border-gray-600"
-                                  : "border-gray-200"
-                              }`}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <div className="flex gap-2">
-                                <input
-                                  type="text"
-                                  value={customColorInput}
-                                  onChange={(e) => setCustomColorInput(e.target.value)}
-                                  onKeyDown={handleCustomColorKeyDown}
-                                  placeholder="Add custom color..."
-                                  className={`flex-1 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
-                                    theme === "dark"
                                       ? "bg-[#1E1B18] border-gray-600 text-white"
                                       : "bg-gray-50 border-gray-300"
-                                  }`}
-                                />
-                                <button
-                                  type="button"
-                                  onClick={addCustomColor}
-                                  disabled={!customColorInput.trim()}
-                                  className={`px-3 py-1 text-sm rounded font-medium transition-colors ${
-                                    customColorInput.trim()
-                                      ? "bg-[#AD7F65] text-white hover:bg-[#8B6553]"
-                                      : theme === "dark"
-                                        ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-                                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                  }`}
-                                >
-                                  Add
-                                </button>
-                              </div>
+                                }`}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (customColorInput.trim() && !selectedVariants.includes(customColorInput.trim())) {
+                                    setSelectedVariants([...selectedVariants, customColorInput.trim()]);
+                                    setCustomColorInput("");
+                                  }
+                                }}
+                                disabled={!customColorInput.trim() || newProduct.differentVariantsPerSize}
+                                className={`px-3 py-2 text-sm rounded-lg font-medium transition-colors ${
+                                  customColorInput.trim() && !newProduct.differentVariantsPerSize
+                                    ? "bg-[#AD7F65] text-white hover:bg-[#8B6553]"
+                                    : theme === "dark"
+                                      ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                                      : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                }`}
+                              >
+                                Add
+                              </button>
                             </div>
-                          </div>
-                        )}
-                        
-                        {/* Click outside to close dropdown */}
-                        {showVariantDropdown && (
-                          <div
-                            className="fixed inset-0 z-40"
-                            onClick={() => setShowVariantDropdown(false)}
-                          />
+                            
+                            {/* Selected variants pills for Foods/Makeup */}
+                            {selectedVariants.length > 0 && !newProduct.differentVariantsPerSize && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {selectedVariants.map((variant) => (
+                                  <span
+                                    key={variant}
+                                    className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
+                                      theme === "dark"
+                                        ? "bg-[#AD7F65]/20 text-[#AD7F65] border border-[#AD7F65]/30"
+                                        : "bg-[#AD7F65]/10 text-[#AD7F65] border border-[#AD7F65]/20"
+                                    }`}
+                                  >
+                                    {variant}
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        removeVariant(variant);
+                                      }}
+                                      className="hover:text-red-500 transition-colors"
+                                    >
+                                      ×
+                                    </button>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            {/* Multi-select dropdown trigger for other categories */}
+                            <div
+                              onClick={() => !newProduct.differentVariantsPerSize && setShowVariantDropdown(!showVariantDropdown)}
+                              className={`w-full px-3 py-2 text-sm border rounded-lg cursor-pointer flex items-center justify-between ${
+                                newProduct.differentVariantsPerSize
+                                  ? theme === "dark"
+                                    ? "bg-[#1E1B18] border-gray-600 text-gray-500 cursor-not-allowed"
+                                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                  : theme === "dark"
+                                    ? "bg-[#1E1B18] border-gray-600 text-white hover:border-[#AD7F65]"
+                                    : "bg-gray-50 border-gray-300 hover:border-[#AD7F65]"
+                              }`}
+                            >
+                              <span className={selectedVariants.length === 0 ? "text-gray-400" : ""}>
+                                {newProduct.differentVariantsPerSize
+                                  ? "Multiple variants selected"
+                                  : selectedVariants.length === 0
+                                    ? "Select colors..."
+                                    : `${selectedVariants.length} color${selectedVariants.length > 1 ? 's' : ''} selected`}
+                              </span>
+                              <svg
+                                className={`w-4 h-4 transition-transform ${showVariantDropdown ? 'rotate-180' : ''}`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </div>
+                            
+                            {/* Selected variants pills */}
+                            {selectedVariants.length > 0 && !newProduct.differentVariantsPerSize && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {selectedVariants.map((color) => (
+                                  <span
+                                    key={color}
+                                    className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
+                                      theme === "dark"
+                                        ? "bg-[#AD7F65]/20 text-[#AD7F65] border border-[#AD7F65]/30"
+                                        : "bg-[#AD7F65]/10 text-[#AD7F65] border border-[#AD7F65]/20"
+                                    }`}
+                                  >
+                                    {color}
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        removeVariant(color);
+                                      }}
+                                      className="hover:text-red-500 transition-colors"
+                                    >
+                                      ×
+                                    </button>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            
+                            {/* Dropdown menu */}
+                            {showVariantDropdown && !newProduct.differentVariantsPerSize && (
+                              <div
+                                className={`absolute z-50 w-full mt-1 max-h-48 overflow-y-auto border rounded-lg shadow-lg ${
+                                  theme === "dark"
+                                    ? "bg-[#2A2724] border-gray-600"
+                                    : "bg-white border-gray-200"
+                                }`}
+                              >
+                                {COMMON_COLORS.filter(c => c !== "Custom").map((color) => (
+                                  <div
+                                    key={color}
+                                    onClick={() => handleVariantToggle(color)}
+                                    className={`px-3 py-2 text-sm cursor-pointer flex items-center justify-between ${
+                                      selectedVariants.includes(color)
+                                        ? theme === "dark"
+                                          ? "bg-[#AD7F65]/20 text-[#AD7F65]"
+                                          : "bg-[#AD7F65]/10 text-[#AD7F65]"
+                                        : theme === "dark"
+                                          ? "hover:bg-[#3A3734]"
+                                          : "hover:bg-gray-100"
+                                    }`}
+                                  >
+                                    <span>{color}</span>
+                                    {selectedVariants.includes(color) && (
+                                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                      </svg>
+                                    )}
+                                  </div>
+                                ))}
+                                {/* Custom color input inside dropdown */}
+                                <div
+                                  className={`px-3 py-2 border-t ${
+                                    theme === "dark"
+                                      ? "border-gray-600"
+                                      : "border-gray-200"
+                                  }`}
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <div className="flex gap-2">
+                                    <input
+                                      type="text"
+                                      value={customColorInput}
+                                      onChange={(e) => setCustomColorInput(e.target.value)}
+                                      onKeyDown={handleCustomColorKeyDown}
+                                      placeholder="Add custom color..."
+                                      className={`flex-1 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
+                                        theme === "dark"
+                                          ? "bg-[#1E1B18] border-gray-600 text-white"
+                                          : "bg-gray-50 border-gray-300"
+                                      }`}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={addCustomColor}
+                                      disabled={!customColorInput.trim()}
+                                      className={`px-3 py-1 text-sm rounded font-medium transition-colors ${
+                                        customColorInput.trim()
+                                          ? "bg-[#AD7F65] text-white hover:bg-[#8B6553]"
+                                          : theme === "dark"
+                                            ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                      }`}
+                                    >
+                                      Add
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Click outside to close dropdown */}
+                            {showVariantDropdown && (
+                              <div
+                                className="fixed inset-0 z-40"
+                                onClick={() => setShowVariantDropdown(false)}
+                              />
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
