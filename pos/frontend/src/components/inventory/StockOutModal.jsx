@@ -315,10 +315,10 @@ const StockOutModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="flex">
+          <div className="flex" style={{ maxHeight: "calc(100vh - 150px)" }}>
             <div
               className={`w-1/2 p-6 flex items-center justify-center ${theme === "dark" ? "bg-[#2A2724]" : "bg-gray-50"}`}
-              style={{ minHeight: "500px" }}
+              style={{ minHeight: "500px", maxHeight: "calc(100vh - 150px)" }}
             >
               {product.itemImage && product.itemImage.trim() !== "" ? (
                 <img
@@ -346,7 +346,7 @@ const StockOutModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
               )}
             </div>
 
-            <div className="w-1/2 p-6 flex flex-col justify-between">
+            <div className="w-1/2 p-6 flex flex-col justify-between overflow-y-auto" style={{ maxHeight: "calc(100vh - 150px)" }}>
               <div className="space-y-6">
                 <div>
                   <h3
