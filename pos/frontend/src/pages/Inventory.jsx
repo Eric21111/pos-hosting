@@ -648,6 +648,7 @@ const Inventory = () => {
         }
       } else if (!newProduct.differentPricesPerSize && hasAnyVariantPricing) {
         // Different prices per size is NOT enabled, but some sizes have variant pricing
+        // This means sizes with variant pricing need variant prices, and sizes without need size-level prices
         const missingPrices = newProduct.selectedSizes.filter((size) => {
           const hasDifferentPricesPerVariant = newProduct.differentPricesPerVariant?.[size];
           
@@ -659,25 +660,17 @@ const Inventory = () => {
             }
             // Check if all variants have prices > 0
             return Object.values(variantPricesForSize).some((price) => !price || parseFloat(price) <= 0);
+          } else {
+            // This size doesn't have variant pricing, check if it has size-level price
+            const price = newProduct.sizePrices?.[size];
+            return !price || price === "" || parseFloat(price) <= 0;
           }
-          return false; // Size doesn't have variant pricing, will use global price
         });
 
         if (missingPrices.length > 0) {
           alert(
-            `Please enter prices for all variants in sizes: ${missingPrices.join(", ")}`,
+            `Please enter prices for all sizes/variants: ${missingPrices.join(", ")}`,
           );
-          return;
-        }
-        
-        // Check if ALL sizes have variant pricing - if so, no global price needed
-        const allSizesHaveVariantPricing = newProduct.selectedSizes?.every(
-          (size) => newProduct.differentPricesPerVariant?.[size]
-        );
-        
-        // Only require global price if some sizes don't have variant pricing
-        if (!allSizesHaveVariantPricing && (!newProduct.itemPrice || parseFloat(newProduct.itemPrice) <= 0)) {
-          alert("Please enter a selling price for sizes without variant pricing.");
           return;
         }
       } else if (!newProduct.differentPricesPerSize) {
