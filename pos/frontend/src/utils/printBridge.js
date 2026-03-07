@@ -1,5 +1,4 @@
 const MAX_WIDTH = Number(import.meta.env.VITE_RECEIPT_LINE_WIDTH || 32);
-const PRINT_SERVER_URL = import.meta.env.VITE_PRINT_SERVER_URL || 'http://localhost:9100';
 
 const formatCurrency = value => `PHP ${Number(value || 0).toFixed(2)}`;
 
@@ -352,75 +351,83 @@ const buildReceiptHTML = (receipt) => {
 };
 
 /**
- * Print receipt - sends to thermal printer at localhost:9100 or falls back to window.print()
+ * Print receipt by sending to the local print server at localhost:9100
+ * Falls back to window.print() if the print server is not available
  */
 export async function sendReceiptToPrinter(receipt) {
   if (!receipt) throw new Error('No receipt payload provided');
 
-  // Try to send to thermal printer at localhost:9100
+  // Format the receipt data for the ESC/POS print server
+  const printData = {
+    transaction_id: receipt.receiptNo || '000000',
+    created_at: new Date().toISOString(),
+    beeper_number: receipt.orderNumber || null,
+    cashier_name: receipt.cashier || receipt.performedByName || 'N/A',
+    items: (receipt.items || []).map(item => ({
+      name: item.name || item.itemName || 'Item',
+      quantity: item.qty || item.quantity || 1,
+      unit_price: item.price || item.itemPrice || 0,
+    })),
+    subtotal: receipt.subtotal || 0,
+    discount_amount: receipt.discount || 0,
+    discount_name: receipt.discounts?.length > 0 
+      ? receipt.discounts.map(d => d.title).join(', ') 
+      : null,
+    total_amount: receipt.total || 0,
+    cash_tendered: receipt.cash || null,
+    change_due: receipt.change || null,
+  };
+
   try {
-    const result = await sendToThermalPrinter(receipt);
-    return result;
-  } catch (error) {
-    console.warn('Thermal printer not available, using window.print():', error.message);
-    return printViaWindow(receipt);
-  }
-}
+    // Try to send to the local print server first
+    const response = await fetch('http://localhost:9100/print', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(printData),
+    });
 
-/**
- * Send receipt to thermal printer at localhost:9100
- */
-async function sendToThermalPrinter(receipt) {
-  // Build receipt lines for ESC/POS
-  const lines = buildReceiptLines(receipt);
-  
-  const response = await fetch(`${PRINT_SERVER_URL}/print`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ lines }),
-  });
+    const result = await response.json();
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `Print server error: ${response.status}`);
-  }
-
-  return { success: true, message: 'Receipt sent to thermal printer' };
-}
-
-/**
- * Print receipt using window.print() - opens a new window with the receipt and triggers print dialog
- */
-async function printViaWindow(receipt) {
-  return new Promise((resolve, reject) => {
-    try {
-      // Build the receipt HTML
-      const receiptHTML = buildReceiptHTML(receipt);
-      
-      // Open a new window for printing
-      const printWindow = window.open('', '_blank', 'width=300,height=600');
-      
-      if (!printWindow) {
-        throw new Error('Unable to open print window. Please allow pop-ups for this site.');
-      }
-
-      // Write the receipt HTML to the new window
-      printWindow.document.write(receiptHTML);
-      printWindow.document.close();
-      
-      // Focus the print window
-      printWindow.focus();
-
-      // Resolve after a short delay to allow the print dialog to open
-      setTimeout(() => {
-        resolve({ success: true, message: 'Print dialog opened' });
-      }, 500);
-
-    } catch (error) {
-      reject(error);
+    if (result.success) {
+      return { success: true, message: 'Receipt printed successfully' };
+    } else {
+      throw new Error(result.error || 'Print failed');
     }
-  });
+  } catch (error) {
+    console.warn('Print server not available, falling back to window.print()', error);
+    
+    // Fallback to window.print() if print server is not available
+    return new Promise((resolve, reject) => {
+      try {
+        // Build the receipt HTML
+        const receiptHTML = buildReceiptHTML(receipt);
+        
+        // Open a new window for printing
+        const printWindow = window.open('', '_blank', 'width=300,height=600');
+        
+        if (!printWindow) {
+          throw new Error('Unable to open print window. Please allow pop-ups for this site.');
+        }
+
+        // Write the receipt HTML to the new window
+        printWindow.document.write(receiptHTML);
+        printWindow.document.close();
+        
+        // Focus the print window
+        printWindow.focus();
+
+        // Resolve after a short delay to allow the print dialog to open
+        setTimeout(() => {
+          resolve({ success: true, message: 'Print dialog opened (fallback)' });
+        }, 500);
+
+      } catch (fallbackError) {
+        reject(fallbackError);
+      }
+    });
+  }
 }
+
 
