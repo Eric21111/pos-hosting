@@ -80,6 +80,10 @@ const QRCodePaymentModal = ({
   const pollIntervalRef = useRef(null);
   const countdownRef = useRef(null);
   const isMountedRef = useRef(true);
+  
+  // Store cart snapshot when payment is initiated (so it persists even if parent clears cart)
+  const cartSnapshotRef = useRef([]);
+  const paymentAmountsRef = useRef({ subtotal: 0, discount: 0, total: 0 });
 
   // ==========================================
   // Cleanup on unmount / modal close
@@ -131,6 +135,9 @@ const QRCodePaymentModal = ({
     setReceiptData(null);
     setIsAutoPrinting(false);
     setPrintError(null);
+    // Clear snapshots
+    cartSnapshotRef.current = [];
+    paymentAmountsRef.current = { subtotal: 0, discount: 0, total: 0 };
   }, []);
 
   // ==========================================
@@ -141,6 +148,22 @@ const QRCodePaymentModal = ({
 
     setPaymentStatus(STATUS.CREATING);
     setErrorMessage("");
+    
+    // Store snapshot of cart and amounts before payment (in case parent clears cart after)
+    cartSnapshotRef.current = cartItems.map(item => ({
+      name: item.itemName || item.name || 'Item',
+      itemName: item.itemName || item.name || 'Item',
+      qty: item.quantity || 1,
+      quantity: item.quantity || 1,
+      price: item.itemPrice || item.price || 0,
+      itemPrice: item.itemPrice || item.price || 0,
+      total: (item.itemPrice || item.price || 0) * (item.quantity || 1),
+    }));
+    paymentAmountsRef.current = {
+      subtotal: subtotalAmount || totalAmount + discountAmount,
+      discount: discountAmount,
+      total: totalAmount,
+    };
 
     try {
       const response = await fetch(`${API_BASE}/api/payments/gcash/create`, {
@@ -359,28 +382,33 @@ const QRCodePaymentModal = ({
   const handlePaymentSuccess = useCallback(
     (ref, receipt) => {
       setShowSuccess(true);
+      
+      // Use the snapshot stored when payment was initiated (cart may have been cleared by parent)
+      const snapshotItems = cartSnapshotRef.current;
+      const snapshotAmounts = paymentAmountsRef.current;
 
       const receiptInfo = {
         receiptNo: receipt || receiptNo || "------",
-        items: cartItems.map((item) => ({
+        items: snapshotItems.length > 0 ? snapshotItems : cartItems.map((item) => ({
           name: item.itemName || item.name || "Item",
           qty: item.quantity || 1,
           price: item.itemPrice || item.price || 0,
           total: (item.itemPrice || item.price || 0) * (item.quantity || 1),
         })),
         paymentMethod: "GCASH",
-        subtotal: subtotalAmount || totalAmount + discountAmount,
-        discount: discountAmount,
+        subtotal: snapshotAmounts.subtotal || subtotalAmount || totalAmount + discountAmount,
+        discount: snapshotAmounts.discount || discountAmount,
         discounts: selectedDiscounts.map((d) => ({
           title: d.title,
           value: d.discountValue,
         })),
-        total: totalAmount,
-        cash: totalAmount,
+        total: snapshotAmounts.total || totalAmount,
+        cash: snapshotAmounts.total || totalAmount,
         change: 0,
         referenceNo: ref || gcashReference || "",
-        date: new Date().toLocaleDateString(),
-        time: new Date().toLocaleTimeString(),
+        cashierName: performedByName || "Staff",
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
       };
 
       setReceiptData(receiptInfo);
@@ -391,7 +419,7 @@ const QRCodePaymentModal = ({
           merchantOrderId,
           receiptNo: receipt || receiptNo,
           gcashReference: ref || gcashReference,
-          totalAmount,
+          totalAmount: snapshotAmounts.total || totalAmount,
         });
       }
 
@@ -408,6 +436,7 @@ const QRCodePaymentModal = ({
       subtotalAmount,
       discountAmount,
       selectedDiscounts,
+      performedByName,
       receiptNo,
       gcashReference,
       merchantOrderId,
