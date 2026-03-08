@@ -131,6 +131,9 @@ const buildReceiptHTML = (receipt) => {
     `;
   }).join('');
 
+  // Dashed line separator for print
+  const dashedLine = '<div class="dashed-line">--------------------------------</div>';
+
   return `
     <!DOCTYPE html>
     <html>
@@ -152,9 +155,22 @@ const buildReceiptHTML = (receipt) => {
             width: 58mm;
             margin: 0;
             padding: 8px;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           .no-print {
             display: none !important;
+          }
+          .dashed-line {
+            display: block !important;
+            text-align: center;
+            font-family: monospace;
+            font-size: 10px;
+            color: #333 !important;
+            letter-spacing: -1px;
+            margin: 8px 0;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
         }
         body {
@@ -170,24 +186,35 @@ const buildReceiptHTML = (receipt) => {
         .receipt-container {
           width: 100%;
         }
+        .dashed-line {
+          display: block;
+          text-align: center;
+          font-family: monospace;
+          font-size: 10px;
+          color: #333;
+          letter-spacing: -1px;
+          margin: 8px 0;
+        }
       </style>
     </head>
     <body>
       <div class="receipt-container">
         <!-- Header -->
-        <div style="text-align: center; margin-bottom: 15px;">
+        <div style="text-align: center; margin-bottom: 10px;">
           <div style="font-size: 16px; font-weight: bold; color: #1a365d; margin-bottom: 4px;">${storeName}</div>
           <div style="font-size: 10px; color: #4a5568;">${location}</div>
         </div>
 
+        ${dashedLine}
+
         <!-- Receipt Number -->
-        <div style="text-align: center; margin: 15px 0; border-top: 1px dashed #cbd5e0; border-bottom: 1px dashed #cbd5e0; padding: 10px 0;">
+        <div style="text-align: center; margin: 10px 0;">
           <div style="font-size: 9px; color: #718096; text-transform: uppercase; letter-spacing: 1px;">Receipt</div>
           <div style="font-size: 16px; font-weight: bold; color: #2d3748;">#${receiptNo}</div>
         </div>
 
         <!-- Date, Cashier, Payment -->
-        <div style="margin-bottom: 15px;">
+        <div style="margin-bottom: 10px;">
           <div style="display: flex; justify-content: space-between; margin: 4px 0; font-size: 11px;">
             <span style="color: #4a5568;">Date:</span>
             <span style="color: #1a202c;">${receiptDate}, ${receiptTime}</span>
@@ -202,13 +229,17 @@ const buildReceiptHTML = (receipt) => {
           </div>
         </div>
 
+        ${dashedLine}
+
         <!-- Items -->
-        <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; margin-bottom: 15px;">
+        <div style="padding: 10px 0;">
           ${itemsHTML || '<div style="text-align: center; color: #718096; padding: 8px;">No items</div>'}
         </div>
 
+        ${dashedLine}
+
         <!-- Summary -->
-        <div style="border-top: 1px solid #e2e8f0; padding-top: 10px;">
+        <div style="padding-top: 10px;">
           <div style="display: flex; justify-content: space-between; margin: 4px 0; font-size: 11px;">
             <span style="color: #4a5568;">Subtotal:</span>
             <span style="color: #1a202c;">PHP ${subtotal.toFixed(2)}</span>
@@ -219,7 +250,7 @@ const buildReceiptHTML = (receipt) => {
           </div>
           
           <!-- Total -->
-          <div style="display: flex; justify-content: space-between; margin: 8px 0; padding-top: 8px; border-top: 1px solid #e2e8f0;">
+          <div style="display: flex; justify-content: space-between; margin: 8px 0; padding-top: 8px;">
             <span style="font-weight: bold; color: #1a365d; font-size: 13px;">Total:</span>
             <span style="font-weight: bold; color: #1a365d; font-size: 13px;">PHP ${total.toFixed(2)}</span>
           </div>
@@ -239,8 +270,10 @@ const buildReceiptHTML = (receipt) => {
           ` : ''}
         </div>
 
+        ${dashedLine}
+
         <!-- Footer -->
-        <div style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px dashed #cbd5e0;">
+        <div style="text-align: center; margin-top: 10px;">
           <div style="font-size: 11px; color: #4a5568;">Thank you for your purchase!</div>
           <div style="font-size: 10px; color: #a0aec0; margin-top: 2px;">This is not an official receipt</div>
         </div>
