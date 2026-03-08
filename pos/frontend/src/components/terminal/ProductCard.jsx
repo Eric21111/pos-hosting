@@ -20,23 +20,23 @@ const ProductCard = memo(function ProductCard({ product, onToggleExpand }) {
   // Helper function to get all prices from size data (handles variant pricing)
   const getAllPricesFromSizeData = (sizeData) => {
     const prices = [];
-    
+
     if (typeof sizeData !== "object" || sizeData === null) {
       return prices;
     }
-    
+
     // Check for direct price on size
     if (sizeData.price !== undefined && sizeData.price > 0) {
       prices.push(sizeData.price);
     }
-    
+
     // Check for variant prices (variantPrices object)
     if (sizeData.variantPrices && typeof sizeData.variantPrices === "object") {
       Object.values(sizeData.variantPrices).forEach(price => {
         if (price > 0) prices.push(price);
       });
     }
-    
+
     // Check for variants with prices (variants object with price property)
     if (sizeData.variants && typeof sizeData.variants === "object") {
       Object.values(sizeData.variants).forEach(variantData => {
@@ -45,7 +45,7 @@ const ProductCard = memo(function ProductCard({ product, onToggleExpand }) {
         }
       });
     }
-    
+
     return prices;
   };
 
@@ -70,7 +70,7 @@ const ProductCard = memo(function ProductCard({ product, onToggleExpand }) {
         // Get all prices including variant prices
         const sizePrices = getAllPricesFromSizeData(sizeData);
         prices.push(...sizePrices);
-        
+
         // Also check simple price format
         const simplePrice = getSizePrice(sizeData);
         if (simplePrice !== null && simplePrice > 0 && !prices.includes(simplePrice)) {
@@ -114,17 +114,15 @@ const ProductCard = memo(function ProductCard({ product, onToggleExpand }) {
 
   return (
     <div
-      className={`mb-4 rounded-2xl transition-all duration-300 ease-out overflow-hidden border-4 shadow hover:shadow-xl hover:border-[#AD7F65] cursor-pointer ${
-        theme === "dark"
+      className={`mb-4 rounded-2xl transition-all duration-300 ease-out overflow-hidden border-4 shadow hover:shadow-xl hover:border-[#AD7F65] cursor-pointer ${theme === "dark"
           ? "bg-[#1E1B18] border-gray-700"
           : "bg-white border-gray-200"
-      }`}
-      onClick={onToggleExpand}
+        }`}
+      onClick={() => onToggleExpand(product)}
     >
       <div
-        className={`aspect-square flex items-center justify-center overflow-hidden ${
-          theme === "dark" ? "bg-[#2A2724]" : "bg-gray-100"
-        }`}
+        className={`aspect-square flex items-center justify-center overflow-hidden ${theme === "dark" ? "bg-[#2A2724]" : "bg-gray-100"
+          }`}
       >
         {product.itemImage && product.itemImage.trim() !== "" ? (
           <img
@@ -147,9 +145,8 @@ const ProductCard = memo(function ProductCard({ product, onToggleExpand }) {
         </h3>
         <div className="flex justify-between items-start gap-1 min-h-[36px]">
           <span
-            className={`leading-tight ${priceRange.isRange ? "text-[11px]" : "text-sm"} ${
-              theme === "dark" ? "text-gray-400" : "text-gray-500"
-            }`}
+            className={`leading-tight ${priceRange.isRange ? "text-[11px]" : "text-sm"} ${theme === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}
           >
             {priceRange.isRange
               ? `₱${priceRange.min.toFixed(0)} - ₱${priceRange.max.toFixed(0)}`
@@ -165,7 +162,7 @@ const ProductCard = memo(function ProductCard({ product, onToggleExpand }) {
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onToggleExpand();
+            onToggleExpand(product);
           }}
           className="w-full mt-2 py-2 text-xs text-white rounded-lg border hover:opacity-90 transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
           style={{

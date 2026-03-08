@@ -369,7 +369,19 @@ const Terminal = () => {
     }
   };
 
-  const handleProductClick = async (product) => {
+  // O(1) Product Lookup Map
+  const productMap = useMemo(() => {
+    const map = new Map();
+    products.forEach((p) => {
+      const pId = String(p._id || p.id);
+      if (pId) {
+        map.set(pId, p);
+      }
+    });
+    return map;
+  }, [products]);
+
+  const handleProductClick = useCallback(async (product) => {
     // Open modal immediately with basic product data
     setSelectedProduct(product);
     setShowProductModal(true);
@@ -399,12 +411,12 @@ const Terminal = () => {
     } catch (error) {
       console.error("Error fetching product details:", error);
     }
-  };
+  }, [productQuantities, productSizes, productVariants]);
 
-  const handleCloseProductModal = () => {
+  const handleCloseProductModal = useCallback(() => {
     setShowProductModal(false);
     setSelectedProduct(null);
-  };
+  }, []);
 
   const updateProductQuantity = (productId, delta) => {
     const product = products.find((p) => p._id === productId);
@@ -429,7 +441,7 @@ const Terminal = () => {
 
     if (product.sizes && typeof product.sizes === "object" && selectedSize) {
       const sizeData = product.sizes[selectedSize];
-      
+
       // Check if this size has variants and a variant is selected
       if (typeof sizeData === "object" && sizeData !== null && sizeData.variants && selectedVariant) {
         // Get stock for the specific variant
@@ -458,10 +470,10 @@ const Terminal = () => {
   const handleVariantSelection = (productId, variant) => {
     // Update selected variant
     setProductVariants({ ...productVariants, [productId]: variant });
-    
+
     // Clear the size selection when variant changes (user must re-select size)
     setProductSizes({ ...productSizes, [productId]: "" });
-    
+
     // Reset quantity to 1
     setProductQuantities({ ...productQuantities, [productId]: 1 });
   };
@@ -489,7 +501,7 @@ const Terminal = () => {
     let availableStock = 0;
     if (product.sizes && typeof product.sizes === "object" && size) {
       const sizeData = product.sizes[size];
-      
+
       // Check if this size has variants
       if (typeof sizeData === "object" && sizeData !== null && sizeData.variants && selectedVariant) {
         // Get stock for the specific variant (handle both number and object format)
@@ -540,9 +552,9 @@ const Terminal = () => {
     const hasVariantsPerSize = () => {
       if (product.sizes && typeof product.sizes === "object") {
         return Object.values(product.sizes).some((sizeData) => {
-          return typeof sizeData === "object" && sizeData !== null && 
-                 sizeData.variants && typeof sizeData.variants === "object" &&
-                 Object.keys(sizeData.variants).length > 0;
+          return typeof sizeData === "object" && sizeData !== null &&
+            sizeData.variants && typeof sizeData.variants === "object" &&
+            Object.keys(sizeData.variants).length > 0;
         });
       }
       return false;
@@ -591,7 +603,7 @@ const Terminal = () => {
           // Get stock for the specific variant (handle both number and object format)
           const variantData = sizeData.variants[variant];
           availableStock = getVariantQty(variantData);
-          
+
           // Get price from variant data object first
           if (typeof variantData === 'object' && variantData !== null && variantData.price !== undefined) {
             itemPrice = variantData.price;
@@ -626,11 +638,11 @@ const Terminal = () => {
     // For products with variants, also check variant in the existing item match
     const existingItem = productHasAnyVariants
       ? cart.find(
-          (item) => item._id === product._id && item.selectedSize === size && item.selectedVariation === variant,
-        )
+        (item) => item._id === product._id && item.selectedSize === size && item.selectedVariation === variant,
+      )
       : cart.find(
-          (item) => item._id === product._id && item.selectedSize === size,
-        );
+        (item) => item._id === product._id && item.selectedSize === size,
+      );
 
     // Calculate total quantity that would be in cart after adding
     const totalQuantityAfterAdd = existingItem
@@ -680,9 +692,9 @@ const Terminal = () => {
 
     setCart(
       cart.map((item) =>
-        item._id === product._id && 
-        item.selectedSize === product.selectedSize &&
-        item.selectedVariation === product.selectedVariation
+        item._id === product._id &&
+          item.selectedSize === product.selectedSize &&
+          item.selectedVariation === product.selectedVariation
           ? { ...item, quantity: item.quantity + product.quantity }
           : item,
       ),
@@ -731,7 +743,7 @@ const Terminal = () => {
       setCart(
         cart.map((item) =>
           item._id === product._id &&
-          (item.selectedSize || "") === (defaultSize || "")
+            (item.selectedSize || "") === (defaultSize || "")
             ? { ...item, quantity: item.quantity + 1 }
             : item,
         ),
@@ -770,10 +782,10 @@ const Terminal = () => {
     } else {
       setCart(
         cart.map((cartItem) =>
-          cartItem._id === productId && 
-          (cartItem.selectedSize || '') === selectedSize &&
-          (cartItem.selectedVariation || '') === selectedVariation
-            ? { ...cartItem, quantity: newQuantity } 
+          cartItem._id === productId &&
+            (cartItem.selectedSize || '') === selectedSize &&
+            (cartItem.selectedVariation || '') === selectedVariation
+            ? { ...cartItem, quantity: newQuantity }
             : cartItem,
         ),
       );
@@ -905,9 +917,9 @@ const Terminal = () => {
               .trim();
             const voidSize = String(
               itemToVoid.selectedSize ||
-                itemToVoid.size ||
-                resolveItemSize(itemToVoid) ||
-                "",
+              itemToVoid.size ||
+              resolveItemSize(itemToVoid) ||
+              "",
             )
               .toLowerCase()
               .trim();
@@ -962,9 +974,9 @@ const Terminal = () => {
               .trim();
             const voidSize = String(
               itemToVoid.selectedSize ||
-                itemToVoid.size ||
-                resolveItemSize(itemToVoid) ||
-                "",
+              itemToVoid.size ||
+              resolveItemSize(itemToVoid) ||
+              "",
             )
               .toLowerCase()
               .trim();
@@ -1027,9 +1039,9 @@ const Terminal = () => {
                 .trim();
               const voidSize = String(
                 itemToVoid.selectedSize ||
-                  itemToVoid.size ||
-                  resolveItemSize(itemToVoid) ||
-                  "",
+                itemToVoid.size ||
+                resolveItemSize(itemToVoid) ||
+                "",
               )
                 .toLowerCase()
                 .trim();
@@ -1188,11 +1200,8 @@ const Terminal = () => {
 
         // If not, try to find it from products array
         if (!itemCategory) {
-          const productId = item._id || item.productId || item.id;
-          const product = products.find((p) => {
-            const pId = p._id || p.id;
-            return pId && productId && pId.toString() === productId.toString();
-          });
+          const productId = String(item._id || item.productId || item.id);
+          const product = productMap.get(productId);
           itemCategory = product?.category;
         }
 
@@ -1285,13 +1294,8 @@ const Terminal = () => {
             // Find item category
             let itemCategory = item.category;
             if (!itemCategory) {
-              const productId = item._id || item.productId || item.id;
-              const product = products.find((p) => {
-                const pId = p._id || p.id;
-                return (
-                  pId && productId && pId.toString() === productId.toString()
-                );
-              });
+              const productId = String(item._id || item.productId || item.id);
+              const product = productMap.get(productId);
               itemCategory = product?.category;
             }
 
@@ -1437,8 +1441,8 @@ const Terminal = () => {
         const errorData = await transactionResponse.json().catch(() => ({}));
         throw new Error(
           errorData.message ||
-            errorData.error ||
-            `Transaction recording failed: ${transactionResponse.status} ${transactionResponse.statusText}`,
+          errorData.error ||
+          `Transaction recording failed: ${transactionResponse.status} ${transactionResponse.statusText}`,
         );
       }
 
@@ -1446,8 +1450,8 @@ const Terminal = () => {
       if (!transactionData.success) {
         throw new Error(
           transactionData.message ||
-            transactionData.error ||
-            "Failed to record transaction",
+          transactionData.error ||
+          "Failed to record transaction",
         );
       }
 
@@ -1649,13 +1653,12 @@ const Terminal = () => {
               <button
                 key={cat.name}
                 onClick={() => setSelectedCategory(cat.name)}
-                className={`flex items-center justify-center px-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border truncate ${
-                  selectedCategory === cat.name
+                className={`flex items-center justify-center px-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border truncate ${selectedCategory === cat.name
                     ? "bg-[#AD7F65] text-white border-[#AD7F65] shadow-md"
                     : theme === "dark"
                       ? "bg-[#2A2724] text-gray-300 border-gray-600 hover:bg-[#352F2A]"
                       : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                }`}
+                  }`}
                 title={cat.name}
               >
                 <span className="truncate w-full text-center">{cat.name}</span>
@@ -1695,7 +1698,7 @@ const Terminal = () => {
                     <ProductCard
                       key={product._id}
                       product={product}
-                      onToggleExpand={() => handleProductClick(product)}
+                      onToggleExpand={handleProductClick}
                     />
                   ))}
                 </div>

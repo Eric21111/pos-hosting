@@ -49,7 +49,7 @@ const OrderSummary = memo(({
   useEffect(() => {
     if (discountFetchedRef.current) return;
     discountFetchedRef.current = true;
-    
+
     const fetchDiscounts = async () => {
       try {
         const response = await fetch('http://localhost:5000/api/discounts');
@@ -183,6 +183,18 @@ const OrderSummary = memo(({
     }
   };
 
+  // O(1) Product Lookup Map
+  const productMap = useMemo(() => {
+    const map = new Map();
+    products.forEach((p) => {
+      const pId = String(p._id || p.id);
+      if (pId) {
+        map.set(pId, p);
+      }
+    });
+    return map;
+  }, [products]);
+
   // Memoized map of item discount percentages to avoid recalculating on every render
   const itemDiscountPercentMap = useMemo(() => {
     const map = new Map();
@@ -195,11 +207,8 @@ const OrderSummary = memo(({
       // Resolve item category
       let itemCategory = item.category;
       if (!itemCategory && products.length > 0) {
-        const productId = item._id || item.productId || item.id;
-        const product = products.find(p => {
-          const pId = p._id || p.id;
-          return (pId && productId && (pId.toString() === productId.toString()));
-        });
+        const productId = String(item._id || item.productId || item.id);
+        const product = productMap.get(productId);
         itemCategory = product?.category;
       }
 
