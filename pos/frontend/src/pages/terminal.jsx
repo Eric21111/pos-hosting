@@ -1687,6 +1687,7 @@ const Terminal = () => {
         selectedDiscounts={selectedDiscounts}
         onProceed={handleCashProceed}
         cartItems={cart}
+        cashierName={currentUser?.name}
       />
 
       <QRCodePaymentModal

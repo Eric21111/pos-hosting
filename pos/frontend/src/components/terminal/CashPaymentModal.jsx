@@ -16,6 +16,7 @@ const CashPaymentModal = ({
   selectedDiscounts = [],
   onProceed,
   cartItems = [],
+  cashierName = "",
 }) => {
   const { theme } = useTheme();
   const [amountReceived, setAmountReceived] = useState("");
@@ -105,6 +106,7 @@ const CashPaymentModal = ({
           total: (item.itemPrice || item.price || 0) * (item.quantity || 1),
         })),
         paymentMethod: "CASH",
+        cashierName: cashierName || "Staff",
         subtotal: subtotalAmount || totalAmount + discountAmount,
         discount: discountAmount,
         discounts: selectedDiscounts.map((d) => ({
