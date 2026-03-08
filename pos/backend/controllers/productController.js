@@ -673,32 +673,79 @@ exports.updateStockAfterTransaction = async (req, res) => {
           const currentQuantity = getSizeQuantity(currentSizeData);
           const currentPrice = getSizePrice(currentSizeData);
 
-          if (isStockOut && currentQuantity < item.quantity) {
-            throw new Error(
-              `Insufficient stock for ${product.itemName} (${item.size}). Available: ${currentQuantity}, Requested: ${item.quantity}`,
-            );
-          }
+          // Check if this size has variants and a variant is specified
+          if (item.variant && typeof currentSizeData === "object" && currentSizeData !== null && currentSizeData.variants) {
+            // Handle variant-specific stock
+            const variantData = currentSizeData.variants[item.variant];
+            
+            // Get current variant quantity (handles both number and object formats)
+            let currentVariantQty = 0;
+            if (typeof variantData === "number") {
+              currentVariantQty = variantData;
+            } else if (typeof variantData === "object" && variantData !== null) {
+              currentVariantQty = variantData.quantity || 0;
+            }
 
-          const newQuantity = isStockIn
-            ? (currentQuantity || 0) + item.quantity
-            : Math.max(0, currentQuantity - item.quantity);
+            if (isStockOut && currentVariantQty < item.quantity) {
+              throw new Error(
+                `Insufficient stock for ${product.itemName} (${item.size}, ${item.variant}). Available: ${currentVariantQty}, Requested: ${item.quantity}`,
+              );
+            }
 
-          if (
-            currentPrice !== null ||
-            (typeof currentSizeData === "object" && currentSizeData !== null)
-          ) {
-            product.sizes[sizeKey] = {
-              quantity: newQuantity,
-              price:
-                currentPrice !== null
-                  ? currentPrice
-                  : item.price || product.itemPrice || 0,
-            };
+            const newVariantQty = isStockIn
+              ? currentVariantQty + item.quantity
+              : Math.max(0, currentVariantQty - item.quantity);
+
+            // Update variant quantity while preserving format
+            if (typeof variantData === "object" && variantData !== null) {
+              currentSizeData.variants[item.variant] = {
+                ...variantData,
+                quantity: newVariantQty,
+              };
+            } else {
+              currentSizeData.variants[item.variant] = newVariantQty;
+            }
+
+            // Recalculate size total quantity from all variants
+            let sizeTotal = 0;
+            for (const [varKey, varValue] of Object.entries(currentSizeData.variants)) {
+              if (typeof varValue === "number") {
+                sizeTotal += varValue;
+              } else if (typeof varValue === "object" && varValue !== null) {
+                sizeTotal += varValue.quantity || 0;
+              }
+            }
+            currentSizeData.quantity = sizeTotal;
+            product.markModified("sizes");
           } else {
-            product.sizes[sizeKey] = newQuantity;
+            // No variants, update size quantity directly
+            if (isStockOut && currentQuantity < item.quantity) {
+              throw new Error(
+                `Insufficient stock for ${product.itemName} (${item.size}). Available: ${currentQuantity}, Requested: ${item.quantity}`,
+              );
+            }
+
+            const newQuantity = isStockIn
+              ? (currentQuantity || 0) + item.quantity
+              : Math.max(0, currentQuantity - item.quantity);
+
+            if (
+              currentPrice !== null ||
+              (typeof currentSizeData === "object" && currentSizeData !== null)
+            ) {
+              product.sizes[sizeKey] = {
+                ...currentSizeData,
+                quantity: newQuantity,
+                price:
+                  currentPrice !== null
+                    ? currentPrice
+                    : item.price || product.itemPrice || 0,
+              };
+            } else {
+              product.sizes[sizeKey] = newQuantity;
+            }
+            product.markModified("sizes");
           }
-          product.markModified("sizes");
-        }
 
         // Recalculate total stock from all sizes
         let totalStock = 0;

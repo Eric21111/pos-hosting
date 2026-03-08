@@ -1377,6 +1377,7 @@ const Terminal = () => {
       _id: item.productId || item._id,
       sku: item.sku || null,
       size: resolveItemSize(item) || null,
+      variant: item.selectedVariation || item.variant || null,
       quantity: item.quantity || 1,
     }));
 

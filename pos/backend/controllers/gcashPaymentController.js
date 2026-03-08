@@ -623,6 +623,7 @@ async function updateStockAfterPayment(transaction) {
       const stockBefore = product.currentStock || 0;
       const qty = item.quantity || 1;
       const size = item.selectedSize || null;
+      const variant = item.variant || null;
 
       if (size && product.sizes && typeof product.sizes === "object") {
         // Size-based stock update
@@ -634,34 +635,76 @@ async function updateStockAfterPayment(transaction) {
             : product.sizes[sizeKey];
           const currentQty = getSizeQty(currentSizeData);
           const currentPrice = getSizePrice(currentSizeData);
-          const newQty = Math.max(0, currentQty - qty);
 
-          // Preserve price structure if it exists
-          if (
-            currentPrice !== null ||
-            (typeof currentSizeData === "object" && currentSizeData !== null)
-          ) {
-            if (product.sizes.set) {
-              product.sizes.set(sizeKey, {
-                quantity: newQty,
-                price:
-                  currentPrice !== null ? currentPrice : product.itemPrice || 0,
-              });
-            } else {
-              product.sizes[sizeKey] = {
-                quantity: newQty,
-                price:
-                  currentPrice !== null ? currentPrice : product.itemPrice || 0,
+          // Check if this size has variants and a variant is specified
+          if (variant && typeof currentSizeData === "object" && currentSizeData !== null && currentSizeData.variants) {
+            // Handle variant-specific stock
+            const variantData = currentSizeData.variants[variant];
+            
+            // Get current variant quantity (handles both number and object formats)
+            let currentVariantQty = 0;
+            if (typeof variantData === "number") {
+              currentVariantQty = variantData;
+            } else if (typeof variantData === "object" && variantData !== null) {
+              currentVariantQty = variantData.quantity || 0;
+            }
+
+            const newVariantQty = Math.max(0, currentVariantQty - qty);
+
+            // Update variant quantity while preserving format
+            if (typeof variantData === "object" && variantData !== null) {
+              currentSizeData.variants[variant] = {
+                ...variantData,
+                quantity: newVariantQty,
               };
-            }
-          } else {
-            if (product.sizes.set) {
-              product.sizes.set(sizeKey, newQty);
             } else {
-              product.sizes[sizeKey] = newQty;
+              currentSizeData.variants[variant] = newVariantQty;
             }
+
+            // Recalculate size total quantity from all variants
+            let sizeTotal = 0;
+            for (const [varKey, varValue] of Object.entries(currentSizeData.variants)) {
+              if (typeof varValue === "number") {
+                sizeTotal += varValue;
+              } else if (typeof varValue === "object" && varValue !== null) {
+                sizeTotal += varValue.quantity || 0;
+              }
+            }
+            currentSizeData.quantity = sizeTotal;
+            product.markModified("sizes");
+          } else {
+            // No variants, update size quantity directly
+            const newQty = Math.max(0, currentQty - qty);
+
+            // Preserve price structure if it exists
+            if (
+              currentPrice !== null ||
+              (typeof currentSizeData === "object" && currentSizeData !== null)
+            ) {
+              if (product.sizes.set) {
+                product.sizes.set(sizeKey, {
+                  ...currentSizeData,
+                  quantity: newQty,
+                  price:
+                    currentPrice !== null ? currentPrice : product.itemPrice || 0,
+                });
+              } else {
+                product.sizes[sizeKey] = {
+                  ...currentSizeData,
+                  quantity: newQty,
+                  price:
+                    currentPrice !== null ? currentPrice : product.itemPrice || 0,
+                };
+              }
+            } else {
+              if (product.sizes.set) {
+                product.sizes.set(sizeKey, newQty);
+              } else {
+                product.sizes[sizeKey] = newQty;
+              }
+            }
+            product.markModified("sizes");
           }
-          product.markModified("sizes");
         } else {
           console.warn(
             `[GCash] Size "${size}" not found for product ${product.itemName}`,
