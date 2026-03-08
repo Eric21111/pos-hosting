@@ -280,6 +280,16 @@ exports.importData = async (req, res) => {
         });
     }
 
+    // Define unique key fields for each collection for upsert operations
+    const uniqueKeyFields = {
+      products: 'sku',
+      employees: 'email',
+      categories: 'name',
+      brandPartners: 'name',
+      discounts: 'name',
+      merchantSettings: 'merchantName',
+    };
+
     for (const key of collectionKeys) {
       const { model, name } = DATA_COLLECTIONS[key];
       const records = data[key];
@@ -290,28 +300,55 @@ exports.importData = async (req, res) => {
       }
 
       try {
-        // Remove _id and __v to avoid duplicate key errors, let MongoDB generate new ones
+        // Clean records by removing _id and __v
         const cleanRecords = records.map((record) => {
           const { _id, __v, ...rest } = record;
           return rest;
         });
 
-        // Use insertMany with ordered: false to skip duplicates
-        const result = await model
-          .insertMany(cleanRecords, { ordered: false })
-          .catch((err) => {
-            // If some inserts fail (duplicates), return the ones that succeeded
-            if (err.insertedDocs) return err.insertedDocs;
-            if (err.result && err.result.nInserted)
-              return { length: err.result.nInserted };
-            throw err;
-          });
+        const uniqueField = uniqueKeyFields[key];
+        let insertedCount = 0;
+        let updatedCount = 0;
 
-        const insertedCount = Array.isArray(result)
-          ? result.length
-          : result?.length || 0;
-        results.push({ key, name, imported: insertedCount });
+        if (uniqueField) {
+          // Use bulkWrite with upsert for collections with unique fields
+          const bulkOps = cleanRecords.map((record) => ({
+            updateOne: {
+              filter: { [uniqueField]: record[uniqueField] },
+              update: { $set: record },
+              upsert: true
+            }
+          }));
+
+          const bulkResult = await model.bulkWrite(bulkOps, { ordered: false });
+          insertedCount = bulkResult.upsertedCount || 0;
+          updatedCount = bulkResult.modifiedCount || 0;
+          results.push({ 
+            key, 
+            name, 
+            imported: insertedCount, 
+            updated: updatedCount,
+            total: insertedCount + updatedCount
+          });
+        } else {
+          // Use insertMany for collections without unique constraints
+          const result = await model
+            .insertMany(cleanRecords, { ordered: false })
+            .catch((err) => {
+              // If some inserts fail (duplicates), return the ones that succeeded
+              if (err.insertedDocs) return err.insertedDocs;
+              if (err.result && err.result.nInserted)
+                return { length: err.result.nInserted };
+              throw err;
+            });
+
+          insertedCount = Array.isArray(result)
+            ? result.length
+            : result?.length || 0;
+          results.push({ key, name, imported: insertedCount });
+        }
       } catch (err) {
+        console.error(`Error importing ${key}:`, err);
         results.push({ key, name, imported: 0, error: err.message });
       }
     }
@@ -320,10 +357,20 @@ exports.importData = async (req, res) => {
       (sum, r) => sum + (r.imported || 0),
       0,
     );
+    const totalUpdated = results.reduce(
+      (sum, r) => sum + (r.updated || 0),
+      0,
+    );
+
+    let message = `Successfully imported ${totalImported} new records`;
+    if (totalUpdated > 0) {
+      message += ` and updated ${totalUpdated} existing records`;
+    }
+    message += ` across ${results.filter((r) => (r.imported || 0) + (r.updated || 0) > 0).length} collection(s)`;
 
     res.json({
       success: true,
-      message: `Successfully imported ${totalImported} records across ${results.filter((r) => r.imported > 0).length} collection(s)`,
+      message,
       data: results,
     });
   } catch (error) {

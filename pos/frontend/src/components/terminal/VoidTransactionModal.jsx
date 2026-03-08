@@ -8,6 +8,14 @@ const VoidTransactionModal = ({ isOpen, onClose, onConfirm, cartItems }) => {
   const { theme } = useTheme();
   const [selectedItems, setSelectedItems] = useState([]);
 
+  // Generate a unique key for each cart item based on product ID, size, and variant
+  const getItemUniqueKey = (item) => {
+    const productId = item._id || item.productId || '';
+    const size = item.selectedSize || item.size || '';
+    const variant = item.selectedVariation || item.variant || '';
+    return `${productId}-${size}-${variant}`;
+  };
+
   // Reset selection when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -16,10 +24,11 @@ const VoidTransactionModal = ({ isOpen, onClose, onConfirm, cartItems }) => {
   }, [isOpen]);
 
   const handleItemToggle = (item) => {
+    const itemKey = getItemUniqueKey(item);
     setSelectedItems(prev => {
-      const isSelected = prev.some(i => i._id === item._id);
+      const isSelected = prev.some(i => getItemUniqueKey(i) === itemKey);
       if (isSelected) {
-        return prev.filter(i => i._id !== item._id);
+        return prev.filter(i => getItemUniqueKey(i) !== itemKey);
       } else {
         return [...prev, item];
       }
@@ -27,7 +36,8 @@ const VoidTransactionModal = ({ isOpen, onClose, onConfirm, cartItems }) => {
   };
 
   const isItemSelected = (item) => {
-    return selectedItems.some(i => i._id === item._id);
+    const itemKey = getItemUniqueKey(item);
+    return selectedItems.some(i => getItemUniqueKey(i) === itemKey);
   };
 
   const calculateSelectedTotal = () => {
@@ -75,9 +85,9 @@ const VoidTransactionModal = ({ isOpen, onClose, onConfirm, cartItems }) => {
             </div>
           ) : (
             <div className="space-y-3">
-              {cartItems.map((item) => (
+              {cartItems.map((item, index) => (
                 <div
-                  key={item._id}
+                  key={`${getItemUniqueKey(item)}-${index}`}
                   onClick={() => handleItemToggle(item)}
                   className={`relative rounded-xl border p-4 cursor-pointer transition-all ${isItemSelected(item)
                       ? theme === 'dark'

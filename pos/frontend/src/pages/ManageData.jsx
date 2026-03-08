@@ -608,7 +608,24 @@ const ManageDataInner = ({ verifiedPin }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ collections: selectedKeys }),
       });
-      const data = await res.json();
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Export API error:", res.status, errorText);
+        setError(`Export failed: Server returned ${res.status}`);
+        setExportLoading(false);
+        return;
+      }
+
+      let data;
+      try {
+        data = await res.json();
+      } catch (parseError) {
+        console.error("JSON parse error:", parseError);
+        setError("Export failed: Invalid response from server");
+        setExportLoading(false);
+        return;
+      }
 
       if (!data.success) {
         setError(data.message || "Export failed");
@@ -618,13 +635,18 @@ const ManageDataInner = ({ verifiedPin }) => {
 
       const timestamp = new Date().toISOString().split("T")[0];
 
-      if (format === "excel") {
-        exportToExcel(data, timestamp);
-      } else {
-        exportToPdf(data, timestamp);
+      try {
+        if (format === "excel") {
+          exportToExcel(data, timestamp);
+        } else {
+          exportToPdf(data, timestamp);
+        }
+      } catch (formatError) {
+        console.error("Export format error:", formatError);
+        // Continue to save JSON backup even if Excel/PDF fails
       }
 
-      // Also save JSON backup automatically
+      // Always save JSON backup for import compatibility
       exportJsonBackup(data, timestamp);
 
       setShowExportModal(false);
@@ -632,8 +654,9 @@ const ManageDataInner = ({ verifiedPin }) => {
         `Data exported successfully as ${format.toUpperCase()}! A JSON backup file was also saved for importing later.`,
       );
       setShowSuccessModal(true);
-    } catch {
-      setError("Network error during export. Please try again.");
+    } catch (err) {
+      console.error("Export error:", err);
+      setError(`Network error during export: ${err.message || "Please check your connection and try again."}`);
     } finally {
       setExportLoading(false);
     }
@@ -867,7 +890,15 @@ const ManageDataInner = ({ verifiedPin }) => {
 
     try {
       const text = await file.text();
-      const parsed = JSON.parse(text);
+      let parsed;
+      try {
+        parsed = JSON.parse(text);
+      } catch (parseError) {
+        console.error("JSON parse error:", parseError);
+        setError("Invalid JSON file. Please select a valid backup file.");
+        setImportLoading(false);
+        return;
+      }
 
       if (!parsed.data || typeof parsed.data !== "object") {
         setError(
@@ -877,12 +908,39 @@ const ManageDataInner = ({ verifiedPin }) => {
         return;
       }
 
+      // Verify there's at least some valid data to import
+      const validKeys = Object.keys(parsed.data).filter(
+        (key) => Array.isArray(parsed.data[key]) && parsed.data[key].length > 0
+      );
+      if (validKeys.length === 0) {
+        setError("No valid data found in the backup file to import.");
+        setImportLoading(false);
+        return;
+      }
+
       const res = await fetch(`${API_BASE}/api/data-management/import`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ data: parsed.data, pin: verifiedPin }),
       });
-      const result = await res.json();
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Import API error:", res.status, errorText);
+        setError(`Import failed: Server returned ${res.status}`);
+        setImportLoading(false);
+        return;
+      }
+
+      let result;
+      try {
+        result = await res.json();
+      } catch (parseError) {
+        console.error("Response parse error:", parseError);
+        setError("Import failed: Invalid response from server");
+        setImportLoading(false);
+        return;
+      }
 
       if (result.success) {
         setSuccessMessage(result.message);
@@ -894,7 +952,7 @@ const ManageDataInner = ({ verifiedPin }) => {
     } catch (err) {
       console.error("Import error:", err);
       setError(
-        "Failed to read or process the file. Ensure it's a valid JSON backup.",
+        `Failed to import data: ${err.message || "Please check your connection and try again."}`,
       );
     } finally {
       setImportLoading(false);
