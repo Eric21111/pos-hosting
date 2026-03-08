@@ -280,93 +280,90 @@ const OrderSummary = memo(({
         voidReason: reason
       };
 
-      // Record void transaction
-      const response = await fetch('http://localhost:5000/api/transactions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          userId,
-          items: [voidedItem],
-          paymentMethod: 'void',
-          totalAmount: voidAmount,
-          performedById: currentUser?._id || currentUser?.id || '',
-          performedByName: currentUser?.name || `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() || 'System',
-          status: 'Voided',
-          voidReason: reason
-        })
-      });
+      // --- OPTIMISTIC UI UPDATE ---
+      // 1. Close modal instantly
+      setIsRemoveModalOpen(false);
+      setItemToRemove(null);
 
-      const data = await response.json();
-
-      if (!data.success) {
-        console.error('Failed to record void transaction:', data.message);
-        // Still proceed with removing the item even if logging fails
-      }
-
-      // Also create a void log entry for the void logs page
-      try {
-        const voidLogResponse = await fetch('http://localhost:5000/api/void-logs', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            items: [voidedItem],
-            totalAmount: voidAmount,
-            voidReason: reason,
-            voidedById: currentUser?._id || currentUser?.id || '',
-            voidedByName: currentUser?.name || `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() || 'System',
-            approvedBy: approverInfo.approvedBy || null,
-            approvedByRole: approverInfo.approvedByRole || null,
-            source: 'cart',
-            userId: userId
-          })
-        });
-
-        const voidLogData = await voidLogResponse.json();
-
-        if (!voidLogData.success) {
-          console.error('Failed to create void log:', voidLogData.message);
-        }
-      } catch (voidLogError) {
-        console.error('Error creating void log:', voidLogError);
-      }
-
-      // Remove or decrease quantity after successful void logging
+      // 2. Remove or decrease quantity instantly
       if (newQuantity <= 0) {
-        // If new quantity is 0 or less, remove the item completely
         removeFromCart(itemToRemove);
       } else {
-        // Update to the new quantity
         updateQuantity(itemToRemove, newQuantity);
       }
 
-      // Clear pending quantity for this item
+      // 3. Clear pending quantity instantly
       const key = getItemKey(itemToRemove);
       setPendingQuantities(prev => {
         const newState = { ...prev };
         delete newState[key];
         return newState;
       });
+
+      // --- BACKGROUND NETWORK REQUESTS ---
+      // We do not await these so the UI doesn't freeze
+      (async () => {
+        try {
+          // Record void transaction
+          const response = await fetch('http://localhost:5000/api/transactions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              userId,
+              items: [voidedItem],
+              paymentMethod: 'void',
+              totalAmount: voidAmount,
+              performedById: currentUser?._id || currentUser?.id || '',
+              performedByName: currentUser?.name || `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() || 'System',
+              status: 'Voided',
+              voidReason: reason
+            })
+          });
+
+          const data = await response.json();
+          if (!data.success) {
+            console.error('Failed to record void transaction:', data.message);
+          }
+
+          // Create a void log entry
+          const voidLogResponse = await fetch('http://localhost:5000/api/void-logs', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              items: [voidedItem],
+              totalAmount: voidAmount,
+              voidReason: reason,
+              voidedById: currentUser?._id || currentUser?.id || '',
+              voidedByName: currentUser?.name || `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() || 'System',
+              approvedBy: approverInfo.approvedBy || null,
+              approvedByRole: approverInfo.approvedByRole || null,
+              source: 'cart',
+              userId: userId
+            })
+          });
+
+          const voidLogData = await voidLogResponse.json();
+          if (!voidLogData.success) {
+            console.error('Failed to create void log:', voidLogData.message);
+          }
+        } catch (bgError) {
+          console.error('Error in background void network requests:', bgError);
+        }
+      })();
+
     } catch (error) {
-      console.error('Error recording void transaction:', error);
-      // Still proceed with removing the item even if logging fails
+      console.error('Error preparing void transaction data:', error);
+      // Fallback optimistic UI update on prepare failure
       const newQuantity = itemToRemove.newQuantity !== undefined ? itemToRemove.newQuantity : (itemToRemove.quantity - 1);
       if (newQuantity <= 0) {
         removeFromCart(itemToRemove);
       } else {
         updateQuantity(itemToRemove, newQuantity);
       }
-      // Clear pending quantity
-      const key = getItemKey(itemToRemove);
-      setPendingQuantities(prev => {
-        const newState = { ...prev };
-        delete newState[key];
-        return newState;
-      });
-    } finally {
       setIsRemoveModalOpen(false);
       setItemToRemove(null);
     }
@@ -435,49 +432,62 @@ const OrderSummary = memo(({
     // Small delay to ensure modal state is fully cleared before cart operations
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    try {
-      // Prepare all voided items for a single transaction
-      const voidedItems = itemsToRemove.map(item => ({
-        productId: item.productId || item._id || item.id,
-        itemName: item.itemName,
-        sku: item.sku,
-        variant: item.variant || item.selectedVariation,
-        selectedSize: item.selectedSize || item.size,
-        quantity: item.quantity,
-        price: item.itemPrice,
-        itemImage: item.itemImage || '',
-        voidReason: reason
-      }));
+    // Calculate total amount for all items
+    const totalAmount = itemsToRemove.reduce((sum, item) => sum + (item.itemPrice * item.quantity), 0);
 
-      // Calculate total amount for all items
-      const totalAmount = itemsToRemove.reduce((sum, item) => sum + (item.itemPrice * item.quantity), 0);
+    // Prepare all voided items for a single transaction
+    const voidedItems = itemsToRemove.map(item => ({
+      productId: item.productId || item._id || item.id,
+      itemName: item.itemName,
+      sku: item.sku,
+      variant: item.variant || item.selectedVariation,
+      selectedSize: item.selectedSize || item.size,
+      quantity: item.quantity,
+      price: item.itemPrice,
+      itemImage: item.itemImage || '',
+      voidReason: reason
+    }));
 
-      // Record single void transaction for all items
-      const response = await fetch('http://localhost:5000/api/transactions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          userId,
-          items: voidedItems,
-          paymentMethod: 'void',
-          totalAmount: totalAmount,
-          performedById: currentUser?._id || currentUser?.id || '',
-          performedByName: currentUser?.name || `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() || 'System',
-          status: 'Voided',
-          voidReason: reason
-        })
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        console.error('Failed to record void transaction:', data.message);
+    // --- OPTIMISTIC UI UPDATE ---
+    // Remove all items from cart using direct remove instantly
+    for (const item of itemsToRemove) {
+      if (removeFromCartDirect) {
+        removeFromCartDirect(item);
+      } else {
+        removeFromCart(item);
       }
+    }
 
-      // Also create a void log entry for the void logs page
+    // Reset processing flag immediately
+    isProcessingVoidRef.current = false;
+
+    // --- BACKGROUND NETWORK REQUESTS ---
+    (async () => {
       try {
+        // Record single void transaction for all items
+        const response = await fetch('http://localhost:5000/api/transactions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            userId,
+            items: voidedItems,
+            paymentMethod: 'void',
+            totalAmount: totalAmount,
+            performedById: currentUser?._id || currentUser?.id || '',
+            performedByName: currentUser?.name || `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() || 'System',
+            status: 'Voided',
+            voidReason: reason
+          })
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+          console.error('Failed to record void transaction:', data.message);
+        }
+
+        // Create a void log entry for the void logs page
         const voidLogResponse = await fetch('http://localhost:5000/api/void-logs', {
           method: 'POST',
           headers: {
@@ -497,36 +507,13 @@ const OrderSummary = memo(({
         });
 
         const voidLogData = await voidLogResponse.json();
-
         if (!voidLogData.success) {
           console.error('Failed to create void log:', voidLogData.message);
         }
-      } catch (voidLogError) {
-        console.error('Error creating void log:', voidLogError);
+      } catch (error) {
+        console.error('Error recording bulk void network requests:', error);
       }
-
-      // Remove all items from cart using direct remove (no PIN modal)
-      for (const item of itemsToRemove) {
-        if (removeFromCartDirect) {
-          removeFromCartDirect(item);
-        } else {
-          removeFromCart(item);
-        }
-      }
-    } catch (error) {
-      console.error('Error recording bulk void transaction:', error);
-      // Still remove items from cart even if logging fails
-      for (const item of itemsToRemove) {
-        if (removeFromCartDirect) {
-          removeFromCartDirect(item);
-        } else {
-          removeFromCart(item);
-        }
-      }
-    } finally {
-      // Reset processing flag
-      isProcessingVoidRef.current = false;
-    }
+    })();
   };
 
   const applyDiscountCode = async () => {
