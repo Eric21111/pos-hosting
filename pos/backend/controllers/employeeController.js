@@ -270,34 +270,37 @@ exports.verifyPin = async (req, res) => {
       });
     }
 
-    // Get all active employees with pin for comparison
+    // Get only active managers/admins/owners with pin for comparison
     // Use .select('+pin') only — don't mix with explicit field list which breaks the +pin modifier
-    const employees = await Employee.find({ status: 'Active' })
+    const employees = await Employee.find({
+      status: 'Active',
+      role: { $in: ['Manager', 'Admin', 'Owner', 'Super Admin'] }
+    })
       .select('+pin')
       .lean();
 
     if (employees.length === 0) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid PIN'
+        message: 'Invalid PIN or insufficient permissions'
       });
     }
 
-    // Run ALL bcrypt comparisons in parallel instead of sequentially
-    // bcrypt.compare is ~100-200ms each; parallel = ~200ms total vs sequential = n×200ms
-    const comparisons = await Promise.all(
-      employees.map(async (emp) => {
-        if (!emp.pin) return { match: false, employee: emp };
-        try {
-          const isMatch = await bcrypt.compare(pin, emp.pin);
-          return { match: isMatch, employee: emp };
-        } catch {
-          return { match: false, employee: emp };
+    // Run bcrypt comparisons sequentially. It exits early if a match is found
+    // instead of hashing 50+ pins all at once blocking the event loop for 10 seconds.
+    let found = null;
+    for (const emp of employees) {
+      if (!emp.pin) continue;
+      try {
+        const isMatch = await bcrypt.compare(pin, emp.pin);
+        if (isMatch) {
+          found = { match: true, employee: emp };
+          break; // Early exit!
         }
-      })
-    );
-
-    const found = comparisons.find(c => c.match);
+      } catch (err) {
+        console.error('Bcrypt error on', emp.email, err);
+      }
+    }
 
     if (found) {
       const { pin: _, ...employeeWithoutPin } = found.employee;
