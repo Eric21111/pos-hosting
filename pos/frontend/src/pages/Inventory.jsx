@@ -620,11 +620,18 @@ const Inventory = () => {
       const hasVariantPrices = newProduct.variantPrices && 
         Object.keys(newProduct.variantPrices).length > 0 &&
         Object.values(newProduct.variantPrices).some(sizeVariants => 
-          Object.values(sizeVariants || {}).some(price => price > 0)
+          sizeVariants && Object.values(sizeVariants).some(price => parseFloat(price) > 0)
         );
 
-      // If we have variant prices filled in, skip global price validation
-      if (hasAnyVariantPricing || hasVariantPrices) {
+      // Check if variant quantities exist (indicates variant mode is being used)
+      const hasVariantQuantities = newProduct.variantQuantities &&
+        Object.keys(newProduct.variantQuantities).length > 0 &&
+        Object.values(newProduct.variantQuantities).some(sizeVariants =>
+          sizeVariants && Object.values(sizeVariants).some(qty => parseInt(qty) > 0)
+        );
+
+      // If we have variant pricing, variant quantities, or variant mode enabled - skip global price validation
+      if (hasAnyVariantPricing || hasVariantPrices || hasVariantQuantities) {
         // Variant pricing is being used - no global price needed
         // Just proceed to confirmation
         setShowConfirmModal(true);
