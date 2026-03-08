@@ -36,32 +36,47 @@ const padLine = (left, right = '') => {
   return (cleanLeft + spacer + cleanRight).slice(0, MAX_LINE_CHARS);
 };
 
-// Build receipt lines from receipt object (matching frontend printBridge.js format)
+// Build receipt lines from receipt object (matching new clean design)
 const buildReceiptLines = receipt => {
   const lines = [];
   const storeName = receipt.storeName || 'Create Your Style';
-  const contactNumber = receipt.contactNumber || '+631112224444';
   const location = receipt.location || 'Pasonanca, Zamboanga City';
-  const issueTime = receipt.time || '12:00PM';
-  const referenceNo = receipt.referenceNo || receipt.reference || '-';
+  const receiptNo = receipt.receiptNo || '000000';
+  const paymentMethod = receipt.paymentMethod || 'Cash';
+  const cashier = receipt.cashier || receipt.cashierName || receipt.performedByName || 'Staff';
+  
+  // Format date/time
+  const receiptDate = receipt.date || new Date().toLocaleDateString('en-US', { 
+    month: 'numeric', 
+    day: 'numeric', 
+    year: 'numeric' 
+  });
+  const receiptTime = receipt.time || new Date().toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit', 
+    hour12: true 
+  });
 
-  // Header
-  lines.push(storeName);
-  lines.push(padLine(issueTime, contactNumber));
-  lines.push(location);
-  lines.push('-'.repeat(MAX_LINE_CHARS));
+  // Header (centered)
+  const centerText = (text) => {
+    const padding = Math.floor((MAX_LINE_CHARS - text.length) / 2);
+    return ' '.repeat(Math.max(0, padding)) + text;
+  };
 
-  // Receipt No
-  lines.push('Receipt No:');
-  lines.push(`#${receipt.receiptNo || '000000'}`);
-  lines.push('-'.repeat(MAX_LINE_CHARS));
+  lines.push(centerText(storeName));
+  lines.push(centerText(location));
+  lines.push('');
+  
+  // Receipt number section
+  lines.push(centerText('RECEIPT'));
+  lines.push(centerText(`#${receiptNo}`));
+  lines.push('');
 
-  // Item table headers (Item: 20, Qty: 3, Price: 9 = 32 chars)
-  const itemCol = 'Item'.padEnd(20);
-  const qtyCol = 'Qty'.padStart(3);
-  const priceCol = 'Price'.padStart(9);
-  lines.push(`${itemCol}${qtyCol}${priceCol}`);
-  lines.push('-'.repeat(MAX_LINE_CHARS));
+  // Date, Cashier, Payment info
+  lines.push(padLine('Date:', `${receiptDate}, ${receiptTime}`));
+  lines.push(padLine('Cashier:', cashier));
+  lines.push(padLine('Payment:', paymentMethod));
+  lines.push('');
 
   // Items
   (receipt.items || []).forEach(item => {
@@ -69,38 +84,28 @@ const buildReceiptLines = receipt => {
     const qty = item.qty || item.quantity || 1;
     const price = item.price || item.itemPrice || 0;
 
-    const itemNameLine = itemName.substring(0, 20).padEnd(20);
-    const qtyStr = qty.toString().padStart(3);
-    const priceStr = formatCurrency(price).padStart(9);
-    lines.push(`${itemNameLine}${qtyStr}${priceStr}`);
+    lines.push(itemName);
+    lines.push(`${qty} x P${Number(price).toFixed(2)}`);
   });
+  lines.push('');
 
-  lines.push('-'.repeat(MAX_LINE_CHARS));
-
-  // Payment summary
-  lines.push(padLine('Transaction/Reference', referenceNo));
-  lines.push(padLine('Payment Method', receipt.paymentMethod || 'CASH'));
-  lines.push(padLine('Subtotal', formatCurrency(receipt.subtotal || 0)));
-  lines.push('-'.repeat(MAX_LINE_CHARS));
-  lines.push(padLine('Discount', formatCurrency(receipt.discount || 0)));
-  lines.push('-'.repeat(MAX_LINE_CHARS));
-  lines.push(padLine('Total', formatCurrency(receipt.total || 0)));
+  // Summary
+  lines.push(padLine('Subtotal:', `P${Number(receipt.subtotal || 0).toFixed(2)}`));
+  lines.push(padLine('Discount:', `P${Number(receipt.discount || 0).toFixed(2)}`));
+  lines.push('');
+  lines.push(padLine('Total:', `P${Number(receipt.total || 0).toFixed(2)}`));
 
   if (receipt.cash !== undefined) {
-    lines.push(padLine('Cash', formatCurrency(receipt.cash)));
+    lines.push(padLine('Amount Received:', `P${Number(receipt.cash).toFixed(2)}`));
   }
 
   if (receipt.change !== undefined) {
-    lines.push(padLine('Change', formatCurrency(receipt.change)));
+    lines.push(padLine('Change:', `P${Number(receipt.change).toFixed(2)}`));
   }
 
-  lines.push('-'.repeat(MAX_LINE_CHARS));
-  lines.push('This is not an official receipt');
-  
-  // Add cashier if available
-  if (receipt.cashier) {
-    lines.push(padLine('Cashier', receipt.cashier));
-  }
+  lines.push('');
+  lines.push(centerText('Thank you for your purchase!'));
+  lines.push(centerText('This is not an official receipt'));
 
   return lines;
 };
