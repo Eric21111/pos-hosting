@@ -92,9 +92,9 @@ const OrderSummary = ({
     }
   };
 
-  // Get unique key for an item
+  // Get unique key for an item (includes size and variant)
   const getItemKey = (item) => {
-    return `${item._id || item.productId}-${item.selectedSize || item.size || ''}`;
+    return `${item._id || item.productId}-${item.selectedSize || item.size || ''}-${item.selectedVariation || ''}`;
   };
 
   // Get the displayed quantity (pending or actual)

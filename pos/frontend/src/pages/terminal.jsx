@@ -756,6 +756,8 @@ const Terminal = () => {
         ? itemOrId
         : cart.find((i) => i._id === itemOrId);
     const productId = typeof itemOrId === "object" ? itemOrId._id : itemOrId;
+    const selectedSize = typeof itemOrId === "object" ? (itemOrId.selectedSize || '') : '';
+    const selectedVariation = typeof itemOrId === "object" ? (itemOrId.selectedVariation || '') : '';
 
     if (newQuantity <= 0) {
       // Show PIN modal before removing
@@ -766,8 +768,12 @@ const Terminal = () => {
       }
     } else {
       setCart(
-        cart.map((item) =>
-          item._id === productId ? { ...item, quantity: newQuantity } : item,
+        cart.map((cartItem) =>
+          cartItem._id === productId && 
+          (cartItem.selectedSize || '') === selectedSize &&
+          (cartItem.selectedVariation || '') === selectedVariation
+            ? { ...cartItem, quantity: newQuantity } 
+            : cartItem,
         ),
       );
     }
