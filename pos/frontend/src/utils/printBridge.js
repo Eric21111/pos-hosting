@@ -28,25 +28,25 @@ export const buildReceiptLines = receipt => {
   const issueTime = receipt.time || '12:00PM';
   const referenceNo = receipt.referenceNo || receipt.reference || '-';
 
-  // Header
+ 
   lines.push(storeName);
   lines.push(padLine(issueTime, contactNumber));
   lines.push(location);
   lines.push('-'.repeat(MAX_WIDTH));
 
-  // Receipt No
+
   lines.push('Receipt No:');
   lines.push(`#${receipt.receiptNo || '000000'}`);
   lines.push('-'.repeat(MAX_WIDTH));
 
-  // Item table headers (Item: 20, Qty: 3, Price: 9 = 32 chars)
+ 
   const itemCol = 'Item'.padEnd(20);
   const qtyCol = 'Qty'.padStart(3);
   const priceCol = 'Price'.padStart(9);
   lines.push(`${itemCol}${qtyCol}${priceCol}`);
   lines.push('-'.repeat(MAX_WIDTH));
 
-  // Items
+  // Item
   (receipt.items || []).forEach(item => {
     const itemName = (item.name || item.itemName || 'Item').toString();
     const qty = item.qty || item.quantity || 1;
@@ -87,35 +87,38 @@ export const buildReceiptLines = receipt => {
  */
 const buildReceiptHTML = (receipt) => {
   const storeName = receipt.storeName || 'Create Your Style';
-  const contactNumber = receipt.contactNumber || '+631112224444';
   const location = receipt.location || 'Pasonanca, Zamboanga City';
-  const issueTime = receipt.time || '12:00PM';
-  const referenceNo = receipt.referenceNo || receipt.reference || '-';
   const receiptNo = receipt.receiptNo || '000000';
-  const paymentMethod = receipt.paymentMethod || 'CASH';
+  const paymentMethod = receipt.paymentMethod || 'Cash';
   const subtotal = Number(receipt.subtotal || 0);
   const discount = Number(receipt.discount || 0);
   const total = Number(receipt.total || 0);
   const cash = receipt.cash !== undefined ? Number(receipt.cash) : null;
   const change = receipt.change !== undefined ? Number(receipt.change) : null;
-  const cashier = receipt.cashier || receipt.performedByName || 'N/A';
+  const cashier = receipt.cashier || receipt.cashierName || receipt.performedByName || 'Staff';
+  
+  // Format date
+  const receiptDate = receipt.date || new Date().toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric' 
+  });
+  const receiptTime = receipt.time || new Date().toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit', 
+    hour12: true 
+  });
 
   const itemsHTML = (receipt.items || []).map(item => {
     const itemName = (item.name || item.itemName || 'Item').toString();
     const qty = item.qty || item.quantity || 1;
     const price = Number(item.price || item.itemPrice || 0);
-    const itemTotal = qty * price;
-    const size = item.size || item.selectedSize || '';
     
     return `
-      <tr>
-        <td style="padding: 4px 0; text-align: left; font-size: 11px;">
-          ${itemName}${size ? ` <span style="color: #666; font-size: 9px;">(${size})</span>` : ''}
-        </td>
-        <td style="padding: 4px 0; text-align: center; font-size: 11px;">${qty}</td>
-        <td style="padding: 4px 0; text-align: right; font-size: 11px;">₱${price.toFixed(2)}</td>
-        <td style="padding: 4px 0; text-align: right; font-size: 11px;">₱${itemTotal.toFixed(2)}</td>
-      </tr>
+      <div style="margin-bottom: 8px;">
+        <div style="font-weight: 600; font-size: 11px; color: #1a202c;">${itemName}</div>
+        <div style="font-size: 10px; color: #718096;">${qty} x ₱${price.toFixed(2)}</div>
+      </div>
     `;
   }).join('');
 
@@ -139,192 +142,101 @@ const buildReceiptHTML = (receipt) => {
           body {
             width: 58mm;
             margin: 0;
-            padding: 5px;
+            padding: 8px;
           }
           .no-print {
             display: none !important;
           }
         }
         body {
-          font-family: 'Courier New', Courier, monospace;
+          font-family: Arial, sans-serif;
           font-size: 11px;
-          line-height: 1.3;
+          line-height: 1.4;
           width: 58mm;
           max-width: 58mm;
-          padding: 8px;
+          padding: 10px;
           background: white;
-          color: #000;
+          color: #1a202c;
         }
         .receipt-container {
           width: 100%;
-        }
-        .header {
-          text-align: center;
-          margin-bottom: 8px;
-        }
-        .store-name {
-          font-size: 14px;
-          font-weight: bold;
-          margin-bottom: 4px;
-        }
-        .header-info {
-          display: flex;
-          justify-content: space-between;
-          font-size: 9px;
-          margin: 4px 0;
-        }
-        .location {
-          font-size: 9px;
-          text-align: center;
-        }
-        .divider {
-          border-top: 1px dashed #000;
-          margin: 6px 0;
-        }
-        .receipt-no {
-          text-align: center;
-          margin: 8px 0;
-        }
-        .receipt-no-label {
-          font-size: 10px;
-        }
-        .receipt-no-value {
-          font-size: 16px;
-          font-weight: bold;
-        }
-        .items-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 8px 0;
-        }
-        .items-table th {
-          border-bottom: 1px solid #000;
-          padding: 4px 0;
-          font-size: 10px;
-          font-weight: bold;
-        }
-        .summary-row {
-          display: flex;
-          justify-content: space-between;
-          padding: 2px 0;
-          font-size: 11px;
-        }
-        .summary-row.total {
-          font-weight: bold;
-          font-size: 12px;
-          padding: 4px 0;
-        }
-        .footer {
-          text-align: center;
-          margin-top: 12px;
-          font-size: 10px;
-          font-weight: bold;
-        }
-        .print-btn {
-          display: block;
-          width: 100%;
-          padding: 12px;
-          margin-top: 20px;
-          background: #4CAF50;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          font-size: 14px;
-          cursor: pointer;
-        }
-        .print-btn:hover {
-          background: #45a049;
         }
       </style>
     </head>
     <body>
       <div class="receipt-container">
-        <div class="header">
-          <div class="store-name">${storeName}</div>
-          <div class="header-info">
-            <span>${issueTime}</span>
-            <span>${contactNumber}</span>
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 15px;">
+          <div style="font-size: 16px; font-weight: bold; color: #1a365d; margin-bottom: 4px;">${storeName}</div>
+          <div style="font-size: 10px; color: #4a5568;">${location}</div>
+        </div>
+
+        <!-- Receipt Number -->
+        <div style="text-align: center; margin: 15px 0; border-top: 1px dashed #cbd5e0; border-bottom: 1px dashed #cbd5e0; padding: 10px 0;">
+          <div style="font-size: 9px; color: #718096; text-transform: uppercase; letter-spacing: 1px;">Receipt</div>
+          <div style="font-size: 16px; font-weight: bold; color: #2d3748;">#${receiptNo}</div>
+        </div>
+
+        <!-- Date, Cashier, Payment -->
+        <div style="margin-bottom: 15px;">
+          <div style="display: flex; justify-content: space-between; margin: 4px 0; font-size: 11px;">
+            <span style="color: #4a5568;">Date:</span>
+            <span style="color: #1a202c;">${receiptDate}, ${receiptTime}</span>
           </div>
-          <div class="location">${location}</div>
+          <div style="display: flex; justify-content: space-between; margin: 4px 0; font-size: 11px;">
+            <span style="color: #4a5568;">Cashier:</span>
+            <span style="color: #1a202c;">${cashier}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin: 4px 0; font-size: 11px;">
+            <span style="color: #4a5568;">Payment:</span>
+            <span style="color: #1a202c;">${paymentMethod}</span>
+          </div>
         </div>
 
-        <div class="divider"></div>
-
-        <div class="receipt-no">
-          <div class="receipt-no-label">Receipt No:</div>
-          <div class="receipt-no-value">#${receiptNo}</div>
+        <!-- Items -->
+        <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; margin-bottom: 15px;">
+          ${itemsHTML || '<div style="text-align: center; color: #718096; padding: 8px;">No items</div>'}
         </div>
 
-        <div class="divider"></div>
-
-        <table class="items-table">
-          <thead>
-            <tr>
-              <th style="text-align: left;">Item</th>
-              <th style="text-align: center;">Qty</th>
-              <th style="text-align: right;">Price</th>
-              <th style="text-align: right;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${itemsHTML || '<tr><td colspan="4" style="text-align: center; padding: 8px;">No items</td></tr>'}
-          </tbody>
-        </table>
-
-        <div class="divider"></div>
-
-        <div class="summary-row">
-          <span>Reference:</span>
-          <span>${referenceNo}</span>
-        </div>
-        <div class="summary-row">
-          <span>Payment:</span>
-          <span>${paymentMethod}</span>
-        </div>
-        <div class="summary-row">
-          <span>Cashier:</span>
-          <span>${cashier}</span>
-        </div>
-        
-        <div class="divider"></div>
-        
-        <div class="summary-row">
-          <span>Subtotal:</span>
-          <span>₱${subtotal.toFixed(2)}</span>
-        </div>
-        <div class="summary-row">
-          <span>Discount:</span>
-          <span>₱${discount.toFixed(2)}</span>
-        </div>
-        
-        <div class="divider"></div>
-        
-        <div class="summary-row total">
-          <span>TOTAL:</span>
-          <span>₱${total.toFixed(2)}</span>
-        </div>
-        
-        ${cash !== null ? `
-        <div class="summary-row">
-          <span>Cash:</span>
-          <span>₱${cash.toFixed(2)}</span>
-        </div>
-        ` : ''}
-        
-        ${change !== null ? `
-        <div class="summary-row">
-          <span>Change:</span>
-          <span>₱${change.toFixed(2)}</span>
-        </div>
-        ` : ''}
-
-        <div class="divider"></div>
-
-        <div class="footer">
-          This is not an official receipt
+        <!-- Summary -->
+        <div style="border-top: 1px solid #e2e8f0; padding-top: 10px;">
+          <div style="display: flex; justify-content: space-between; margin: 4px 0; font-size: 11px;">
+            <span style="color: #4a5568;">Subtotal:</span>
+            <span style="color: #1a202c;">₱${subtotal.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin: 4px 0; font-size: 11px;">
+            <span style="color: #4a5568;">Discount:</span>
+            <span style="color: #1a202c;">₱${discount.toFixed(2)}</span>
+          </div>
+          
+          <!-- Total -->
+          <div style="display: flex; justify-content: space-between; margin: 8px 0; padding-top: 8px; border-top: 1px solid #e2e8f0;">
+            <span style="font-weight: bold; color: #1a365d; font-size: 13px;">Total:</span>
+            <span style="font-weight: bold; color: #1a365d; font-size: 13px;">₱${total.toFixed(2)}</span>
+          </div>
+          
+          ${cash !== null ? `
+          <div style="display: flex; justify-content: space-between; margin: 4px 0; font-size: 11px;">
+            <span style="color: #4a5568;">Amount Received:</span>
+            <span style="color: #1a202c;">₱${cash.toFixed(2)}</span>
+          </div>
+          ` : ''}
+          
+          ${change !== null ? `
+          <div style="display: flex; justify-content: space-between; margin: 4px 0; font-size: 11px;">
+            <span style="color: #4a5568;">Change:</span>
+            <span style="color: #1a202c;">₱${change.toFixed(2)}</span>
+          </div>
+          ` : ''}
         </div>
 
-        <button class="print-btn no-print" onclick="window.print(); return false;">
+        <!-- Footer -->
+        <div style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px dashed #cbd5e0;">
+          <div style="font-size: 11px; color: #4a5568;">Thank you for your purchase!</div>
+          <div style="font-size: 10px; color: #a0aec0; margin-top: 2px;">This is not an official receipt</div>
+        </div>
+
+        <button class="no-print" style="display: block; width: 100%; padding: 12px; margin-top: 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; font-size: 14px; cursor: pointer;" onclick="window.print(); return false;">
           🖨️ Print Receipt
         </button>
       </div>
@@ -339,7 +251,6 @@ const buildReceiptHTML = (receipt) => {
         
         // Close window after printing (optional)
         window.onafterprint = function() {
-          // Give user a moment to see the result
           setTimeout(function() {
             window.close();
           }, 500);
