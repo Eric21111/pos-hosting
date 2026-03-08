@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import Pagination from "../components/inventory/Pagination";
 import Header from "../components/shared/header";
@@ -1564,7 +1564,12 @@ const Terminal = () => {
     setShowQRPaymentModal(false);
   };
 
-  const handleSelectDiscount = (discountItem) => {
+  // Memoized callback for opening discount modal
+  const handleOpenDiscountModal = useCallback(() => {
+    setShowDiscountModal(true);
+  }, []);
+
+  const handleSelectDiscount = useCallback((discountItem) => {
     try {
       // Validate discount item exists
       if (!discountItem) {
@@ -1599,9 +1604,9 @@ const Terminal = () => {
       console.error("Error selecting discount:", error);
       alert("An error occurred while applying the discount. Please try again.");
     }
-  };
+  }, [selectedDiscounts, cart, validateDiscountForCart]);
 
-  const handleRemoveDiscount = (discountId) => {
+  const handleRemoveDiscount = useCallback((discountId) => {
     if (discountId) {
       // Remove specific discount by ID
       setSelectedDiscounts((prev) => prev.filter((d) => d._id !== discountId));
@@ -1610,7 +1615,7 @@ const Terminal = () => {
       setSelectedDiscounts([]);
     }
     setDiscountAmount("");
-  };
+  }, []);
 
   return (
     <>
@@ -1718,13 +1723,13 @@ const Terminal = () => {
               setDiscountAmount={setDiscountAmount}
               selectedDiscounts={selectedDiscounts}
               onRemoveDiscount={handleRemoveDiscount}
-              calculateSubtotal={() => subtotal}
-              calculateDiscount={() => discount}
-              calculateTotal={() => total}
+              subtotal={subtotal}
+              discount={discount}
+              total={total}
               handleCheckout={handleCheckout}
               onCashPayment={handleCashPayment}
               onQRPayment={handleQRPayment}
-              onOpenDiscountModal={() => setShowDiscountModal(true)}
+              onOpenDiscountModal={handleOpenDiscountModal}
               onSelectDiscount={handleSelectDiscount}
             />
           </div>

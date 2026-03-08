@@ -1,7 +1,8 @@
+import { memo, useMemo } from "react";
 import { MdCategory } from "react-icons/md";
 import { useTheme } from "../../context/ThemeContext";
 
-export default function ProductCard({ product, onToggleExpand }) {
+const ProductCard = memo(function ProductCard({ product, onToggleExpand }) {
   const { theme } = useTheme();
 
   // Helper function to get quantity from size data (handles both number and object formats)
@@ -60,8 +61,8 @@ export default function ProductCard({ product, onToggleExpand }) {
     return null;
   };
 
-  // Function to get price range for products with sizes
-  const getPriceRange = () => {
+  // Memoized price range calculation
+  const priceRange = useMemo(() => {
     if (product.sizes && typeof product.sizes === "object") {
       const prices = [];
 
@@ -94,9 +95,10 @@ export default function ProductCard({ product, onToggleExpand }) {
       max: product.itemPrice || 0,
       isRange: false,
     };
-  };
+  }, [product.sizes, product.itemPrice]);
 
-  const getTotalStock = () => {
+  // Memoized total stock calculation
+  const displayStock = useMemo(() => {
     if (typeof product.currentStock === "number") {
       return product.currentStock;
     }
@@ -108,10 +110,7 @@ export default function ProductCard({ product, onToggleExpand }) {
       );
     }
     return product.currentStock || 0;
-  };
-
-  const displayStock = getTotalStock();
-  const priceRange = getPriceRange();
+  }, [product.currentStock, product.sizes]);
 
   return (
     <div
@@ -180,4 +179,6 @@ export default function ProductCard({ product, onToggleExpand }) {
       </div>
     </div>
   );
-}
+});
+
+export default ProductCard;

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FaMinus, FaPlus, FaTag, FaTimes } from 'react-icons/fa';
 import { HiDocumentRemove } from 'react-icons/hi';
 import { MdCategory } from 'react-icons/md';
@@ -9,7 +9,7 @@ import { useTheme } from '../../context/ThemeContext';
 import RemoveItemPinModal from './RemoveItemPinModal';
 import VoidTransactionModal from './VoidTransactionModal';
 
-const OrderSummary = ({
+const OrderSummary = memo(({
   cart,
   removeFromCart,
   removeFromCartDirect,
@@ -18,9 +18,9 @@ const OrderSummary = ({
   setDiscountAmount,
   selectedDiscounts = [],
   onRemoveDiscount,
-  calculateSubtotal,
-  calculateDiscount,
-  calculateTotal,
+  subtotal = 0,
+  discount = 0,
+  total = 0,
   handleCheckout,
   onCashPayment,
   onQRPayment,
@@ -43,9 +43,13 @@ const OrderSummary = ({
   // Track pending quantity changes per item (key: item._id + selectedSize)
   const [pendingQuantities, setPendingQuantities] = useState({});
   const [availableDiscounts, setAvailableDiscounts] = useState([]);
+  const discountFetchedRef = useRef(false);
 
-  // Fetch discounts on mount for auto-apply functionality
+  // Fetch discounts on mount for auto-apply functionality (only once)
   useEffect(() => {
+    if (discountFetchedRef.current) return;
+    discountFetchedRef.current = true;
+    
     const fetchDiscounts = async () => {
       try {
         const response = await fetch('http://localhost:5000/api/discounts');
@@ -60,7 +64,7 @@ const OrderSummary = ({
     fetchDiscounts();
   }, []);
 
-  // Auto-apply discount when code matches
+  // Debounced auto-apply discount when code matches
   useEffect(() => {
     if (!discountCode || !discountCode.trim() || applyingDiscount) return;
 
@@ -179,58 +183,67 @@ const OrderSummary = ({
     }
   };
 
-  // Helper to calculate total discount percentage for an item
-  const getItemTotalDiscountPercent = (item) => {
-    if (!selectedDiscounts || selectedDiscounts.length === 0) return 0;
+  // Memoized map of item discount percentages to avoid recalculating on every render
+  const itemDiscountPercentMap = useMemo(() => {
+    const map = new Map();
+    if (!selectedDiscounts || selectedDiscounts.length === 0) return map;
 
-    let totalPercent = 0;
+    cart.forEach(item => {
+      const key = getItemKey(item);
+      let totalPercent = 0;
 
-    // Resolve item category (same logic as Terminal.jsx)
-    let itemCategory = item.category;
-    if (!itemCategory && products.length > 0) {
-      const productId = item._id || item.productId || item.id;
-      const product = products.find(p => {
-        const pId = p._id || p.id;
-        return (pId && productId && (pId.toString() === productId.toString()));
-      });
-      itemCategory = product?.category;
-    }
-
-    selectedDiscounts.forEach(discount => {
-      // Check if discount applies
-      const appliesToType = discount.appliesToType || discount.appliesTo;
-      let applies = false;
-
-      if (appliesToType === 'all') {
-        applies = true;
-      } else if (appliesToType === 'category' && discount.category) {
-        if (itemCategory === discount.category) {
-          applies = true;
-        }
-      } else if (appliesToType === 'products' && discount.productIds && discount.productIds.length > 0) {
-        const itemId = item._id || item.productId || item.id;
-        const isMatch = discount.productIds.some(pid => {
-          const pidStr = pid.toString ? pid.toString() : pid;
-          const itemIdStr = itemId.toString ? itemId.toString() : itemId;
-          return pidStr === itemIdStr;
+      // Resolve item category
+      let itemCategory = item.category;
+      if (!itemCategory && products.length > 0) {
+        const productId = item._id || item.productId || item.id;
+        const product = products.find(p => {
+          const pId = p._id || p.id;
+          return (pId && productId && (pId.toString() === productId.toString()));
         });
-        if (isMatch) applies = true;
+        itemCategory = product?.category;
       }
 
-      if (applies) {
-        // Extract percentage
-        const discountValueStr = discount.discountValue || '';
-        if (typeof discountValueStr === 'string' && discountValueStr.includes('%')) {
-          const percentage = parseFloat(discountValueStr.replace('% OFF', '').replace(/\s/g, ''));
-          if (!isNaN(percentage)) {
-            totalPercent += percentage;
+      selectedDiscounts.forEach(discount => {
+        const appliesToType = discount.appliesToType || discount.appliesTo;
+        let applies = false;
+
+        if (appliesToType === 'all') {
+          applies = true;
+        } else if (appliesToType === 'category' && discount.category) {
+          if (itemCategory === discount.category) {
+            applies = true;
+          }
+        } else if (appliesToType === 'products' && discount.productIds && discount.productIds.length > 0) {
+          const itemId = item._id || item.productId || item.id;
+          const isMatch = discount.productIds.some(pid => {
+            const pidStr = pid.toString ? pid.toString() : pid;
+            const itemIdStr = itemId.toString ? itemId.toString() : itemId;
+            return pidStr === itemIdStr;
+          });
+          if (isMatch) applies = true;
+        }
+
+        if (applies) {
+          const discountValueStr = discount.discountValue || '';
+          if (typeof discountValueStr === 'string' && discountValueStr.includes('%')) {
+            const percentage = parseFloat(discountValueStr.replace('% OFF', '').replace(/\s/g, ''));
+            if (!isNaN(percentage)) {
+              totalPercent += percentage;
+            }
           }
         }
-      }
+      });
+
+      map.set(key, totalPercent);
     });
 
-    return totalPercent;
-  };
+    return map;
+  }, [cart, selectedDiscounts, products]);
+
+  // Fast lookup for item discount percentage
+  const getItemTotalDiscountPercent = useCallback((item) => {
+    return itemDiscountPercentMap.get(getItemKey(item)) || 0;
+  }, [itemDiscountPercentMap]);
 
   const handleRemoveConfirm = async (reason, approverInfo = {}) => {
     if (!itemToRemove) {
@@ -776,16 +789,16 @@ const OrderSummary = ({
         <div className="space-y-2 mb-6 text-xs">
           <div className="flex justify-between">
             <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Subtotal</span>
-            <span className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>PHP {calculateSubtotal().toFixed(2)}</span>
+            <span className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>PHP {subtotal.toFixed(2)}</span>
           </div>
           <div className="flex justify-between">
             <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Discount</span>
-            <span className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>PHP {calculateDiscount().toFixed(2)}</span>
+            <span className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>PHP {discount.toFixed(2)}</span>
           </div>
           <div className={`border-t my-3 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-300'}`}></div>
           <div className="flex justify-between">
             <span className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Total</span>
-            <span className="text-sm font-bold" style={{ color: 'rgba(255, 133, 88, 1)' }}>PHP {calculateTotal().toFixed(2)}</span>
+            <span className="text-sm font-bold" style={{ color: 'rgba(255, 133, 88, 1)' }}>PHP {total.toFixed(2)}</span>
           </div>
         </div>
 
