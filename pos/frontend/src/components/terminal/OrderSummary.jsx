@@ -852,7 +852,7 @@ const OrderSummary = memo(({
       />
     </div>
   );
-};
+});
 
 export default OrderSummary;
 
