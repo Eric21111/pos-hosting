@@ -314,54 +314,63 @@ const ViewProductModal = ({
                                   ₱{parseFloat(price).toFixed(2)}
                                 </span>
                               )}
-                              {/* Show variants with quantities */}
-                              {variants && Object.keys(variants).length > 0 && (
+                              {/* Show variants with quantities - prioritize variants object, but also show from variantPrices if variants doesn't exist */}
+                              {(variants && Object.keys(variants).length > 0) || (variantPrices && Object.keys(variantPrices).length > 0) ? (
                                 <div className="mt-2 w-full border-t border-gray-200 dark:border-gray-600 pt-2">
-                                  {Object.entries(variants).map(([variantName, variantData]) => {
-                                    // Handle both number format and object format for variant data
-                                    const variantQty = typeof variantData === 'number' 
-                                      ? variantData 
-                                      : (variantData && typeof variantData === 'object' ? variantData.quantity || 0 : 0);
+                                  {(() => {
+                                    // Determine what to iterate over - prefer variants, fall back to variantPrices keys
+                                    const variantKeys = variants && Object.keys(variants).length > 0 
+                                      ? Object.keys(variants)
+                                      : (variantPrices ? Object.keys(variantPrices) : []);
                                     
-                                    // Get price from variant data object first, then fall back to variantPrices
-                                    let variantPrice = null;
-                                    if (variantData && typeof variantData === 'object' && variantData.price !== undefined) {
-                                      variantPrice = variantData.price;
-                                    } else if (variantPrices && variantPrices[variantName] !== undefined) {
-                                      variantPrice = variantPrices[variantName];
-                                    }
+                                    return variantKeys.map((variantName) => {
+                                      const variantData = variants?.[variantName];
+                                      
+                                      // Handle both number format and object format for variant data
+                                      const variantQty = typeof variantData === 'number' 
+                                        ? variantData 
+                                        : (variantData && typeof variantData === 'object' ? variantData.quantity || 0 : 0);
                                     
-                                    // Get cost price from variant data object
-                                    let variantCost = null;
-                                    if (variantData && typeof variantData === 'object' && variantData.costPrice !== undefined) {
-                                      variantCost = variantData.costPrice;
-                                    }
+                                      // Get price from variant data object first, then fall back to variantPrices
+                                      let variantPrice = null;
+                                      if (variantData && typeof variantData === 'object' && variantData.price !== undefined) {
+                                        variantPrice = variantData.price;
+                                      } else if (variantPrices && variantPrices[variantName] !== undefined) {
+                                        variantPrice = variantPrices[variantName];
+                                      }
                                     
-                                    return (
-                                      <div key={variantName} className="flex items-center justify-between gap-2 text-[10px] py-0.5">
-                                        <span className={`${theme === "dark" ? "text-[#AD7F65]" : "text-[#8B6553]"}`}>
-                                          {variantName}
-                                        </span>
-                                        <div className="flex items-center gap-1">
-                                          <span className={`font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
-                                            ×{variantQty}
+                                      // Get cost price from variant data object
+                                      let variantCost = null;
+                                      if (variantData && typeof variantData === 'object' && variantData.costPrice !== undefined) {
+                                        variantCost = variantData.costPrice;
+                                      }
+                                    
+                                      return (
+                                        <div key={variantName} className="flex items-center justify-between gap-2 text-[10px] py-0.5">
+                                          <span className={`${theme === "dark" ? "text-[#AD7F65]" : "text-[#8B6553]"}`}>
+                                            {variantName}
                                           </span>
-                                          {variantPrice !== null && (
-                                            <span className="text-green-500">
-                                              ₱{parseFloat(variantPrice).toFixed(2)}
+                                          <div className="flex items-center gap-1">
+                                            <span className={`font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                                              ×{variantQty}
                                             </span>
-                                          )}
-                                          {variantCost !== null && (
-                                            <span className="text-red-400">
-                                              (cost: ₱{parseFloat(variantCost).toFixed(2)})
-                                            </span>
-                                          )}
+                                            {variantPrice !== null && (
+                                              <span className="text-green-500">
+                                                ₱{parseFloat(variantPrice).toFixed(2)}
+                                              </span>
+                                            )}
+                                            {variantCost !== null && (
+                                              <span className="text-red-400">
+                                                (cost: ₱{parseFloat(variantCost).toFixed(2)})
+                                              </span>
+                                            )}
+                                          </div>
                                         </div>
-                                      </div>
-                                    );
-                                  })}
+                                      );
+                                    });
+                                  })()}
                                 </div>
-                              )}
+                              ) : null}
                             </div>
                           );
                         },

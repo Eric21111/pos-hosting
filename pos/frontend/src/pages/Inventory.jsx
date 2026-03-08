@@ -1002,15 +1002,35 @@ const Inventory = () => {
         Object.entries(payload.editableSizePrices).forEach(([size, sizeData]) => {
           if (updatedSizes[size]) {
             if (sizeData.hasVariants && sizeData.variants) {
-              // Update variant prices
+              // Update variant prices - need to handle both number and object formats
+              const currentSizeData = updatedSizes[size];
+              const currentVariants = currentSizeData.variants || {};
+              const currentVariantPrices = currentSizeData.variantPrices || {};
+              
               Object.entries(sizeData.variants).forEach(([variant, variantData]) => {
-                if (updatedSizes[size].variants && updatedSizes[size].variants[variant]) {
-                  updatedSizes[size].variants[variant] = {
-                    ...updatedSizes[size].variants[variant],
-                    price: parseFloat(variantData.price) || 0
-                  };
+                const newPrice = parseFloat(variantData.price) || 0;
+                
+                // Check if variants store quantities as numbers or objects
+                if (currentVariants[variant] !== undefined) {
+                  if (typeof currentVariants[variant] === 'number') {
+                    // Variants store quantities as numbers, so update variantPrices separately
+                    currentVariantPrices[variant] = newPrice;
+                  } else if (typeof currentVariants[variant] === 'object') {
+                    // Variants store objects with quantity and price
+                    currentVariants[variant] = {
+                      ...currentVariants[variant],
+                      price: newPrice
+                    };
+                  }
                 }
               });
+              
+              // Update the size data with modified variants/variantPrices
+              updatedSizes[size] = {
+                ...currentSizeData,
+                variants: currentVariants,
+                variantPrices: Object.keys(currentVariantPrices).length > 0 ? currentVariantPrices : currentSizeData.variantPrices
+              };
             } else {
               // Update size price directly
               updatedSizes[size] = {
