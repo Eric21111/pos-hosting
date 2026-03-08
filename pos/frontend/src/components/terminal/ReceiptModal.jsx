@@ -121,19 +121,20 @@ const ReceiptModal = ({
         }}
       >
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '15px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '10px' }}>
           <h2 style={{ margin: '5px 0', fontSize: '18px', fontWeight: 'bold', color: '#1a365d' }}>Create Your Style</h2>
           <p style={{ fontSize: '10px', margin: '2px 0', color: '#4a5568' }}>Pasonanca, Zamboanga City</p>
         </div>
+        <div style={{ borderBottom: '1px dashed #000', marginBottom: '10px' }}></div>
 
         {/* Receipt Number */}
-        <div style={{ textAlign: 'center', margin: '15px 0', borderTop: '1px dashed #cbd5e0', borderBottom: '1px dashed #cbd5e0', padding: '10px 0' }}>
+        <div style={{ textAlign: 'center', marginBottom: '10px' }}>
           <p style={{ fontSize: '10px', margin: '2px 0', color: '#718096', textTransform: 'uppercase', letterSpacing: '1px' }}>Receipt</p>
           <p style={{ fontSize: '18px', fontWeight: 'bold', margin: '2px 0', color: '#2d3748' }}>#{receipt.receiptNo}</p>
         </div>
 
         {/* Date, Cashier, Payment Info */}
-        <div style={{ fontSize: '11px', marginBottom: '15px' }}>
+        <div style={{ fontSize: '11px', marginBottom: '10px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0' }}>
             <span style={{ color: '#4a5568' }}>Date:</span>
             <span style={{ color: '#1a202c' }}>{receipt.date}, {receipt.time}</span>
@@ -147,9 +148,10 @@ const ReceiptModal = ({
             <span style={{ color: '#1a202c' }}>{receipt.paymentMethod || 'Cash'}</span>
           </div>
         </div>
+        <div style={{ borderBottom: '1px dashed #000', marginBottom: '10px' }}></div>
 
         {/* Items */}
-        <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '10px', marginBottom: '15px' }}>
+        <div style={{ marginBottom: '10px' }}>
           {receipt.items && receipt.items.map((item, index) => (
             <div key={index} style={{ marginBottom: '8px' }}>
               <p style={{ fontSize: '11px', fontWeight: '600', margin: '0', color: '#1a202c' }}>{item.name}</p>
@@ -157,9 +159,10 @@ const ReceiptModal = ({
             </div>
           ))}
         </div>
+        <div style={{ borderBottom: '1px dashed #000', marginBottom: '10px' }}></div>
 
         {/* Summary */}
-        <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '10px', fontSize: '11px' }}>
+        <div style={{ fontSize: '11px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0' }}>
             <span style={{ color: '#4a5568' }}>Subtotal:</span>
             <span style={{ color: '#1a202c' }}>PHP {receipt.subtotal.toFixed(2)}</span>
@@ -168,7 +171,7 @@ const ReceiptModal = ({
             <span style={{ color: '#4a5568' }}>Discount:</span>
             <span style={{ color: '#1a202c' }}>PHP {receipt.discount.toFixed(2)}</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', margin: '8px 0', paddingTop: '8px', borderTop: '1px solid #e2e8f0' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', margin: '8px 0', paddingTop: '8px' }}>
             <span style={{ fontWeight: 'bold', color: '#1a365d', fontSize: '13px' }}>Total:</span>
             <span style={{ fontWeight: 'bold', color: '#1a365d', fontSize: '13px' }}>PHP {receipt.total.toFixed(2)}</span>
           </div>
@@ -181,9 +184,10 @@ const ReceiptModal = ({
             <span style={{ color: '#1a202c' }}>PHP {receipt.change.toFixed(2)}</span>
           </div>
         </div>
+        <div style={{ borderBottom: '1px dashed #000', marginBottom: '10px', marginTop: '10px' }}></div>
 
         {/* Footer */}
-        <div style={{ textAlign: 'center', marginTop: '20px', paddingTop: '15px', borderTop: '1px dashed #cbd5e0' }}>
+        <div style={{ textAlign: 'center', paddingTop: '5px' }}>
           <p style={{ fontSize: '11px', color: '#4a5568', margin: '2px 0' }}>Thank you for your purchase!</p>
           <p style={{ fontSize: '10px', color: '#a0aec0', margin: '2px 0' }}>This is not an official receipt</p>
         </div>

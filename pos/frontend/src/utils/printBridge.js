@@ -46,7 +46,7 @@ export const buildReceiptLines = receipt => {
   // Header (centered)
   lines.push(centerText(storeName));
   lines.push(centerText(location));
-  lines.push('');
+  lines.push('--------------------------------');
   
   // Receipt number section
   lines.push(centerText('RECEIPT'));
@@ -57,7 +57,7 @@ export const buildReceiptLines = receipt => {
   lines.push(padLine('Date:', `${receiptDate}, ${receiptTime}`));
   lines.push(padLine('Cashier:', cashier));
   lines.push(padLine('Payment:', paymentMethod));
-  lines.push('');
+  lines.push('--------------------------------');
 
   // Items
   (receipt.items || []).forEach(item => {
@@ -68,7 +68,7 @@ export const buildReceiptLines = receipt => {
     lines.push(itemName);
     lines.push(`${qty} x PHP ${Number(price).toFixed(2)}`);
   });
-  lines.push('');
+  lines.push('--------------------------------');
 
   // Summary
   lines.push(padLine('Subtotal:', `PHP ${Number(receipt.subtotal || 0).toFixed(2)}`));
@@ -84,7 +84,7 @@ export const buildReceiptLines = receipt => {
     lines.push(padLine('Change:', `PHP ${Number(receipt.change).toFixed(2)}`));
   }
 
-  lines.push('');
+  lines.push('--------------------------------');
   lines.push(centerText('Thank you for your purchase!'));
   lines.push(centerText('This is not an official receipt'));
 
