@@ -1,5 +1,5 @@
 
-const PRODUCTION_URL = 'https://pos-system-w61d.onrender.com';
+const PRODUCTION_URL = 'https://pos-hosting.onrender.com';
 
 const LOCAL_IP = '192.168.56.1';
 const PORT = 5000;

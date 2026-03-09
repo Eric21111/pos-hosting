@@ -29,6 +29,7 @@ import TopSellingModal from "../../components/owner/TopSellingModal";
 import Header from "../../components/shared/header";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import { API_ENDPOINTS } from "../../config/api";
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
@@ -126,7 +127,7 @@ const Dashboard = () => {
       };
       const apiTimeframe = timeMap[timeframe] || "daily";
 
-      let url = `http://localhost:5000/api/transactions/dashboard/stats?timeframe=${apiTimeframe}`;
+      let url = `${API_ENDPOINTS.transactionsDashboardStats}?timeframe=${apiTimeframe}`;
       if (timeframe === "Custom" && startDate && endDate) {
         url += `&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`;
       }
@@ -152,7 +153,7 @@ const Dashboard = () => {
       };
       const apiTimeframe = timeMap[timeframe] || "daily";
 
-      let url = `http://localhost:5000/api/transactions/sales-over-time?timeframe=${apiTimeframe}`;
+      let url = `${API_ENDPOINTS.transactionsSalesOverTime}?timeframe=${apiTimeframe}`;
       if (timeframe === "Custom" && startDate && endDate) {
         url += `&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`;
       }
@@ -173,7 +174,7 @@ const Dashboard = () => {
 
   const fetchSalesByCategory = async () => {
     try {
-      let url = "http://localhost:5000/api/transactions/sales-by-category";
+      let url = API_ENDPOINTS.transactionsSalesByCategory;
       if (timeframe === "Custom" && startDate && endDate) {
         url += `?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`;
       }
@@ -199,7 +200,7 @@ const Dashboard = () => {
       };
       const apiTimeframe = timeMap[timeframe] || "daily";
 
-      let url = `http://localhost:5000/api/transactions/top-selling?sort=${topSellingSort}&limit=10&period=${apiTimeframe}`;
+      let url = `${API_ENDPOINTS.transactionsTopSelling}?sort=${topSellingSort}&limit=10&period=${apiTimeframe}`;
       if (timeframe === "Custom" && startDate && endDate) {
         url += `&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`;
       }
@@ -216,7 +217,7 @@ const Dashboard = () => {
 
   const fetchLowStockProducts = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/products/low-stock");
+      const response = await fetch(API_ENDPOINTS.productsLowStock);
       const data = await response.json();
       if (data.success && Array.isArray(data.data)) {
         // Map data to match the component's expected structure

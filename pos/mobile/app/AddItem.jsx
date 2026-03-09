@@ -148,6 +148,11 @@ function AddItem({ onBack, item, isEditing = false }) {
   const [differentPricesPerSize, setDifferentPricesPerSize] = useState(false);
   const [sizePrices, setSizePrices] = useState({});
   const [sizeCostPrices, setSizeCostPrices] = useState({});
+  const [reorderNumber, setReorderNumber] = useState(
+    item?.reorderNumber !== undefined ? item.reorderNumber.toString() : "",
+  );
+  const [supplierName, setSupplierName] = useState(item?.supplierName || "");
+  const [supplierContact, setSupplierContact] = useState(item?.supplierContact || "");
   const [waistSize, setWaistSize] = useState(item?.waistSize || "");
   const [accessoryType, setAccessoryType] = useState(item?.accessoryType || "");
   const [makeupBrand, setMakeupBrand] = useState(item?.makeupBrand || "");
@@ -285,6 +290,9 @@ function AddItem({ onBack, item, isEditing = false }) {
       !!itemSize,
       selectedSizes.length > 0,
       Object.keys(sizeQuantities).length > 0,
+      !!reorderNumber,
+      !!supplierName,
+      !!supplierContact,
       !!waistSize,
       !!accessoryType,
       !!makeupBrand,
@@ -352,6 +360,9 @@ function AddItem({ onBack, item, isEditing = false }) {
     setItemSize("");
     setSelectedSizes([]);
     setSizeQuantities({});
+    setReorderNumber("");
+    setSupplierName("");
+    setSupplierContact("");
     setWaistSize("");
     setAccessoryType("");
     setMakeupBrand("");
@@ -404,6 +415,11 @@ function AddItem({ onBack, item, isEditing = false }) {
       setItemName(item.itemName || item.name || "");
       setItemCategory(item.category || "Tops");
       setItemSize(item.size || "");
+      setReorderNumber(
+        item.reorderNumber !== undefined ? item.reorderNumber.toString() : "",
+      );
+      setSupplierName(item.supplierName || "");
+      setSupplierContact(item.supplierContact || "");
       setWaistSize(item.waistSize || "");
       setAccessoryType(item.accessoryType || "");
       setMakeupBrand(item.makeupBrand || "");
@@ -446,7 +462,7 @@ function AddItem({ onBack, item, isEditing = false }) {
       setDifferentVariantsPerSize(false);
       setSizeVariants({});
       setIsForPOS(!!item.isForPOS);
-      
+
       // Initialize editable size prices from existing product data (like web)
       if (item.sizes && typeof item.sizes === 'object') {
         const sizePricesData = {};
@@ -657,22 +673,22 @@ function AddItem({ onBack, item, isEditing = false }) {
     // For variant quantities, sum up all variant quantities per size
     const totalSizeStock = hasSizesSelected
       ? selectedSizes.reduce((sum, size) => {
-          if (selectedVariants.length > 0 && variantQuantities[size]) {
-            // Sum variant quantities for this size
-            return sum + Object.values(variantQuantities[size]).reduce((vSum, q) => vSum + (parseInt(q) || 0), 0);
-          }
-          return sum + (parseInt(sizeQuantities[size]) || 0);
-        }, 0)
+        if (selectedVariants.length > 0 && variantQuantities[size]) {
+          // Sum variant quantities for this size
+          return sum + Object.values(variantQuantities[size]).reduce((vSum, q) => vSum + (parseInt(q) || 0), 0);
+        }
+        return sum + (parseInt(sizeQuantities[size]) || 0);
+      }, 0)
       : 0;
 
     // Check if variant quantities have any stock
-    const hasVariantQuantities = selectedVariants.length > 0 && 
-      Object.values(variantQuantities).some(sizeVars => 
+    const hasVariantQuantities = selectedVariants.length > 0 &&
+      Object.values(variantQuantities).some(sizeVars =>
         Object.values(sizeVars || {}).some(qty => parseInt(qty) > 0)
       );
-    
+
     // Check if any variant has prices
-    const hasVariantPrices = Object.values(variantPrices).some(sizeVars => 
+    const hasVariantPrices = Object.values(variantPrices).some(sizeVars =>
       Object.values(sizeVars || {}).some(price => parseFloat(price) > 0)
     );
 
@@ -681,7 +697,7 @@ function AddItem({ onBack, item, isEditing = false }) {
       Alert.alert("Error", "Please fill in item name and category");
       return;
     }
-    
+
     // Only require selling price if no variant pricing is being used
     if (!sellingPrice && !hasVariantPrices) {
       Alert.alert("Error", "Please enter a selling price");
@@ -745,60 +761,32 @@ function AddItem({ onBack, item, isEditing = false }) {
             }
           } else {
             // Use global variant (with custom support) or selected variants
-            variantValue = selectedVariants.length > 0 
+            variantValue = selectedVariants.length > 0
               ? selectedVariants.join(", ")
               : (variant === "Custom" ? customVariant : variant || "");
           }
 
           // Check if this size has variant-level pricing
           const hasDifferentPricesPerVariant = differentPricesPerVariant[size];
-          
+
           if (hasDifferentPricesPerVariant && selectedVariants.length > 0 && variantQuantities[size]) {
-            // Variant-level pricing: store each variant with its own qty/price/cost
-            const variants = {};
-            selectedVariants.forEach(variantName => {
-              const qty = parseInt(variantQuantities[size]?.[variantName]) || 0;
-              const price = parseFloat(variantPrices[size]?.[variantName]) || parseFloat(sellingPrice) || 0;
-              const costPriceVal = parseFloat(variantCostPrices[size]?.[variantName]) || parseFloat(costPrice) || 0;
-              if (qty > 0 || price > 0) {
-                variants[variantName] = {
-                  quantity: qty,
-                  price: price,
-                  costPrice: costPriceVal,
-                };
-              }
-            });
-            
-            // Calculate total quantity for this size
-            const totalQty = Object.values(variants).reduce((sum, v) => sum + (v.quantity || 0), 0);
-            
+            // Variant-level pricing: store each variant with its own qty, and add variantPrices/variantCostPrices
             sizesObject[size] = {
-              quantity: totalQty,
-              variants: variants,
-              hasDifferentPricesPerVariant: true,
+              quantity: Object.values(variantQuantities[size]).reduce((sum, q) => sum + (parseInt(q) || 0), 0),
+              price: differentPricesPerSize ? (parseFloat(sizePrices[size]) || defaultItemPrice || 0) : defaultItemPrice,
+              variant: variantValue,
+              variants: variantQuantities[size], // e.g. { "Blue": 5, "White": 7 }
             };
+            if (variantPrices[size]) {
+              sizesObject[size].variantPrices = variantPrices[size];
+            }
+            if (variantCostPrices[size]) {
+              sizesObject[size].variantCostPrices = variantCostPrices[size];
+            }
           } else if (selectedVariants.length > 0 && variantQuantities[size]) {
             // Has variant quantities but no variant-specific pricing
-            const variants = {};
-            selectedVariants.forEach(variantName => {
-              const qty = parseInt(variantQuantities[size]?.[variantName]) || 0;
-              if (qty > 0) {
-                variants[variantName] = {
-                  quantity: qty,
-                  price: differentPricesPerSize 
-                    ? (parseFloat(sizePrices[size]) || parseFloat(sellingPrice) || 0)
-                    : (parseFloat(sellingPrice) || 0),
-                  costPrice: differentPricesPerSize
-                    ? (parseFloat(sizeCostPrices[size]) || parseFloat(costPrice) || 0)
-                    : (parseFloat(costPrice) || 0),
-                };
-              }
-            });
-            
-            const totalQty = Object.values(variants).reduce((sum, v) => sum + (v.quantity || 0), 0);
-            
             sizesObject[size] = {
-              quantity: totalQty,
+              quantity: Object.values(variantQuantities[size]).reduce((sum, q) => sum + (parseInt(q) || 0), 0),
               price: differentPricesPerSize
                 ? parseFloat(sizePrices[size]) || 0
                 : parseFloat(sellingPrice) || 0,
@@ -806,7 +794,7 @@ function AddItem({ onBack, item, isEditing = false }) {
                 ? parseFloat(sizeCostPrices[size]) || 0
                 : parseFloat(costPrice) || 0,
               variant: variantValue,
-              variants: variants,
+              variants: variantQuantities[size], // just quantities
             };
           } else {
             // Simple size quantity (no variants)
@@ -847,6 +835,9 @@ function AddItem({ onBack, item, isEditing = false }) {
           ? totalSizeStock
           : parseInt(itemStock) || 0,
         costPrice: parseFloat(costPrice) || 0,
+        reorderNumber: parseInt(reorderNumber) || 0,
+        supplierName: supplierName.trim(),
+        supplierContact: supplierContact.trim(),
         variant: selectedVariants.length > 0
           ? selectedVariants.join(", ")
           : (variant === "Custom" ? customVariant : variant || customEssentialType || itemSize || ""),
@@ -884,7 +875,7 @@ function AddItem({ onBack, item, isEditing = false }) {
       // If editing and we have editable size prices, update the sizes with new prices
       if (isEditing && Object.keys(editableSizePrices).length > 0) {
         const updatedSizes = { ...(item.sizes || {}) };
-        
+
         Object.entries(editableSizePrices).forEach(([size, sizeData]) => {
           if (updatedSizes[size]) {
             if (sizeData.hasVariants && sizeData.variants) {
@@ -893,11 +884,11 @@ function AddItem({ onBack, item, isEditing = false }) {
               const currentVariants = currentSizeData.variants || {};
               const currentVariantPrices = currentSizeData.variantPrices || {};
               const currentVariantCostPrices = currentSizeData.variantCostPrices || {};
-              
+
               Object.entries(sizeData.variants).forEach(([variant, variantData]) => {
                 const newPrice = parseFloat(variantData.price) || 0;
                 const newCostPrice = parseFloat(variantData.costPrice) || 0;
-                
+
                 if (currentVariants[variant] !== undefined) {
                   if (typeof currentVariants[variant] === 'number') {
                     // Variants store quantities as numbers
@@ -913,7 +904,7 @@ function AddItem({ onBack, item, isEditing = false }) {
                   }
                 }
               });
-              
+
               updatedSizes[size] = {
                 ...currentSizeData,
                 variants: currentVariants,
@@ -930,7 +921,7 @@ function AddItem({ onBack, item, isEditing = false }) {
             }
           }
         });
-        
+
         itemData.sizes = updatedSizes;
         delete itemData.editableSizePrices;
       }
@@ -1247,7 +1238,7 @@ function AddItem({ onBack, item, isEditing = false }) {
                 Optional - Select multiple colors
               </Text>
             </Text>
-            
+
             {/* Selected variants chips */}
             {selectedVariants.length > 0 && (
               <View style={styles.variantChipsContainer}>
@@ -1281,24 +1272,24 @@ function AddItem({ onBack, item, isEditing = false }) {
                 ))}
               </View>
             )}
-            
+
             {/* Dropdown to add variants */}
             <TouchableOpacity
               style={styles.variantDropdownButton}
               onPress={() => setShowVariantDropdown(!showVariantDropdown)}
             >
               <Text style={styles.variantDropdownButtonText}>
-                {selectedVariants.length > 0 
-                  ? `${selectedVariants.length} colors selected` 
+                {selectedVariants.length > 0
+                  ? `${selectedVariants.length} colors selected`
                   : "Select colors"}
               </Text>
-              <Ionicons 
-                name={showVariantDropdown ? "chevron-up" : "chevron-down"} 
-                size={20} 
-                color="#6b7280" 
+              <Ionicons
+                name={showVariantDropdown ? "chevron-up" : "chevron-down"}
+                size={20}
+                color="#6b7280"
               />
             </TouchableOpacity>
-            
+
             {showVariantDropdown && (
               <View style={styles.variantDropdownList}>
                 <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled>
@@ -1327,7 +1318,7 @@ function AddItem({ onBack, item, isEditing = false }) {
                 </ScrollView>
               </View>
             )}
-            
+
             {variant === "Custom" && (
               <View style={{ flexDirection: 'row', marginTop: 8, gap: 8 }}>
                 <TextInput
@@ -1405,7 +1396,7 @@ function AddItem({ onBack, item, isEditing = false }) {
             <Text style={styles.sectionHint}>
               Update prices for each size/variant below. Stock adjustments should be done via Stock In/Out.
             </Text>
-            
+
             {Object.entries(editableSizePrices).map(([size, sizeData]) => (
               <View key={size} style={styles.editableSizeCard}>
                 <View style={styles.editableSizeHeader}>
@@ -1416,7 +1407,7 @@ function AddItem({ onBack, item, isEditing = false }) {
                       : `Stock: ${sizeData.quantity || 0}`}
                   </Text>
                 </View>
-                
+
                 {sizeData.hasVariants ? (
                   <View style={styles.editableVariantsContainer}>
                     {Object.entries(sizeData.variants || {}).map(([variant, variantData]) => (
@@ -1659,11 +1650,11 @@ function AddItem({ onBack, item, isEditing = false }) {
 
                     <View style={styles.sizeQuantityContainer}>
                       <Text style={styles.sizeQuantityTitle}>
-                        {selectedVariants.length > 0 
+                        {selectedVariants.length > 0
                           ? "Quantity per Variant per Size:"
                           : "Quantity per Size:"}
                       </Text>
-                      
+
                       {/* If variants are selected, show matrix of size x variant */}
                       {selectedVariants.length > 0 ? (
                         <View style={{ gap: 16 }}>
@@ -1675,7 +1666,7 @@ function AddItem({ onBack, item, isEditing = false }) {
                                   Total: {Object.values(variantQuantities[size] || {}).reduce((sum, q) => sum + (parseInt(q) || 0), 0)}
                                 </Text>
                               </View>
-                              
+
                               {/* Different prices per variant checkbox */}
                               <TouchableOpacity
                                 style={[styles.differentPricesRow, { marginVertical: 8 }]}
@@ -1709,45 +1700,45 @@ function AddItem({ onBack, item, isEditing = false }) {
                                   Different prices each variant?
                                 </Text>
                               </TouchableOpacity>
-                              
+
                               {/* Cost Price and Selling Price for size (when no variant pricing) */}
-                              {!differentPricesPerVariant[size] && 
-                               (differentPricesPerSize || Object.values(differentPricesPerVariant).some(v => v)) && (
-                                <View style={styles.sizePriceRow}>
-                                  <View style={styles.sizePriceInput}>
-                                    <Text style={styles.sizePriceLabel}>Cost</Text>
-                                    <TextInput
-                                      style={styles.sizeQuantityInput}
-                                      placeholder="₱"
-                                      keyboardType="numeric"
-                                      value={sizeCostPrices[size]?.toString() || ""}
-                                      onChangeText={(value) => {
-                                        setSizeCostPrices(prev => ({ ...prev, [size]: value }));
-                                      }}
-                                    />
+                              {!differentPricesPerVariant[size] &&
+                                (differentPricesPerSize || Object.values(differentPricesPerVariant).some(v => v)) && (
+                                  <View style={styles.sizePriceRow}>
+                                    <View style={styles.sizePriceInput}>
+                                      <Text style={styles.sizePriceLabel}>Cost</Text>
+                                      <TextInput
+                                        style={styles.sizeQuantityInput}
+                                        placeholder="₱"
+                                        keyboardType="numeric"
+                                        value={sizeCostPrices[size]?.toString() || ""}
+                                        onChangeText={(value) => {
+                                          setSizeCostPrices(prev => ({ ...prev, [size]: value }));
+                                        }}
+                                      />
+                                    </View>
+                                    <View style={styles.sizePriceInput}>
+                                      <Text style={styles.sizePriceLabel}>Price</Text>
+                                      <TextInput
+                                        style={styles.sizeQuantityInput}
+                                        placeholder="₱"
+                                        keyboardType="numeric"
+                                        value={sizePrices[size]?.toString() || ""}
+                                        onChangeText={(value) => {
+                                          setSizePrices(prev => ({ ...prev, [size]: value }));
+                                        }}
+                                      />
+                                    </View>
                                   </View>
-                                  <View style={styles.sizePriceInput}>
-                                    <Text style={styles.sizePriceLabel}>Price</Text>
-                                    <TextInput
-                                      style={styles.sizeQuantityInput}
-                                      placeholder="₱"
-                                      keyboardType="numeric"
-                                      value={sizePrices[size]?.toString() || ""}
-                                      onChangeText={(value) => {
-                                        setSizePrices(prev => ({ ...prev, [size]: value }));
-                                      }}
-                                    />
-                                  </View>
-                                </View>
-                              )}
-                              
+                                )}
+
                               {/* Variant quantities (and prices if enabled) */}
                               <View style={differentPricesPerVariant[size] ? { gap: 8 } : styles.variantQuantityGrid}>
                                 {selectedVariants.map((variantName) => (
-                                  <View 
-                                    key={variantName} 
-                                    style={differentPricesPerVariant[size] 
-                                      ? styles.variantRowWithPrices 
+                                  <View
+                                    key={variantName}
+                                    style={differentPricesPerVariant[size]
+                                      ? styles.variantRowWithPrices
                                       : styles.variantQuantityItem}
                                   >
                                     <View style={styles.variantBadge}>
@@ -2279,6 +2270,40 @@ function AddItem({ onBack, item, isEditing = false }) {
               onChangeText={setSellingPrice}
             />
           </View>
+        </View>
+
+        {/* Reorder Number */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Reorder Point (Optional)</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g., 10"
+            keyboardType="numeric"
+            value={reorderNumber}
+            onChangeText={setReorderNumber}
+          />
+        </View>
+
+        {/* Supplier Name */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Supplier Name (Optional)</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Supplier name"
+            value={supplierName}
+            onChangeText={setSupplierName}
+          />
+        </View>
+
+        {/* Supplier Contact */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Supplier Contact (Optional)</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Supplier contact"
+            value={supplierContact}
+            onChangeText={setSupplierContact}
+          />
         </View>
 
         {/* Item Stock - Only show when no sizes are selected */}

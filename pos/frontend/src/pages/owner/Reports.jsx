@@ -27,6 +27,7 @@ import { utils, writeFile } from "xlsx";
 import exportIcon from "../../assets/inventory-icons/export.svg";
 import Header from "../../components/shared/header";
 import { useTheme } from "../../context/ThemeContext";
+import { API_ENDPOINTS } from "../../config/api";
 
 const Reports = () => {
   const { theme } = useTheme();
@@ -106,7 +107,7 @@ const Reports = () => {
   const fetchInventoryMetrics = async () => {
     try {
       // Fetch products for inventory metrics
-      const response = await fetch("http://localhost:5000/api/products");
+      const response = await fetch(API_ENDPOINTS.products);
       const data = await response.json();
 
       if (data.success && Array.isArray(data.data)) {
@@ -167,7 +168,7 @@ const Reports = () => {
 
       // Fetch stock movements
       const movementsResponse = await fetch(
-        "http://localhost:5000/api/stock-movements?limit=50",
+        `${API_ENDPOINTS.stockMovements}?limit=50`,
       );
       const movementsData = await movementsResponse.json();
       if (movementsData.success && Array.isArray(movementsData.data)) {
@@ -239,7 +240,7 @@ const Reports = () => {
       };
       const apiTimeframe = timeMap[period] || "daily";
 
-      let url = `http://localhost:5000/api/reports/inventory-analytics?timeframe=${apiTimeframe}`;
+      let url = `${API_ENDPOINTS.reportsInventoryAnalytics}?timeframe=${apiTimeframe}`;
       if (period === "Custom" && startDate && endDate) {
         url += `&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`;
       }
@@ -344,10 +345,10 @@ const Reports = () => {
                   setDateRange([null, null]); // Reset custom range when switching back to presets
                 }}
                 className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${timePeriod === t
-                    ? "bg-[#AD7F65] text-white shadow-sm"
-                    : theme === "dark"
-                      ? "text-gray-400 hover:bg-[#3A3734]"
-                      : "text-gray-500 hover:bg-gray-100"
+                  ? "bg-[#AD7F65] text-white shadow-sm"
+                  : theme === "dark"
+                    ? "text-gray-400 hover:bg-[#3A3734]"
+                    : "text-gray-500 hover:bg-gray-100"
                   }`}
               >
                 {t}
@@ -360,10 +361,10 @@ const Reports = () => {
                 }
               }}
               className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${timePeriod === "Custom"
-                  ? "bg-[#AD7F65] text-white shadow-sm"
-                  : theme === "dark"
-                    ? "text-gray-400 hover:bg-[#3A3734] hidden"
-                    : "text-gray-500 hover:bg-gray-100 hidden"
+                ? "bg-[#AD7F65] text-white shadow-sm"
+                : theme === "dark"
+                  ? "text-gray-400 hover:bg-[#3A3734] hidden"
+                  : "text-gray-500 hover:bg-gray-100 hidden"
                 }`}
             >
               Custom
@@ -1056,10 +1057,10 @@ const Reports = () => {
                               <td className="py-2.5 text-center">
                                 <span
                                   className={`px-2 py-1 rounded-full text-[10px] font-medium ${item.type === "Damaged"
-                                      ? "bg-red-100 text-red-600"
-                                      : item.type === "Expired"
-                                        ? "bg-amber-100 text-amber-600"
-                                        : "bg-gray-100 text-gray-600"
+                                    ? "bg-red-100 text-red-600"
+                                    : item.type === "Expired"
+                                      ? "bg-amber-100 text-amber-600"
+                                      : "bg-gray-100 text-gray-600"
                                     }`}
                                 >
                                   {item.type}
