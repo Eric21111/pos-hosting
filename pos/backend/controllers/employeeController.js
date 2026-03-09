@@ -306,8 +306,6 @@ exports.verifyPin = async (req, res) => {
     }
 
     // Get only active managers/admins/owners with pin for comparison
-    // Use .select('+pin') only — don't mix with explicit field list which breaks the +pin modifier
-    // Exclude profileImage to keep memory clean
     const employees = await Employee.find({
       status: 'Active',
       role: { $in: ['Manager', 'Admin', 'Owner', 'Super Admin'] }
@@ -323,17 +321,15 @@ exports.verifyPin = async (req, res) => {
     }
 
     // FAST PATH: Check the in-memory cache
-    // We hash the PIN instantly using SHA-256 so we don't store plain text PINs in RAM
     const hashedInput = crypto.createHash('sha256').update(pin).digest('hex');
     const cachedEmpId = pinCache.get(hashedInput);
 
     if (cachedEmpId) {
       const emp = employees.find(e => e._id.toString() === cachedEmpId);
       if (emp) {
-        // Validate with exactly ONE bcrypt.compare instead of checking everyone
         const isMatch = await bcrypt.compare(pin, emp.pin);
         if (isMatch) {
-          const { pin: _, profileImage: __, ...employeeWithoutPin } = emp;
+          const { pin: unusedPin, profileImage: unusedImage, ...employeeWithoutPin } = emp;
           return res.json({
             success: true,
             message: 'PIN verified successfully (cached)',
@@ -341,33 +337,30 @@ exports.verifyPin = async (req, res) => {
             requiresPinReset: emp.requiresPinReset || false
           });
         } else {
-          // PIN was changed recently, invalidate cache
           pinCache.delete(hashedInput);
         }
       }
     }
 
-    // SLOW PATH: First time this PIN is used since server start. 
-    // We check sequentially because queuing 20+ bcrypt promises at once blocks
-    // the Node event loop and UV thread pool for several seconds.
-    let found = null;
-    for (const emp of employees) {
-      if (!emp.pin) continue;
+    // SLOW PATH: First time this PIN is used since server start.
+    // Check all employees concurrently mapped to promises to speed it up.
+    const matchPromises = employees.map(async (emp) => {
+      if (!emp.pin) return null;
       try {
         const isMatch = await bcrypt.compare(pin, emp.pin);
-        if (isMatch) {
-          found = emp;
-          // Save to cache for instant future logins!
-          pinCache.set(hashedInput, emp._id.toString());
-          break; // Early exit
-        }
+        return isMatch ? emp : null;
       } catch (err) {
         console.error('Bcrypt error on', emp.email, err);
+        return null;
       }
-    }
+    });
+
+    const results = await Promise.all(matchPromises);
+    const found = results.find(emp => emp !== null);
 
     if (found) {
-      const { pin: _, profileImage: __, ...employeeWithoutPin } = found;
+      pinCache.set(hashedInput, found._id.toString());
+      const { pin: unusedPin, profileImage: unusedImage, ...employeeWithoutPin } = found;
 
       return res.json({
         success: true,
