@@ -156,6 +156,8 @@ const Logs = () => {
 
       if (data.success && Array.isArray(data.data)) {
         setVoidLogs(data.data);
+      } else if (Array.isArray(data)) {
+        setVoidLogs(data);
       } else {
         setVoidLogs([]);
       }
