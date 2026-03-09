@@ -16,6 +16,7 @@ import topIcon from "../assets/inventory-icons/Top.svg";
 import AddProductModal from "../components/inventory/AddProductModal";
 import ConfirmAddProductModal from "../components/inventory/ConfirmAddProductModal";
 import DeleteConfirmationModal from "../components/inventory/DeleteConfirmationModal";
+import ArchiveConfirmationModal from "../components/inventory/ArchiveConfirmationModal";
 import EditConfirmationModal from "../components/inventory/EditConfirmationModal";
 import Pagination from "../components/inventory/Pagination";
 import ProductTable from "../components/inventory/ProductTable";
@@ -107,6 +108,8 @@ const Inventory = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [productToArchive, setProductToArchive] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [productToEdit, setProductToEdit] = useState(null);
   const [filterCategory, setFilterCategory] = useState("All");
@@ -617,9 +620,9 @@ const Inventory = () => {
       );
 
       // Check if variant prices exist (they might be synced even if differentPricesPerVariant isn't yet)
-      const hasVariantPrices = newProduct.variantPrices && 
+      const hasVariantPrices = newProduct.variantPrices &&
         Object.keys(newProduct.variantPrices).length > 0 &&
-        Object.values(newProduct.variantPrices).some(sizeVariants => 
+        Object.values(newProduct.variantPrices).some(sizeVariants =>
           sizeVariants && Object.values(sizeVariants).some(price => parseFloat(price) > 0)
         );
 
@@ -675,9 +678,9 @@ const Inventory = () => {
     const totalStock =
       newProduct.selectedSizes?.length > 0
         ? Object.values(newProduct.sizeQuantities || {}).reduce(
-            (sum, qty) => sum + (parseInt(qty) || 0),
-            0,
-          )
+          (sum, qty) => sum + (parseInt(qty) || 0),
+          0,
+        )
         : parseInt(newProduct.currentStock) || 0;
 
     try {
@@ -691,7 +694,7 @@ const Inventory = () => {
       // Prepare payload - exclude sizes and stock when editing
       // Get default itemPrice - use first available price from various sources
       let defaultItemPrice = parseFloat(newProduct.itemPrice) || 0;
-      
+
       // If no itemPrice, try to get from size prices
       if (!defaultItemPrice && newProduct.differentPricesPerSize && newProduct.selectedSizes?.length > 0) {
         const firstSizePrice = newProduct.sizePrices?.[newProduct.selectedSizes[0]];
@@ -699,7 +702,7 @@ const Inventory = () => {
           defaultItemPrice = parseFloat(firstSizePrice) || 0;
         }
       }
-      
+
       // If still no itemPrice, try to get from variant prices
       if (!defaultItemPrice && newProduct.variantPrices) {
         const firstSizeWithVariantPrices = Object.keys(newProduct.variantPrices)[0];
@@ -724,11 +727,11 @@ const Inventory = () => {
         payload.currentStock = totalStock;
         if (newProduct.selectedSizes.length > 0) {
           // Check if we have variant quantities (quantity per variant per size)
-          const hasVariantQuantities = newProduct.variantQuantities && 
+          const hasVariantQuantities = newProduct.variantQuantities &&
             Object.keys(newProduct.variantQuantities).length > 0;
-          
+
           // Check if we have variant prices (different prices per variant)
-          const hasVariantPrices = newProduct.variantPrices && 
+          const hasVariantPrices = newProduct.variantPrices &&
             Object.keys(newProduct.variantPrices).length > 0;
 
           // If different prices per size, include size prices in sizes object
@@ -780,11 +783,11 @@ const Inventory = () => {
           } else {
             // No different prices per size checkbox, but may have variants with inline prices
             const sizesObject = {};
-            
+
             // Check if we have variant cost prices
-            const hasVariantCostPrices = newProduct.variantCostPrices && 
+            const hasVariantCostPrices = newProduct.variantCostPrices &&
               Object.keys(newProduct.variantCostPrices).length > 0;
-            
+
             newProduct.selectedSizes.forEach((size) => {
               // Determine variant value for this size
               let variantValue = "";
@@ -888,7 +891,7 @@ const Inventory = () => {
       } else {
         alert(
           data.message ||
-            `Failed to ${editingProduct ? "update" : "add"} product`,
+          `Failed to ${editingProduct ? "update" : "add"} product`,
         );
       }
     } catch (error) {
@@ -998,7 +1001,7 @@ const Inventory = () => {
       if (payload.editableSizePrices && Object.keys(payload.editableSizePrices).length > 0) {
         // Get existing sizes from editing product and update prices
         const updatedSizes = { ...editingProduct.sizes };
-        
+
         Object.entries(payload.editableSizePrices).forEach(([size, sizeData]) => {
           if (updatedSizes[size]) {
             if (sizeData.hasVariants && sizeData.variants) {
@@ -1007,11 +1010,11 @@ const Inventory = () => {
               const currentVariants = currentSizeData.variants || {};
               const currentVariantPrices = currentSizeData.variantPrices || {};
               const currentVariantCostPrices = currentSizeData.variantCostPrices || {};
-              
+
               Object.entries(sizeData.variants).forEach(([variant, variantData]) => {
                 const newPrice = parseFloat(variantData.price) || 0;
                 const newCostPrice = parseFloat(variantData.costPrice) || 0;
-                
+
                 // Check if variants store quantities as numbers or objects
                 if (currentVariants[variant] !== undefined) {
                   if (typeof currentVariants[variant] === 'number') {
@@ -1028,7 +1031,7 @@ const Inventory = () => {
                   }
                 }
               });
-              
+
               // Update the size data with modified variants/variantPrices/variantCostPrices
               updatedSizes[size] = {
                 ...currentSizeData,
@@ -1046,7 +1049,7 @@ const Inventory = () => {
             }
           }
         });
-        
+
         // Include the updated sizes in the payload
         payload.sizes = updatedSizes;
         delete payload.editableSizePrices;
@@ -1131,6 +1134,44 @@ const Inventory = () => {
   const handleDeleteClick = (product) => {
     setProductToDelete(product._id);
     setShowDeleteModal(true);
+  };
+
+  const handleArchiveClick = (product) => {
+    setProductToArchive(product._id);
+    setShowArchiveModal(true);
+  };
+
+  const confirmArchiveProduct = async () => {
+    if (!productToArchive) return;
+
+    setShowArchiveModal(false);
+
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${API_BASE_URL}/api/products/${productToArchive}/archive`,
+        {
+          method: "PATCH",
+        },
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setShowSuccessModal(true);
+        setSuccessMessage("The item was archived successfully!");
+        invalidateCache("products");
+        fetchProducts();
+      } else {
+        alert(data.message || "Failed to archive product");
+      }
+    } catch (error) {
+      console.error("Error archiving product:", error);
+      alert("Failed to archive product. Please try again.");
+    } finally {
+      setLoading(false);
+      setProductToArchive(null);
+    }
   };
 
   const confirmDeleteProduct = async () => {
@@ -1301,7 +1342,7 @@ const Inventory = () => {
             const currentVariants = (typeof currentSizeData === "object" && currentSizeData.variants) || {};
             const currentVariantPrices = (typeof currentSizeData === "object" && currentSizeData.variantPrices) || {};
             const addVariantQtys = stockData.variantQuantities[size] || {};
-            
+
             // Helper to get current variant quantity (handles both number and object formats)
             const getVariantQty = (variantData) => {
               if (typeof variantData === "number") return variantData;
@@ -1310,17 +1351,17 @@ const Inventory = () => {
               }
               return 0;
             };
-            
+
             // Create new variants object with updated quantities
             const newVariants = { ...currentVariants };
             const newVariantPrices = { ...currentVariantPrices };
-            
+
             Object.entries(addVariantQtys).forEach(([variant, addQty]) => {
               if (addQty > 0) {
                 const currentQty = getVariantQty(newVariants[variant]);
                 // Always store as a simple number for consistency
                 newVariants[variant] = currentQty + addQty;
-                
+
                 // Add prices for new variants if provided
                 if (stockData.newVariantPrices && stockData.newVariantPrices[variant]) {
                   newVariantPrices[variant] = stockData.newVariantPrices[variant].price || editingProduct.itemPrice || 0;
@@ -1455,8 +1496,8 @@ const Inventory = () => {
       // Determine type based on reason
       const movementType =
         stockData.reason === "Damaged" ||
-        stockData.reason === "Lost" ||
-        stockData.reason === "Expired"
+          stockData.reason === "Lost" ||
+          stockData.reason === "Expired"
           ? "Pull-Out"
           : "Stock-Out";
 
@@ -1523,7 +1564,7 @@ const Inventory = () => {
             const currentSizeData = updatedSizes[size] || {};
             const currentVariants = (typeof currentSizeData === "object" && currentSizeData.variants) || {};
             const removeVariantQtys = stockData.variantQuantities[size] || {};
-            
+
             // Helper to get current variant quantity (handles both number and object formats)
             const getVariantQty = (variantData) => {
               if (typeof variantData === "number") return variantData;
@@ -1532,7 +1573,7 @@ const Inventory = () => {
               }
               return 0;
             };
-            
+
             // Create new variants object with updated quantities
             const newVariants = { ...currentVariants };
             Object.entries(removeVariantQtys).forEach(([variant, removeQty]) => {
@@ -1760,8 +1801,8 @@ const Inventory = () => {
       const productsToExport =
         selectedProductIds.length > 0
           ? filteredProducts.filter((product) =>
-              selectedProductIds.includes(product._id),
-            )
+            selectedProductIds.includes(product._id),
+          )
           : filteredProducts;
 
       if (productsToExport.length === 0) {
@@ -2108,13 +2149,12 @@ const Inventory = () => {
         <div className="flex gap-4">
           <button
             onClick={handleExportButtonClick}
-            className={`rounded-2xl shadow-md flex flex-col items-center justify-center px-5 py-4 transition-colors ${
-              isExportSelectionMode
+            className={`rounded-2xl shadow-md flex flex-col items-center justify-center px-5 py-4 transition-colors ${isExportSelectionMode
                 ? "border border-[#AD7F65] bg-[#AD7F65]/5"
                 : theme === "dark"
                   ? "bg-[#2A2724] hover:bg-[#352F2A]"
                   : "bg-white hover:bg-gray-50"
-            }`}
+              }`}
             style={{ minWidth: "100px" }}
           >
             <svg
@@ -2139,11 +2179,10 @@ const Inventory = () => {
           {isExportSelectionMode && (
             <button
               onClick={handleCancelExportSelection}
-              className={`rounded-2xl shadow-md px-4 py-2 text-xs font-medium border transition-colors ${
-                theme === "dark"
+              className={`rounded-2xl shadow-md px-4 py-2 text-xs font-medium border transition-colors ${theme === "dark"
                   ? "bg-[#2A2724] border-gray-600 text-gray-400 hover:bg-[#352F2A]"
                   : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-              }`}
+                }`}
             >
               Cancel
             </button>
@@ -2151,11 +2190,10 @@ const Inventory = () => {
 
           <button
             onClick={() => document.getElementById("csv-file-input").click()}
-            className={`rounded-2xl shadow-md flex flex-col items-center justify-center px-5 py-4 transition-colors ${
-              theme === "dark"
+            className={`rounded-2xl shadow-md flex flex-col items-center justify-center px-5 py-4 transition-colors ${theme === "dark"
                 ? "bg-[#2A2724] hover:bg-[#352F2A]"
                 : "bg-white hover:bg-gray-50"
-            }`}
+              }`}
             style={{ minWidth: "100px" }}
           >
             <svg
@@ -2198,22 +2236,20 @@ const Inventory = () => {
               placeholder="Search For..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full h-10 pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
-                theme === "dark"
+              className={`w-full h-10 pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark"
                   ? "bg-[#2A2724] border-gray-600 text-white placeholder-gray-500"
                   : "bg-white border-gray-300"
-              }`}
+                }`}
             />
           </div>
 
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className={`h-10 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] ${
-              theme === "dark"
+            className={`h-10 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] ${theme === "dark"
                 ? "bg-[#2A2724] border-gray-600 text-white"
                 : "bg-white border-gray-300"
-            }`}
+              }`}
           >
             <option value="All">By Category</option>
             {categories
@@ -2228,11 +2264,10 @@ const Inventory = () => {
           <select
             value={filterBrand}
             onChange={(e) => setFilterBrand(e.target.value)}
-            className={`h-10 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] ${
-              theme === "dark"
+            className={`h-10 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] ${theme === "dark"
                 ? "bg-[#2A2724] border-gray-600 text-white"
                 : "bg-white border-gray-300"
-            }`}
+              }`}
           >
             <option value="All">By Brand</option>
             {uniqueBrands.map((brand) => (
@@ -2245,11 +2280,10 @@ const Inventory = () => {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className={`h-10 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] ${
-              theme === "dark"
+            className={`h-10 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] ${theme === "dark"
                 ? "bg-[#2A2724] border-gray-600 text-white"
                 : "bg-white border-gray-300"
-            }`}
+              }`}
           >
             <option value="All">By Status</option>
             <option value="In Stock">In Stock</option>
@@ -2260,11 +2294,10 @@ const Inventory = () => {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className={`h-10 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] ${
-              theme === "dark"
+            className={`h-10 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] ${theme === "dark"
                 ? "bg-[#2A2724] border-gray-600 text-white"
                 : "bg-white border-gray-300"
-            }`}
+              }`}
           >
             <option value="sku-new">SKU: Newest First</option>
             <option value="sku-old">SKU: Oldest First</option>
@@ -2298,6 +2331,7 @@ const Inventory = () => {
         filteredProducts={paginatedProducts}
         handleEditProduct={handleEditClick}
         handleDeleteProduct={handleDeleteClick}
+        handleArchiveProduct={handleArchiveClick}
         handleViewProduct={handleViewProduct}
         handleStockUpdate={handleStockUpdate}
         selectedProductIds={selectedProductIds}
@@ -2359,6 +2393,20 @@ const Inventory = () => {
         itemName={
           productToDelete
             ? filteredProducts.find((p) => p._id === productToDelete)?.itemName
+            : ""
+        }
+      />
+
+      <ArchiveConfirmationModal
+        isOpen={showArchiveModal}
+        onClose={() => {
+          setShowArchiveModal(false);
+          setProductToArchive(null);
+        }}
+        onConfirm={confirmArchiveProduct}
+        itemName={
+          productToArchive
+            ? filteredProducts.find((p) => p._id === productToArchive)?.itemName
             : ""
         }
       />

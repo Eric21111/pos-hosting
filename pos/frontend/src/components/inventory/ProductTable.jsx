@@ -7,6 +7,7 @@ const ProductTable = ({
   filteredProducts,
   handleEditProduct,
   handleDeleteProduct,
+  handleArchiveProduct,
   handleViewProduct,
   handleStockUpdate,
   selectedProductIds = [],
@@ -133,8 +134,8 @@ const ProductTable = ({
                 <tr
                   key={product._id}
                   className={`border-b transition-colors cursor-pointer ${theme === "dark"
-                      ? "border-[#4A4037] hover:bg-[#352F2A] text-gray-300"
-                      : "border-gray-100 hover:bg-gray-50 text-gray-800"
+                    ? "border-[#4A4037] hover:bg-[#352F2A] text-gray-300"
+                    : "border-gray-100 hover:bg-gray-50 text-gray-800"
                     }`}
                   onClick={() => handleViewProduct(product)}
                 >
@@ -194,10 +195,10 @@ const ProductTable = ({
                       return (
                         <span
                           className={`px-2 py-1 rounded font-semibold ${totalStock === 0
-                              ? "bg-red-100 text-red-700"
-                              : totalStock <= (product.reorderNumber || 10)
-                                ? "bg-yellow-100 text-yellow-700"
-                                : "bg-green-100 text-green-700"
+                            ? "bg-red-100 text-red-700"
+                            : totalStock <= (product.reorderNumber || 10)
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-green-100 text-green-700"
                             }`}
                         >
                           {totalStock}
@@ -208,8 +209,8 @@ const ProductTable = ({
                   <td className="py-3 px-4 text-center">
                     <span
                       className={`px-2 py-1 rounded text-sm font-medium ${product.displayInTerminal !== false
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-600"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-gray-100 text-gray-600"
                         }`}
                     >
                       {product.terminalStatus ||
@@ -305,6 +306,30 @@ const ProductTable = ({
                             strokeLinejoin="round"
                             strokeWidth={2}
                             d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          />
+                        </svg>
+                      </button>
+
+                      {/* Archive Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (handleArchiveProduct) handleArchiveProduct(product);
+                        }}
+                        className={`p-2 rounded-lg transition-colors group ${theme === "dark" ? "hover:bg-[#352F2A]" : "hover:bg-orange-50"}`}
+                        title="Archive"
+                      >
+                        <svg
+                          className="w-6 h-6 text-orange-400 group-hover:text-orange-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
                           />
                         </svg>
                       </button>

@@ -12,7 +12,7 @@ exports.getAllProducts = async (req, res) => {
     const isMinimal = req.query.fields === "minimal";
     const projection = isMinimal ? "-stockHistory -itemImage" : "-stockHistory";
 
-    let query = Product.find({}, projection).sort({ dateAdded: -1 });
+    let query = Product.find({ isArchived: { $ne: true } }, projection).sort({ dateAdded: -1 });
 
     // Only apply pagination if limit is specified (Mobile uses limit=20, Web sends none)
     if (limit) {
@@ -550,6 +550,36 @@ exports.deleteProduct = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error deleting product",
+      error: error.message,
+    });
+  }
+};
+
+exports.archiveProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    product.isArchived = true;
+    product.displayInTerminal = false;
+    product.lastUpdated = Date.now();
+    await product.save();
+
+    res.json({
+      success: true,
+      message: "Product archived successfully",
+    });
+  } catch (error) {
+    console.error("Error archiving product:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error archiving product",
       error: error.message,
     });
   }

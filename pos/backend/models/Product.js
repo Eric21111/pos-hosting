@@ -95,6 +95,10 @@ const productSchema = new mongoose.Schema({
     type: [mongoose.Schema.Types.ObjectId],
     default: [],
     ref: 'Discount'
+  },
+  isArchived: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true
