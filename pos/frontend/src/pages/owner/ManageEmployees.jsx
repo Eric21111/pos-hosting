@@ -62,9 +62,9 @@ const ManageEmployees = () => {
   const itemsPerPage = 12;
 
   // Fetch employees from database
-  const fetchEmployees = async () => {
+  const fetchEmployees = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const response = await fetch("http://localhost:5000/api/employees");
       const data = await response.json();
 
@@ -85,7 +85,7 @@ const ManageEmployees = () => {
         "Failed to fetch employees. Make sure the backend server is running.",
       );
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -163,8 +163,8 @@ const ManageEmployees = () => {
           );
         }
         setShowSuccessModal(true);
-        // Refresh employees to reflect any changes
-        fetchEmployees();
+        // Refresh employees to reflect any changes without full screen load
+        fetchEmployees(false);
       } else {
         alert(data.message || "Failed to reset PIN");
       }
@@ -212,7 +212,7 @@ const ManageEmployees = () => {
         );
         setShowSuccessModal(true);
 
-        fetchEmployees();
+        fetchEmployees(false);
       } else {
         alert(data.message || `Failed to ${toggleAction} account`);
       }
@@ -241,8 +241,8 @@ const ManageEmployees = () => {
       const data = await response.json();
 
       if (data.success) {
-        // Refresh employee list
-        fetchEmployees();
+        // Refresh employee list without full screen load
+        fetchEmployees(false);
         setShowDeleteModal(false);
         setDeletingEmployee(null);
       } else {
@@ -281,8 +281,8 @@ const ManageEmployees = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={`w-full h-10 pl-16 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark"
-                    ? "bg-[#2A2724] border-[#4A4037] text-white placeholder-gray-500"
-                    : "bg-white border-gray-300 text-gray-900"
+                  ? "bg-[#2A2724] border-[#4A4037] text-white placeholder-gray-500"
+                  : "bg-white border-gray-300 text-gray-900"
                   }`}
               />
             </div>
@@ -291,8 +291,8 @@ const ManageEmployees = () => {
               <button
                 onClick={() => setFilterStatus("All")}
                 className={`px-6 py-2.5 text-sm font-bold rounded-xl transition-all shadow-sm border ${filterStatus === "All"
-                    ? "bg-white text-[#AD7F65] border-gray-100 border-b-[4px] border-b-[#AD7F65]"
-                    : "bg-white text-gray-800 border-gray-200 border-b-[4px] border-b-gray-200 hover:bg-gray-50"
+                  ? "bg-white text-[#AD7F65] border-gray-100 border-b-[4px] border-b-[#AD7F65]"
+                  : "bg-white text-gray-800 border-gray-200 border-b-[4px] border-b-gray-200 hover:bg-gray-50"
                   }`}
               >
                 All
@@ -300,8 +300,8 @@ const ManageEmployees = () => {
               <button
                 onClick={() => setFilterStatus("Active")}
                 className={`px-6 py-2.5 text-sm font-bold rounded-xl transition-all shadow-sm border ${filterStatus === "Active"
-                    ? "bg-white text-[#AD7F65] border-gray-100 border-b-[4px] border-b-[#AD7F65]"
-                    : "bg-white text-gray-800 border-gray-200 border-b-[4px] border-b-gray-200 hover:bg-gray-50"
+                  ? "bg-white text-[#AD7F65] border-gray-100 border-b-[4px] border-b-[#AD7F65]"
+                  : "bg-white text-gray-800 border-gray-200 border-b-[4px] border-b-gray-200 hover:bg-gray-50"
                   }`}
               >
                 Active
@@ -309,8 +309,8 @@ const ManageEmployees = () => {
               <button
                 onClick={() => setFilterStatus("Archived")}
                 className={`px-6 py-2.5 text-sm font-bold rounded-xl transition-all shadow-sm border ${filterStatus === "Archived"
-                    ? "bg-white text-[#AD7F65] border-gray-100 border-b-[4px] border-b-[#AD7F65]"
-                    : "bg-white text-gray-800 border-gray-200 border-b-[4px] border-b-gray-200 hover:bg-gray-50"
+                  ? "bg-white text-[#AD7F65] border-gray-100 border-b-[4px] border-b-[#AD7F65]"
+                  : "bg-white text-gray-800 border-gray-200 border-b-[4px] border-b-gray-200 hover:bg-gray-50"
                   }`}
               >
                 Archived
@@ -341,8 +341,8 @@ const ManageEmployees = () => {
         ) : employees.length === 0 ? (
           <div
             className={`flex flex-col items-center justify-center py-20 rounded-2xl shadow-inner border border-dashed ${theme === "dark"
-                ? "bg-[#2A2724] border-gray-600"
-                : "bg-white border-gray-300"
+              ? "bg-[#2A2724] border-gray-600"
+              : "bg-white border-gray-300"
               }`}
           >
             <p
@@ -383,8 +383,8 @@ const ManageEmployees = () => {
                   </div>
                   <div
                     className={`absolute bottom-1 right-1 w-5 h-5 rounded-full border-2 border-white ${employee.status === "Active"
-                        ? "bg-green-500"
-                        : "bg-red-500"
+                      ? "bg-green-500"
+                      : "bg-red-500"
                       }`}
                   ></div>
                 </div>
@@ -483,8 +483,8 @@ const ManageEmployees = () => {
                       <button
                         onClick={() => handleToggleStatus(employee)}
                         className={`w-8 h-8 flex items-center justify-center rounded-lg text-white hover:opacity-90 transition-colors shadow-sm ${employee.status === "Active"
-                            ? "bg-[#FFA500]"
-                            : "bg-[#10B981]"
+                          ? "bg-[#FFA500]"
+                          : "bg-[#10B981]"
                           }`}
                         title={
                           employee.status === "Active"
@@ -551,7 +551,7 @@ const ManageEmployees = () => {
           setEditingEmployee(null);
         }}
         employee={editingEmployee}
-        onEmployeeUpdated={fetchEmployees}
+        onEmployeeUpdated={() => fetchEmployees(false)}
       />
 
       <DeleteEmployeeModal
@@ -569,7 +569,7 @@ const ManageEmployees = () => {
         onClose={() => {
           setShowAddModal(false);
         }}
-        onEmployeeAdded={fetchEmployees}
+        onEmployeeAdded={() => fetchEmployees(false)}
         onEmployeeCreated={(name, pin) => {
           setNewEmployeeName(name);
           setNewEmployeePin(pin);

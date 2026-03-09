@@ -35,7 +35,9 @@ exports.getAllEmployees = async (req, res) => {
 // Get employee by ID
 exports.getEmployeeById = async (req, res) => {
   try {
-    const employee = await Employee.findById(req.params.id).lean();
+    const employee = await Employee.findById(req.params.id)
+      .select('-profileImage')
+      .lean();
 
     if (!employee) {
       return res.status(404).json({
@@ -144,7 +146,7 @@ exports.createEmployee = async (req, res) => {
 
     const employee = await Employee.create(employeeData);
 
-    const { pin: _, ...employeeWithoutPin } = employee.toObject();
+    const { pin: _, profileImage: __, ...employeeWithoutPin } = employee.toObject();
 
     // Send temporary PIN via email automatically
     let emailSent = false;
@@ -234,7 +236,7 @@ exports.updateEmployee = async (req, res) => {
       id,
       updateData,
       { new: true, runValidators: true }
-    );
+    ).select('-profileImage');
 
     if (!employee) {
       return res.status(404).json({
@@ -263,7 +265,7 @@ exports.updateEmployee = async (req, res) => {
 // Delete employee
 exports.deleteEmployee = async (req, res) => {
   try {
-    const employee = await Employee.findByIdAndDelete(req.params.id);
+    const employee = await Employee.findByIdAndDelete(req.params.id).select('_id');
 
     if (!employee) {
       return res.status(404).json({
@@ -301,11 +303,12 @@ exports.verifyPin = async (req, res) => {
 
     // Get only active managers/admins/owners with pin for comparison
     // Use .select('+pin') only — don't mix with explicit field list which breaks the +pin modifier
+    // Exclude profileImage to keep memory clean
     const employees = await Employee.find({
       status: 'Active',
       role: { $in: ['Manager', 'Admin', 'Owner', 'Super Admin'] }
     })
-      .select('+pin')
+      .select('+pin -profileImage')
       .lean();
 
     if (employees.length === 0) {
@@ -380,7 +383,7 @@ exports.resetPin = async (req, res) => {
         lastUpdated: Date.now()
       },
       { new: true }
-    );
+    ).select('-profileImage');
 
     if (!employee) {
       return res.status(404).json({
@@ -408,7 +411,7 @@ exports.resetPin = async (req, res) => {
 exports.toggleStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const employee = await Employee.findById(id);
+    const employee = await Employee.findById(id).select('-profileImage');
 
     if (!employee) {
       return res.status(404).json({
@@ -423,7 +426,7 @@ exports.toggleStatus = async (req, res) => {
       id,
       { status: newStatus, lastUpdated: Date.now() },
       { new: true }
-    );
+    ).select('-profileImage');
 
     const { pin, ...employeeWithoutPin } = updatedEmployee.toObject();
 
@@ -446,7 +449,10 @@ exports.toggleStatus = async (req, res) => {
 exports.getEmployeesByRole = async (req, res) => {
   try {
     const { role } = req.params;
-    const employees = await Employee.find({ role }).sort({ dateJoined: -1 }).lean();
+    const employees = await Employee.find({ role })
+      .select('-profileImage')
+      .sort({ dateJoined: -1 })
+      .lean();
 
     const employeesWithoutPin = employees.map(emp => {
       const { pin, ...rest } = emp;
@@ -471,7 +477,7 @@ exports.getEmployeesByRole = async (req, res) => {
 exports.sendTemporaryPin = async (req, res) => {
   try {
     const { id } = req.params;
-    const employee = await Employee.findById(id);
+    const employee = await Employee.findById(id).select('-profileImage');
 
     if (!employee) {
       return res.status(404).json({
@@ -617,7 +623,7 @@ exports.updatePin = async (req, res) => {
         lastUpdated: Date.now()
       },
       { new: true }
-    );
+    ).select('-profileImage');
 
     if (!employee) {
       return res.status(404).json({
