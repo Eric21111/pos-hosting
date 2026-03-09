@@ -101,7 +101,7 @@ const Logs = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/stock-movements/stats/today');
+      const response = await fetch(`${API_BASE_URL}/api/stock-movements/stats/today`);
       const data = await response.json();
       if (data.success) {
         // Map backend response to frontend expected format
@@ -132,7 +132,7 @@ const Logs = () => {
         limit: '1000' // Fetch all movements, paginate client-side
       });
 
-      const response = await fetch(`http://localhost:5000/api/stock-movements?${params}`);
+      const response = await fetch(`${API_BASE_URL}/api/stock-movements?${params}`);
       const data = await response.json();
 
       if (data.success) {
@@ -151,7 +151,7 @@ const Logs = () => {
     try {
       setLoading(true);
       // Fetch from VoidLog collection which has the voidId
-      const response = await fetch('http://localhost:5000/api/void-logs?limit=1000&sortBy=voidedAt&sortOrder=desc');
+      const response = await fetch(`${API_BASE_URL}/api/void-logs?limit=1000&sortBy=voidedAt&sortOrder=desc`);
       const data = await response.json();
 
       if (data.success && Array.isArray(data.data)) {
@@ -361,8 +361,7 @@ const Logs = () => {
           return;
         }
 
-        // Send to backend
-        const response = await fetch('http://localhost:5000/api/stock-movements/bulk', {
+        const response = await fetch(`${API_BASE_URL}/api/stock-movements/bulk`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ movements: importedMovements })
