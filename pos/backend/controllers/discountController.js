@@ -3,17 +3,31 @@ const Discount = require('../models/Discount');
 exports.getAllDiscounts = async (req, res) => {
   try {
     const discounts = await Discount.find({}).sort({ dateCreated: -1 }).lean();
-    
+
+    // Auto-disable discounts that reached their limit before formatting
+    for (let i = 0; i < discounts.length; i++) {
+      let discount = discounts[i];
+      if (
+        discount.usageLimit &&
+        discount.usageLimit > 0 &&
+        (discount.usageCount || 0) >= discount.usageLimit &&
+        discount.status === 'active'
+      ) {
+        await Discount.findByIdAndUpdate(discount._id, { status: 'inactive' });
+        discounts[i].status = 'inactive';
+      }
+    }
+
     const formattedDiscounts = discounts.map(discount => {
-      const discountValue = discount.discountType === 'percentage' 
+      const discountValue = discount.discountType === 'percentage'
         ? `${discount.discountValue}% OFF`
         : `₱${discount.discountValue} OFF`;
 
-      const appliesToText = discount.appliesTo === 'all' 
+      const appliesToText = discount.appliesTo === 'all'
         ? 'All Products'
         : discount.appliesTo === 'category'
-        ? `Category: ${discount.category}`
-        : 'Specific Products';
+          ? `Category: ${discount.category}`
+          : 'Specific Products';
 
       return {
         ...discount,
@@ -21,14 +35,14 @@ exports.getAllDiscounts = async (req, res) => {
         discountValue: discountValue,
         appliesTo: appliesToText,
         appliesToType: discount.appliesTo,
-        usage: discount.usageLimit 
+        usage: discount.usageLimit
           ? { used: discount.usageCount || 0, total: discount.usageLimit }
           : null,
         validFrom: discount.noExpiration ? 'Permanent' : (discount.validFrom ? new Date(discount.validFrom).toISOString().split('T')[0] : null),
         validTo: discount.noExpiration ? null : (discount.validTo ? new Date(discount.validTo).toISOString().split('T')[0] : null)
       };
     });
-    
+
     res.json({
       success: true,
       count: formattedDiscounts.length,
@@ -47,7 +61,7 @@ exports.getAllDiscounts = async (req, res) => {
 exports.getDiscountById = async (req, res) => {
   try {
     const discount = await Discount.findById(req.params.id).lean();
-    
+
     if (!discount) {
       return res.status(404).json({
         success: false,
@@ -71,20 +85,20 @@ exports.getDiscountById = async (req, res) => {
 exports.createDiscount = async (req, res) => {
   try {
     const discountData = { ...req.body };
-    
+
     if (!discountData.title || !discountData.discountType || discountData.discountValue === undefined) {
       return res.status(400).json({
         success: false,
         message: 'Title, discount type, and discount value are required'
       });
     }
-    
+
     if (!discountData.status) {
       discountData.status = 'active';
     }
-    
+
     const discount = await Discount.create(discountData);
-    
+
     res.status(201).json({
       success: true,
       data: discount
@@ -109,20 +123,45 @@ exports.updateDiscount = async (req, res) => {
   try {
     const updateData = { ...req.body };
     updateData.lastUpdated = Date.now();
-    
+
+    const currentDiscount = await Discount.findById(req.params.id);
+    if (!currentDiscount) {
+      return res.status(404).json({
+        success: false,
+        message: 'Discount not found'
+      });
+    }
+
+    // Auto-reactivate if usageLimit is increased above current usage
+    if (
+      updateData.usageLimit &&
+      updateData.usageLimit > (currentDiscount.usageCount || 0) &&
+      currentDiscount.status === 'inactive'
+    ) {
+      updateData.status = 'active';
+    }
+    // Auto-disable if usageLimit is decreased below or equal to current usage
+    else if (
+      updateData.usageLimit &&
+      updateData.usageLimit <= (currentDiscount.usageCount || 0) &&
+      currentDiscount.status === 'active'
+    ) {
+      updateData.status = 'inactive';
+    }
+
     const discount = await Discount.findByIdAndUpdate(
       req.params.id,
       updateData,
       { new: true }
     );
-    
+
     if (!discount) {
       return res.status(404).json({
         success: false,
         message: 'Discount not found'
       });
     }
-    
+
     res.json({
       success: true,
       data: discount
@@ -146,14 +185,14 @@ exports.updateDiscount = async (req, res) => {
 exports.deleteDiscount = async (req, res) => {
   try {
     const discount = await Discount.findByIdAndDelete(req.params.id);
-    
+
     if (!discount) {
       return res.status(404).json({
         success: false,
         message: 'Discount not found'
       });
     }
-    
+
     res.json({
       success: true,
       message: 'Discount deleted successfully'
@@ -171,22 +210,22 @@ exports.deleteDiscount = async (req, res) => {
 exports.toggleDiscountStatus = async (req, res) => {
   try {
     const discount = await Discount.findById(req.params.id);
-    
+
     if (!discount) {
       return res.status(404).json({
         success: false,
         message: 'Discount not found'
       });
     }
-    
+
     const newStatus = discount.status === 'active' ? 'inactive' : 'active';
-    
+
     const updatedDiscount = await Discount.findByIdAndUpdate(
       req.params.id,
       { status: newStatus, lastUpdated: Date.now() },
       { new: true }
     );
-    
+
     res.json({
       success: true,
       data: updatedDiscount
@@ -204,15 +243,23 @@ exports.toggleDiscountStatus = async (req, res) => {
 exports.getActiveDiscounts = async (req, res) => {
   try {
     const now = new Date();
-    
-    const discounts = await Discount.find({
+
+    let discounts = await Discount.find({
       status: 'active',
       $or: [
         { noExpiration: true },
         { validFrom: { $lte: now }, validTo: { $gte: now } }
       ]
     }).lean();
-    
+
+    // Filter out discounts that reached limit (fallback defense)
+    discounts = discounts.filter(discount => {
+      if (discount.usageLimit && discount.usageLimit > 0) {
+        return (discount.usageCount || 0) < discount.usageLimit;
+      }
+      return true;
+    });
+
     res.json({
       success: true,
       count: discounts.length,
