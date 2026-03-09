@@ -15,7 +15,7 @@ const Logs = () => {
   const { currentUser } = useAuth();
   const { getCachedData, setCachedData, isCacheValid, invalidateCache } = useDataCache();
   const [activeTab, setActiveTab] = useState('stock-movement');
-  const [movements, setMovements] = useState(() => getCachedData('stockMovements') || []);
+  const [movements, setMovements] = useState([]);
   const [voidLogs, setVoidLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showVoidLogModal, setShowVoidLogModal] = useState(false);
@@ -37,7 +37,9 @@ const Logs = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [voidCurrentPage, setVoidCurrentPage] = useState(1);
   const rowsPerPage = 8;
-  const [selectedMovementIds, setSelectedMovementIds] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [voidTotalPages, setVoidTotalPages] = useState(1);
+  const [selectedMovements, setSelectedMovements] = useState([]);
   const [isMovementExportMode, setIsMovementExportMode] = useState(false);
 
   const categories = ['All', 'Tops', 'Bottoms', 'Dresses', 'Makeup', 'Accessories', 'Shoes', 'Head Wear', 'Foods'];
@@ -53,51 +55,44 @@ const Logs = () => {
     { value: 'sku-desc', label: 'SKU: Z-A' }
   ];
 
-  // Only fetch if cache is empty or invalid
+  const selectAllMovementsRef = useRef(null);
+
+  // Fetch stock movement and void log stats on mount
   useEffect(() => {
-    const cachedMovements = getCachedData('stockMovements');
     const cachedStats = getCachedData('stats');
-
-    if (!cachedMovements || !isCacheValid('stockMovements')) {
-      fetchMovements();
-    } else {
-      setMovements(cachedMovements);
-    }
-
     if (!cachedStats || !isCacheValid('stats')) {
       fetchStats();
-    } else {
-      setStats(cachedStats);
     }
   }, []);
 
-  // Fetch void logs when void logs tab is active
+  // Fetch stock movements when active tab, filters, or page change
+  useEffect(() => {
+    if (activeTab === 'stock-movement') {
+      fetchMovements();
+    }
+  }, [activeTab, currentPage, searchQuery, filterCategory, filterType, filterBrand, filterDate, filterReason, sortBy]);
+
+  // Reset page to 1 when filters change (using a separate effect avoids re-fetching twice 
+  // because React handles synchronous state updates well, but to be clean, 
+  // one could reset inside the filter handlers. For now, it resets on changes.)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterCategory, filterType, filterBrand, filterDate, filterReason, sortBy]);
+
+  // Fetch void logs when active tab or page changes
   useEffect(() => {
     if (activeTab === 'void-logs') {
       fetchVoidLogs();
     }
-  }, [activeTab]);
+  }, [activeTab, voidCurrentPage]);
 
+  // Clean up selected items when switching tabs
   useEffect(() => {
     if (activeTab !== 'stock-movement') {
       setIsMovementExportMode(false);
-      setSelectedMovementIds([]);
+      setSelectedMovements([]);
     }
   }, [activeTab]);
-
-  // Refetch movements when filters change (but use cache for initial load)
-  const isInitialMount = useRef(true);
-  const selectAllMovementsRef = useRef(null);
-  useEffect(() => {
-    // Skip on initial mount (already handled by first useEffect)
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-    // Refetch when filters change (but not when page changes - we'll handle that client-side)
-    setCurrentPage(1); // Reset to first page when filters change
-    fetchMovements();
-  }, [searchQuery, filterCategory, filterType, filterBrand, filterDate, filterReason, sortBy]);
 
   const fetchStats = async () => {
     try {
@@ -129,7 +124,8 @@ const Logs = () => {
         date: filterDate,
         reason: filterReason,
         sortBy: sortBy,
-        limit: '1000' // Fetch all movements, paginate client-side
+        page: currentPage,
+        limit: rowsPerPage
       });
 
       const response = await fetch(`${API_BASE_URL}/api/stock-movements?${params}`);
@@ -137,7 +133,7 @@ const Logs = () => {
 
       if (data.success) {
         setMovements(data.data || []);
-        setCachedData('stockMovements', data.data || []);
+        if (data.pagination) setTotalPages(data.pagination.pages || 1);
       }
     } catch (error) {
       console.error('Error fetching movements:', error);
@@ -150,12 +146,19 @@ const Logs = () => {
   const fetchVoidLogs = async () => {
     try {
       setLoading(true);
+      const params = new URLSearchParams({
+        page: voidCurrentPage,
+        limit: rowsPerPage,
+        sortBy: 'voidedAt',
+        sortOrder: 'desc'
+      });
       // Fetch from VoidLog collection which has the voidId
-      const response = await fetch(`${API_BASE_URL}/api/void-logs?limit=1000&sortBy=voidedAt&sortOrder=desc`);
+      const response = await fetch(`${API_BASE_URL}/api/void-logs?${params}`);
       const data = await response.json();
 
       if (data.success && Array.isArray(data.data)) {
         setVoidLogs(data.data);
+        if (data.pagination) setVoidTotalPages(data.pagination.pages || 1);
       } else if (Array.isArray(data)) {
         setVoidLogs(data);
       } else {
@@ -211,30 +214,30 @@ const Logs = () => {
     return 'text-gray-600';
   };
 
-  const handleToggleMovementSelection = (movementId) => {
-    if (!movementId) return;
-    setSelectedMovementIds((prev) =>
-      prev.includes(movementId)
-        ? prev.filter((id) => id !== movementId)
-        : [...prev, movementId]
+  const handleToggleMovementSelection = (movement) => {
+    if (!movement || !movement._id) return;
+    setSelectedMovements((prev) =>
+      prev.some((m) => m._id === movement._id)
+        ? prev.filter((m) => m._id !== movement._id)
+        : [...prev, movement]
     );
   };
 
   const handleToggleSelectAllMovements = () => {
-    setSelectedMovementIds((prev) => {
+    setSelectedMovements((prev) => {
       if (allVisibleMovementsSelected) {
-        return prev.filter((id) => !paginatedMovementIds.includes(id));
+        return prev.filter((m) => !movements.some((vm) => vm._id === m._id));
       }
-      const merged = new Set(prev);
-      paginatedMovementIds.forEach((id) => merged.add(id));
-      return Array.from(merged);
+      const existingIds = new Set(prev.map(m => m._id));
+      const toAdd = movements.filter((m) => !existingIds.has(m._id));
+      return [...prev, ...toAdd];
     });
   };
 
   const handleMovementExportButtonClick = () => {
     if (!isMovementExportMode) {
       setIsMovementExportMode(true);
-      setSelectedMovementIds([]);
+      setSelectedMovements([]);
       return;
     }
     handleExport();
@@ -242,13 +245,13 @@ const Logs = () => {
 
   const handleCancelMovementSelection = () => {
     setIsMovementExportMode(false);
-    setSelectedMovementIds([]);
+    setSelectedMovements([]);
   };
 
   const handleExport = () => {
     // Export all stock movements to CSV with all details
-    const movementsToExport = selectedMovementIds.length > 0
-      ? filteredMovements.filter((movement) => selectedMovementIds.includes(movement._id))
+    const movementsToExport = selectedMovements.length > 0
+      ? selectedMovements
       : [];
 
     if (movementsToExport.length === 0) {
@@ -313,7 +316,7 @@ const Logs = () => {
     link.click();
     document.body.removeChild(link);
     setIsMovementExportMode(false);
-    setSelectedMovementIds([]);
+    setSelectedMovements([]);
   };
 
   const handleImport = async (event) => {
@@ -405,118 +408,15 @@ const Logs = () => {
     return ['All', ...Array.from(brands).sort()];
   }, [movements]);
 
-  // Filter movements client-side (similar to transaction.jsx)
-  const filteredMovements = useMemo(() => {
-    let filtered = movements;
-
-    // Filter by category
-    if (filterCategory !== 'All') {
-      filtered = filtered.filter(m => m.category === filterCategory);
-    }
-
-    // Filter by type
-    if (filterType !== 'All') {
-      filtered = filtered.filter(m => m.type === filterType);
-    }
-
-    // Filter by brand
-    if (filterBrand !== 'All') {
-      filtered = filtered.filter(m => m.brandName === filterBrand);
-    }
-
-    // Filter by reason
-    if (filterReason !== 'All') {
-      filtered = filtered.filter(m => m.reason === filterReason);
-    }
-
-    // Filter by date
-    if (filterDate !== 'All') {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const thisWeek = new Date(today);
-      thisWeek.setDate(today.getDate() - 7);
-      const thisMonth = new Date(today);
-      thisMonth.setMonth(today.getMonth() - 1);
-
-      filtered = filtered.filter(m => {
-        const movementDate = new Date(m.createdAt || 0);
-        switch (filterDate) {
-          case 'Today':
-            return movementDate >= today;
-          case 'This Week':
-            return movementDate >= thisWeek;
-          case 'This Month':
-            return movementDate >= thisMonth;
-          default:
-            return true;
-        }
-      });
-    }
-
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(m =>
-        m.itemName?.toLowerCase().includes(query) ||
-        m.sku?.toLowerCase().includes(query) ||
-        m.handledBy?.toLowerCase().includes(query)
-      );
-    }
-
-    // Sort movements
-    filtered = [...filtered].sort((a, b) => {
-      switch (sortBy) {
-        case 'date-desc':
-          return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-        case 'date-asc':
-          return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
-        case 'name-asc':
-          return (a.itemName || '').localeCompare(b.itemName || '');
-        case 'name-desc':
-          return (b.itemName || '').localeCompare(a.itemName || '');
-        case 'sku-asc':
-          return (a.sku || '').localeCompare(b.sku || '');
-        case 'sku-desc':
-          return (b.sku || '').localeCompare(a.sku || '');
-        default:
-          return 0;
-      }
-    });
-
-    return filtered;
-  }, [movements, filterCategory, filterType, filterBrand, filterReason, searchQuery, sortBy]);
-
-  // Paginate movements client-side (similar to transaction.jsx)
-  const paginatedMovements = useMemo(() => {
-    const startIndex = (currentPage - 1) * rowsPerPage;
-    return filteredMovements.slice(startIndex, startIndex + rowsPerPage);
-  }, [filteredMovements, currentPage, rowsPerPage]);
-  const paginatedMovementIds = useMemo(
-    () => paginatedMovements.map((movement) => movement._id).filter(Boolean),
-    [paginatedMovements]
-  );
   const allVisibleMovementsSelected =
-    paginatedMovementIds.length > 0 &&
-    paginatedMovementIds.every((id) => selectedMovementIds.includes(id));
-  const someVisibleMovementsSelected = paginatedMovementIds.some((id) =>
-    selectedMovementIds.includes(id)
+    movements.length > 0 &&
+    movements.every((m) => selectedMovements.some(sm => sm._id === m._id));
+
+  const someVisibleMovementsSelected = movements.some((m) =>
+    selectedMovements.some(sm => sm._id === m._id)
   );
 
-  // Paginate void logs client-side (similar to transaction.jsx)
-  const paginatedVoidLogs = useMemo(() => {
-    const startIndex = (voidCurrentPage - 1) * rowsPerPage;
-    return voidLogs.slice(startIndex, startIndex + rowsPerPage);
-  }, [voidLogs, voidCurrentPage, rowsPerPage]);
-
-  const totalPages = Math.ceil(filteredMovements.length / rowsPerPage) || 1;
-  const voidTotalPages = Math.ceil(voidLogs.length / rowsPerPage) || 1;
   const movementTableColumnCount = isMovementExportMode ? 8 : 7;
-
-  useEffect(() => {
-    setSelectedMovementIds((prev) =>
-      prev.filter((id) => filteredMovements.some((movement) => movement._id === id))
-    );
-  }, [filteredMovements]);
 
   useEffect(() => {
     if (selectAllMovementsRef.current) {
@@ -774,22 +674,22 @@ const Logs = () => {
                         </div>
                       </td>
                     </tr>
-                  ) : paginatedMovements.length === 0 ? (
+                  ) : movements.length === 0 ? (
                     <tr>
                       <td colSpan={movementTableColumnCount} className="px-4 py-8 text-center text-gray-500">
                         No stock movements found
                       </td>
                     </tr>
                   ) : (
-                    paginatedMovements.map((movement) => (
+                    movements.map((movement) => (
                       <tr key={movement._id} className={`${theme === 'dark' ? 'hover:bg-[#3A3734] hover:bg-opacity-50' : 'hover:bg-gray-50'}`}>
                         {isMovementExportMode && (
                           <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                             <input
                               type="checkbox"
                               className="w-4 h-4 text-[#AD7F65] border-[#AD7F65] rounded focus:ring-[#AD7F65]"
-                              checked={selectedMovementIds.includes(movement._id)}
-                              onChange={() => handleToggleMovementSelection(movement._id)}
+                              checked={selectedMovements.some(sm => sm._id === movement._id)}
+                              onChange={() => handleToggleMovementSelection(movement)}
                               disabled={!movement._id}
                             />
                           </td>
@@ -812,11 +712,10 @@ const Logs = () => {
           </div>
 
           {/* Pagination - Same style as transaction.jsx */}
-          {filteredMovements.length > 0 && (
+          {movements.length > 0 && (
             <div className="flex items-center justify-between mt-5">
               <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                Showing {(currentPage - 1) * rowsPerPage + 1}-
-                {Math.min(currentPage * rowsPerPage, filteredMovements.length)} of {filteredMovements.length}
+                Page {currentPage} of {totalPages}
               </div>
               {totalPages > 1 && (
                 <div className={`flex items-center gap-2 rounded-full border px-3 py-1 shadow-inner ${theme === 'dark' ? 'bg-[#2A2724] border-gray-700' : 'bg-white border-gray-200'}`}>
@@ -901,8 +800,10 @@ const Logs = () => {
                     </td>
                   </tr>
                 ) : (
-                  paginatedVoidLogs.map((log, index) => {
-                    const voidNumber = voidLogs.length - (voidCurrentPage - 1) * rowsPerPage - index; // Most recent void gets highest number
+                  voidLogs.map((log, index) => {
+                    const voidNumber = voidTotalPages === 1
+                      ? voidLogs.length - index
+                      : (voidTotalPages * rowsPerPage) - ((voidCurrentPage - 1) * rowsPerPage) - index; // Best effort estimation if not provided by backend
                     // Determine approved by display - show name and role
                     const getApprovedByDisplay = () => {
                       if (log.approvedBy && log.approvedByRole) {
@@ -961,8 +862,7 @@ const Logs = () => {
           {voidLogs.length > 0 && (
             <div className="flex items-center justify-between mt-5">
               <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                Showing {(voidCurrentPage - 1) * rowsPerPage + 1}-
-                {Math.min(voidCurrentPage * rowsPerPage, voidLogs.length)} of {voidLogs.length}
+                Page {voidCurrentPage} of {voidTotalPages}
               </div>
               {voidTotalPages > 1 && (
                 <div className={`flex items-center gap-2 rounded-full border px-3 py-1 shadow-inner ${theme === 'dark' ? 'bg-[#2A2724] border-gray-700' : 'bg-white border-gray-200'}`}>

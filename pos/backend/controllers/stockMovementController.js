@@ -156,6 +156,12 @@ exports.getStockMovements = async (req, res) => {
       case 'name-desc':
         sort = { itemName: -1 };
         break;
+      case 'sku-asc':
+        sort = { sku: 1 };
+        break;
+      case 'sku-desc':
+        sort = { sku: -1 };
+        break;
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
