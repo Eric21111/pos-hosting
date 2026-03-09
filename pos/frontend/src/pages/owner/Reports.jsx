@@ -228,7 +228,7 @@ const Reports = () => {
     }
   };
 
-  const fetchInventoryAnalytics = async (period = "Day") => {
+  const fetchInventoryAnalytics = async (period = "Day", retryCount = 0) => {
     try {
       setInventoryLoading(true);
       const timeMap = {
@@ -245,7 +245,13 @@ const Reports = () => {
         url += `&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`;
       }
 
-      const response = await fetch(url);
+      // Use AbortController for timeout (25s first try, 30s retry)
+      const controller = new AbortController();
+      const timeoutMs = retryCount === 0 ? 25000 : 30000;
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
       const data = await response.json();
 
       if (data.success) {
@@ -253,6 +259,11 @@ const Reports = () => {
       }
     } catch (error) {
       console.error("Error fetching inventory analytics:", error);
+      // Retry once on timeout/network error
+      if (retryCount < 1 && (error.name === "AbortError" || error.message?.includes("fetch"))) {
+        console.log("Retrying inventory analytics fetch...");
+        return fetchInventoryAnalytics(period, retryCount + 1);
+      }
     } finally {
       setInventoryLoading(false);
     }

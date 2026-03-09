@@ -55,6 +55,10 @@ const getDateRange = (timeframe, customStartDate, customEndDate) => {
 /**
  * GET /api/reports/inventory-analytics
  * Returns all data needed for the Inventory & Product analytics tab
+ * 
+ * OPTIMIZED: Uses MongoDB aggregation pipelines and parallel queries
+ * to avoid loading entire collections into Node.js memory.
+ * This prevents Render free-tier 30s timeout.
  */
 exports.getInventoryAnalytics = async (req, res) => {
   try {
@@ -65,161 +69,327 @@ exports.getInventoryAnalytics = async (req, res) => {
     } = req.query;
     const { start, end } = getDateRange(timeframe, customStart, customEnd);
 
-    // ── 1. Fetch all products for inventory value calculations ──
-    const products = await Product.find({}).lean();
-
-    const inventoryValue = products.reduce(
-      (sum, p) => sum + (p.itemPrice || 0) * (p.currentStock || 0),
-      0,
-    );
-    const totalItems = products.length;
-
-    // ── 2. Fetch completed transactions in the time range ──
-    const transactions = await SalesTransaction.find({
-      $or: [
-        { checkedOutAt: { $gte: start, $lte: end } },
+    // ── Run all queries in parallel for speed ──
+    const [
+      inventoryAgg,
+      salesAgg,
+      movementAgg,
+      movementTimeSeries,
+      salesTimeSeries,
+      damagedExpiredItems,
+    ] = await Promise.all([
+      // 1. Product inventory aggregation (replaces Product.find({}).lean())
+      Product.aggregate([
         {
-          checkedOutAt: { $exists: false },
-          createdAt: { $gte: start, $lte: end },
+          $group: {
+            _id: null,
+            totalItems: { $sum: 1 },
+            inventoryValue: {
+              $sum: { $multiply: [{ $ifNull: ["$itemPrice", 0] }, { $ifNull: ["$currentStock", 0] }] },
+            },
+            costValue: {
+              $sum: { $multiply: [{ $ifNull: ["$costPrice", 0] }, { $ifNull: ["$currentStock", 0] }] },
+            },
+            totalStockUnits: { $sum: { $ifNull: ["$currentStock", 0] } },
+            inStockCount: {
+              $sum: {
+                $cond: [
+                  { $gt: [{ $ifNull: ["$currentStock", 0] }, { $ifNull: ["$reorderNumber", 10] }] },
+                  1,
+                  0,
+                ],
+              },
+            },
+            lowStockCount: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      { $gt: [{ $ifNull: ["$currentStock", 0] }, 0] },
+                      { $lte: [{ $ifNull: ["$currentStock", 0] }, { $ifNull: ["$reorderNumber", 10] }] },
+                    ],
+                  },
+                  1,
+                  0,
+                ],
+              },
+            },
+            outOfStockCount: {
+              $sum: {
+                $cond: [{ $eq: [{ $ifNull: ["$currentStock", 0] }, 0] }, 1, 0],
+              },
+            },
+          },
         },
-      ],
-      status: { $not: { $regex: /^voided$/i } },
-      paymentMethod: { $ne: "return" },
-    }).lean();
+      ]),
 
-    // Calculate Total Sales (Revenue)
-    const totalSales = transactions.reduce(
-      (sum, t) => sum + (t.totalAmount || 0),
-      0,
-    );
-    const totalTransactions = transactions.length;
+      // 2. Sales transaction aggregation with COGS calculation
+      SalesTransaction.aggregate([
+        {
+          $match: {
+            $or: [
+              { checkedOutAt: { $gte: start, $lte: end } },
+              {
+                checkedOutAt: { $exists: false },
+                createdAt: { $gte: start, $lte: end },
+              },
+            ],
+            status: { $not: { $regex: /^voided$/i } },
+            paymentMethod: { $ne: "return" },
+          },
+        },
+        { $unwind: { path: "$items", preserveNullAndEmptyArrays: true } },
+        {
+          $lookup: {
+            from: "products",
+            localField: "items.productId",
+            foreignField: "_id",
+            as: "productInfo",
+            pipeline: [{ $project: { costPrice: 1 } }],
+          },
+        },
+        {
+          $addFields: {
+            itemCostPrice: {
+              $ifNull: [{ $arrayElemAt: ["$productInfo.costPrice", 0] }, 0],
+            },
+          },
+        },
+        {
+          $group: {
+            _id: "$_id",
+            totalAmount: { $first: "$totalAmount" },
+            totalUnitsSold: { $sum: { $ifNull: ["$items.quantity", 1] } },
+            cogs: {
+              $sum: {
+                $multiply: [
+                  { $ifNull: ["$itemCostPrice", 0] },
+                  { $ifNull: ["$items.quantity", 1] },
+                ],
+              },
+            },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalSales: { $sum: { $ifNull: ["$totalAmount", 0] } },
+            totalTransactions: { $sum: 1 },
+            totalUnitsSold: { $sum: "$totalUnitsSold" },
+            cogs: { $sum: "$cogs" },
+          },
+        },
+      ]),
 
-    // Calculate total units sold
-    let totalUnitsSold = 0;
-    for (const txn of transactions) {
-      for (const item of txn.items || []) {
-        totalUnitsSold += item.quantity || 1;
-      }
-    }
+      // 3. Stock movement counts aggregation
+      StockMovement.aggregate([
+        { $match: { createdAt: { $gte: start, $lte: end } } },
+        {
+          $group: {
+            _id: "$type",
+            totalQuantity: { $sum: { $abs: "$quantity" } },
+          },
+        },
+      ]),
 
-    // Build product cost lookup
-    const productCostMap = {};
-    products.forEach((p) => {
-      productCostMap[p._id.toString()] = p.costPrice || 0;
+      // 4. Stock movement time series (for inventory chart)
+      StockMovement.aggregate([
+        { $match: { createdAt: { $gte: start, $lte: end } } },
+        {
+          $group: {
+            _id: getTimeSeriesGroupId(timeframe),
+            stockIn: {
+              $sum: {
+                $cond: [{ $eq: ["$type", "Stock-In"] }, { $abs: "$quantity" }, 0],
+              },
+            },
+            stockOut: {
+              $sum: {
+                $cond: [{ $eq: ["$type", "Stock-Out"] }, { $abs: "$quantity" }, 0],
+              },
+            },
+            pullOut: {
+              $sum: {
+                $cond: [{ $eq: ["$type", "Pull-Out"] }, { $abs: "$quantity" }, 0],
+              },
+            },
+            sortDate: { $min: "$createdAt" },
+          },
+        },
+        { $sort: { sortDate: 1 } },
+      ]),
+
+      // 5. Sales time series (for profit chart)
+      SalesTransaction.aggregate([
+        {
+          $match: {
+            $or: [
+              { checkedOutAt: { $gte: start, $lte: end } },
+              {
+                checkedOutAt: { $exists: false },
+                createdAt: { $gte: start, $lte: end },
+              },
+            ],
+            status: { $not: { $regex: /^voided$/i } },
+            paymentMethod: { $ne: "return" },
+          },
+        },
+        { $unwind: { path: "$items", preserveNullAndEmptyArrays: true } },
+        {
+          $lookup: {
+            from: "products",
+            localField: "items.productId",
+            foreignField: "_id",
+            as: "productInfo",
+            pipeline: [{ $project: { costPrice: 1 } }],
+          },
+        },
+        {
+          $addFields: {
+            itemCostPrice: {
+              $ifNull: [{ $arrayElemAt: ["$productInfo.costPrice", 0] }, 0],
+            },
+            dateField: { $ifNull: ["$checkedOutAt", "$createdAt"] },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              txnId: "$_id",
+              period: getTimeSeriesGroupIdForDate(timeframe, "$dateField"),
+            },
+            revenue: { $first: "$totalAmount" },
+            cogs: {
+              $sum: {
+                $multiply: [
+                  { $ifNull: ["$itemCostPrice", 0] },
+                  { $ifNull: ["$items.quantity", 1] },
+                ],
+              },
+            },
+            sortDate: { $min: "$dateField" },
+          },
+        },
+        {
+          $group: {
+            _id: "$_id.period",
+            revenue: { $sum: { $ifNull: ["$revenue", 0] } },
+            cogs: { $sum: "$cogs" },
+            sortDate: { $min: "$sortDate" },
+          },
+        },
+        { $sort: { sortDate: 1 } },
+      ]),
+
+      // 6. Damaged & expired items (limited to 20)
+      StockMovement.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: start, $lte: end },
+            reason: { $in: ["Damaged", "Expired", "Lost"] },
+          },
+        },
+        { $sort: { createdAt: -1 } },
+        { $limit: 20 },
+        {
+          $project: {
+            itemName: { $ifNull: ["$itemName", "Unknown"] },
+            sku: { $ifNull: ["$sku", "-"] },
+            category: { $ifNull: ["$category", "-"] },
+            type: "$reason",
+            quantity: { $abs: "$quantity" },
+            date: "$createdAt",
+            handledBy: { $ifNull: ["$handledBy", "Unknown"] },
+            notes: { $ifNull: ["$notes", ""] },
+          },
+        },
+      ]),
+    ]);
+
+    // ── Process results ──
+
+    // Inventory stats
+    const inv = inventoryAgg[0] || {
+      totalItems: 0,
+      inventoryValue: 0,
+      costValue: 0,
+      totalStockUnits: 0,
+      inStockCount: 0,
+      lowStockCount: 0,
+      outOfStockCount: 0,
+    };
+
+    // Sales stats
+    const sales = salesAgg[0] || {
+      totalSales: 0,
+      totalTransactions: 0,
+      totalUnitsSold: 0,
+      cogs: 0,
+    };
+
+    const totalProfit = sales.totalSales - sales.cogs;
+    const profitMargin =
+      sales.totalSales > 0 ? (totalProfit / sales.totalSales) * 100 : 0;
+
+    // Stock movement counts
+    let stockInCount = 0,
+      stockOutCount = 0,
+      pullOutCount = 0;
+    movementAgg.forEach((m) => {
+      if (m._id === "Stock-In") stockInCount = m.totalQuantity;
+      else if (m._id === "Stock-Out") stockOutCount = m.totalQuantity;
+      else if (m._id === "Pull-Out") pullOutCount = m.totalQuantity;
     });
 
-    // Calculate COGS & Profit from transactions
-    let cogs = 0;
-    for (const txn of transactions) {
-      for (const item of txn.items || []) {
-        const costPrice = productCostMap[item.productId?.toString()] || 0;
-        cogs += costPrice * (item.quantity || 1);
-      }
-    }
-    const totalProfit = totalSales - cogs;
-    const profitMargin = totalSales > 0 ? (totalProfit / totalSales) * 100 : 0;
-
-    // Product stock breakdown
-    const inStockCount = products.filter(
-      (p) => (p.currentStock || 0) > (p.reorderNumber || 10),
-    ).length;
-    const lowStockCount = products.filter(
-      (p) =>
-        (p.currentStock || 0) > 0 &&
-        (p.currentStock || 0) <= (p.reorderNumber || 10),
-    ).length;
-    const outOfStockCount = products.filter(
-      (p) => (p.currentStock || 0) === 0,
-    ).length;
-    const totalStockUnits = products.reduce(
-      (sum, p) => sum + (p.currentStock || 0),
-      0,
-    );
-    const costValue = products.reduce(
-      (sum, p) => sum + (p.costPrice || 0) * (p.currentStock || 0),
-      0,
-    );
-
-    // ── 3. Fetch stock movements in the time range ──
-    const movements = await StockMovement.find({
-      createdAt: { $gte: start, $lte: end },
-    }).lean();
-
-    // Count by type
-    let stockInCount = 0;
-    let stockOutCount = 0;
-    let pullOutCount = 0;
-    movements.forEach((m) => {
-      if (m.type === "Stock-In") stockInCount += Math.abs(m.quantity);
-      else if (m.type === "Stock-Out") stockOutCount += Math.abs(m.quantity);
-      else if (m.type === "Pull-Out") pullOutCount += Math.abs(m.quantity);
-    });
-
-    // ── 4. Build Inventory Analysis chart data (Stock-In vs Stock-Out per period) ──
-    const inventoryChartData = buildTimeSeriesData(
-      movements,
+    // Build inventory chart data with proper labels
+    const inventoryChartData = buildChartFromAggregation(
+      movementTimeSeries,
       timeframe,
       start,
       end,
+      "inventory",
     );
 
-    // ── 5. Build Profit Analysis chart data (Revenue, COGS, Profit per period) ──
-    const profitChartData = await buildProfitChartData(
-      transactions,
+    // Build profit chart data with proper labels
+    const profitChartData = buildChartFromAggregation(
+      salesTimeSeries,
       timeframe,
       start,
       end,
-      productCostMap,
+      "profit",
     );
 
-    // ── 6. Damaged & Expired stock data ──
-    const damagedExpiredMovements = movements
-      .filter((m) => ["Damaged", "Expired", "Lost"].includes(m.reason))
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      .slice(0, 20)
-      .map((m) => ({
-        itemName: m.itemName || "Unknown",
-        sku: m.sku || "-",
-        category: m.category || "-",
-        type: m.reason,
-        quantity: Math.abs(m.quantity),
-        date: m.createdAt,
-        handledBy: m.handledBy || "Unknown",
-        notes: m.notes || "",
-      }));
-
-    // Total damaged/expired/lost quantities
-    const damagedTotal = movements
-      .filter((m) => m.reason === "Damaged")
-      .reduce((sum, m) => sum + Math.abs(m.quantity), 0);
-    const expiredTotal = movements
-      .filter((m) => m.reason === "Expired")
-      .reduce((sum, m) => sum + Math.abs(m.quantity), 0);
-    const lostTotal = movements
-      .filter((m) => m.reason === "Lost")
-      .reduce((sum, m) => sum + Math.abs(m.quantity), 0);
+    // Damaged/expired summary
+    let damagedTotal = 0,
+      expiredTotal = 0,
+      lostTotal = 0;
+    damagedExpiredItems.forEach((item) => {
+      if (item.type === "Damaged") damagedTotal += item.quantity;
+      else if (item.type === "Expired") expiredTotal += item.quantity;
+      else if (item.type === "Lost") lostTotal += item.quantity;
+    });
 
     res.json({
       success: true,
       data: {
         // KPI Cards
         kpis: {
-          totalSales,
-          totalTransactions,
-          totalUnitsSold,
-          cogs,
+          totalSales: sales.totalSales,
+          totalTransactions: sales.totalTransactions,
+          totalUnitsSold: sales.totalUnitsSold,
+          cogs: sales.cogs,
           totalProfit,
           profitMargin: Math.round(profitMargin * 100) / 100,
-          inventoryValue,
-          costValue,
-          totalStockUnits,
+          inventoryValue: inv.inventoryValue,
+          costValue: inv.costValue,
+          totalStockUnits: inv.totalStockUnits,
         },
         // Stat Cards
         stats: {
-          totalItems,
-          inStockCount,
-          lowStockCount,
-          outOfStockCount,
+          totalItems: inv.totalItems,
+          inStockCount: inv.inStockCount,
+          lowStockCount: inv.lowStockCount,
+          outOfStockCount: inv.outOfStockCount,
           stockInCount,
           stockOutCount,
           pullOutCount,
@@ -230,7 +400,7 @@ exports.getInventoryAnalytics = async (req, res) => {
         profitChartData,
         // Table: Damaged & Expired
         damagedExpired: {
-          items: damagedExpiredMovements,
+          items: damagedExpiredItems,
           summary: {
             damaged: damagedTotal,
             expired: expiredTotal,
@@ -251,62 +421,125 @@ exports.getInventoryAnalytics = async (req, res) => {
 };
 
 /**
- * Build time series data for stock movements (Stock-In vs Stock-Out vs Pull-Out)
+ * Get MongoDB $group _id expression for time series bucketing (using createdAt)
  */
-function buildTimeSeriesData(movements, timeframe, start, end) {
-  const buckets = generateBuckets(timeframe, start, end);
-
-  movements.forEach((m) => {
-    const date = new Date(m.createdAt);
-    const bucketKey = getBucketKey(date, timeframe, buckets);
-    const bucket = buckets.find((b) => b.key === bucketKey);
-    if (bucket) {
-      const qty = Math.abs(m.quantity);
-      if (m.type === "Stock-In") bucket.stockIn += qty;
-      else if (m.type === "Stock-Out") bucket.stockOut += qty;
-      else if (m.type === "Pull-Out") bucket.pullOut += qty;
-    }
-  });
-
-  return buckets.map((b) => ({
-    period: b.label,
-    stockIn: b.stockIn,
-    stockOut: b.stockOut,
-    pullOut: b.pullOut,
-  }));
+function getTimeSeriesGroupId(timeframe) {
+  switch (timeframe) {
+    case "daily":
+      return {
+        year: { $year: "$createdAt" },
+        month: { $month: "$createdAt" },
+        day: { $dayOfMonth: "$createdAt" },
+      };
+    case "weekly":
+      return {
+        year: { $isoWeekYear: "$createdAt" },
+        week: { $isoWeek: "$createdAt" },
+      };
+    case "monthly":
+      return {
+        year: { $year: "$createdAt" },
+        month: { $month: "$createdAt" },
+      };
+    case "yearly":
+      return { year: { $year: "$createdAt" } };
+    default:
+      return {
+        year: { $year: "$createdAt" },
+        month: { $month: "$createdAt" },
+        day: { $dayOfMonth: "$createdAt" },
+      };
+  }
 }
 
 /**
- * Build time series data for profit analysis (Revenue, COGS, Profit)
+ * Get MongoDB $group _id expression for time series bucketing (using a specified field)
  */
-async function buildProfitChartData(
-  transactions,
-  timeframe,
-  start,
-  end,
-  costMap,
-) {
+function getTimeSeriesGroupIdForDate(timeframe, dateField) {
+  switch (timeframe) {
+    case "daily":
+      return {
+        year: { $year: dateField },
+        month: { $month: dateField },
+        day: { $dayOfMonth: dateField },
+      };
+    case "weekly":
+      return {
+        year: { $isoWeekYear: dateField },
+        week: { $isoWeek: dateField },
+      };
+    case "monthly":
+      return {
+        year: { $year: dateField },
+        month: { $month: dateField },
+      };
+    case "yearly":
+      return { year: { $year: dateField } };
+    default:
+      return {
+        year: { $year: dateField },
+        month: { $month: dateField },
+        day: { $dayOfMonth: dateField },
+      };
+  }
+}
+
+/**
+ * Build chart data array with proper period labels from aggregation results.
+ * Generates all expected time buckets and fills in aggregation data.
+ */
+function buildChartFromAggregation(aggResults, timeframe, start, end, chartType) {
   const buckets = generateBuckets(timeframe, start, end);
 
-  for (const txn of transactions) {
-    const date = new Date(txn.checkedOutAt || txn.createdAt);
-    const bucketKey = getBucketKey(date, timeframe, buckets);
-    const bucket = buckets.find((b) => b.key === bucketKey);
-    if (bucket) {
-      bucket.revenue += txn.totalAmount || 0;
-      for (const item of txn.items || []) {
-        const cost = costMap[item.productId?.toString()] || 0;
-        bucket.cogs += cost * (item.quantity || 1);
-      }
-    }
-  }
+  // Map aggregation results by bucket key
+  const dataMap = {};
+  aggResults.forEach((item) => {
+    const key = aggIdToKey(item._id, timeframe);
+    dataMap[key] = item;
+  });
 
-  return buckets.map((b) => ({
-    period: b.label,
-    revenue: Math.round(b.revenue * 100) / 100,
-    cogs: Math.round(b.cogs * 100) / 100,
-    profit: Math.round((b.revenue - b.cogs) * 100) / 100,
-  }));
+  return buckets.map((bucket) => {
+    const data = dataMap[bucket.key];
+    if (chartType === "inventory") {
+      return {
+        period: bucket.label,
+        stockIn: data ? data.stockIn : 0,
+        stockOut: data ? data.stockOut : 0,
+        pullOut: data ? data.pullOut : 0,
+      };
+    } else {
+      // profit
+      const revenue = data ? data.revenue : 0;
+      const cogs = data ? data.cogs : 0;
+      return {
+        period: bucket.label,
+        revenue: Math.round(revenue * 100) / 100,
+        cogs: Math.round(cogs * 100) / 100,
+        profit: Math.round((revenue - cogs) * 100) / 100,
+      };
+    }
+  });
+}
+
+/**
+ * Convert aggregation _id to bucket key string
+ */
+function aggIdToKey(id, timeframe) {
+  if (!id) return "unknown";
+  switch (timeframe) {
+    case "daily":
+      return `day_${id.year}_${id.month - 1}_${id.day}`;
+    case "weekly":
+      return `week_${id.year}_${id.week}`;
+    case "monthly":
+      return `month_${id.year}_${id.month - 1}`;
+    case "yearly":
+      return `year_${id.year}`;
+    default:
+      if (id.day !== undefined) return `day_${id.year}_${id.month - 1}_${id.day}`;
+      if (id.month !== undefined) return `month_${id.year}_${id.month - 1}`;
+      return `year_${id.year}`;
+  }
 }
 
 /**
@@ -330,12 +563,6 @@ function generateBuckets(timeframe, start, end) {
         buckets.push({
           key: `day_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`,
           label,
-          date: new Date(d),
-          stockIn: 0,
-          stockOut: 0,
-          pullOut: 0,
-          revenue: 0,
-          cogs: 0,
         });
       }
       break;
@@ -347,16 +574,23 @@ function generateBuckets(timeframe, start, end) {
         const dayOfWeek = weekStart.getDay();
         weekStart.setDate(weekStart.getDate() - dayOfWeek - i * 7);
         weekStart.setHours(0, 0, 0, 0);
+        // Calculate ISO week number
+        const tempDate = new Date(weekStart);
+        tempDate.setHours(0, 0, 0, 0);
+        tempDate.setDate(tempDate.getDate() + 3 - ((tempDate.getDay() + 6) % 7));
+        const week1 = new Date(tempDate.getFullYear(), 0, 4);
+        const isoWeek =
+          1 +
+          Math.round(
+            ((tempDate.getTime() - week1.getTime()) / 86400000 -
+              3 +
+              ((week1.getDay() + 6) % 7)) /
+            7,
+          );
         const label = `Week ${weekStart.getDate()}`;
         buckets.push({
-          key: `week_${i}`,
+          key: `week_${weekStart.getFullYear()}_${isoWeek}`,
           label,
-          date: new Date(weekStart),
-          stockIn: 0,
-          stockOut: 0,
-          pullOut: 0,
-          revenue: 0,
-          cogs: 0,
         });
       }
       break;
@@ -370,12 +604,6 @@ function generateBuckets(timeframe, start, end) {
         buckets.push({
           key: `month_${d.getFullYear()}_${d.getMonth()}`,
           label,
-          date: new Date(d),
-          stockIn: 0,
-          stockOut: 0,
-          pullOut: 0,
-          revenue: 0,
-          cogs: 0,
         });
       }
       break;
@@ -384,16 +612,9 @@ function generateBuckets(timeframe, start, end) {
       // Last 5 years: "2022", "2023", "2024", "2025", "2026"
       for (let i = 4; i >= 0; i--) {
         const year = now.getFullYear() - i;
-        const label = year.toString();
         buckets.push({
           key: `year_${year}`,
-          label,
-          date: new Date(year, 0, 1),
-          stockIn: 0,
-          stockOut: 0,
-          pullOut: 0,
-          revenue: 0,
-          cogs: 0,
+          label: year.toString(),
         });
       }
       break;
@@ -402,7 +623,6 @@ function generateBuckets(timeframe, start, end) {
       // Custom range: auto-detect granularity
       const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
       if (diffDays <= 31) {
-        // Day by day
         for (let i = 0; i <= diffDays; i++) {
           const d = new Date(start);
           d.setDate(d.getDate() + i);
@@ -411,36 +631,22 @@ function generateBuckets(timeframe, start, end) {
             day: "numeric",
           });
           buckets.push({
-            key: `cd_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`,
+            key: `day_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`,
             label,
-            date: new Date(d),
-            stockIn: 0,
-            stockOut: 0,
-            pullOut: 0,
-            revenue: 0,
-            cogs: 0,
           });
         }
       } else if (diffDays <= 180) {
-        // Weekly
         const weeks = Math.ceil(diffDays / 7);
         for (let i = 0; i < weeks; i++) {
           const d = new Date(start);
           d.setDate(d.getDate() + i * 7);
           const label = `Week of ${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
           buckets.push({
-            key: `cw_${i}`,
+            key: `day_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`,
             label,
-            date: new Date(d),
-            stockIn: 0,
-            stockOut: 0,
-            pullOut: 0,
-            revenue: 0,
-            cogs: 0,
           });
         }
       } else {
-        // Monthly
         let current = new Date(start.getFullYear(), start.getMonth(), 1);
         while (current <= end) {
           const label = current.toLocaleDateString("en-US", {
@@ -448,14 +654,8 @@ function generateBuckets(timeframe, start, end) {
             year: "numeric",
           });
           buckets.push({
-            key: `cm_${current.getFullYear()}_${current.getMonth()}`,
+            key: `month_${current.getFullYear()}_${current.getMonth()}`,
             label,
-            date: new Date(current),
-            stockIn: 0,
-            stockOut: 0,
-            pullOut: 0,
-            revenue: 0,
-            cogs: 0,
           });
           current.setMonth(current.getMonth() + 1);
         }
@@ -464,53 +664,4 @@ function generateBuckets(timeframe, start, end) {
   }
 
   return buckets;
-}
-
-/**
- * Get the bucket key for a given date and timeframe
- */
-function getBucketKey(date, timeframe, buckets) {
-  switch (timeframe) {
-    case "daily": {
-      return `day_${date.getFullYear()}_${date.getMonth()}_${date.getDate()}`;
-    }
-    case "weekly": {
-      // Find which weekly bucket this date falls into
-      for (let i = 0; i < buckets.length; i++) {
-        const bucketStart = buckets[i].date;
-        const bucketEnd = new Date(bucketStart);
-        bucketEnd.setDate(bucketEnd.getDate() + 7);
-        if (date >= bucketStart && date < bucketEnd) {
-          return buckets[i].key;
-        }
-      }
-      return null;
-    }
-    case "monthly": {
-      return `month_${date.getFullYear()}_${date.getMonth()}`;
-    }
-    case "yearly": {
-      return `year_${date.getFullYear()}`;
-    }
-    default: {
-      // Custom: find matching bucket by date range
-      const diffDays =
-        buckets.length > 1 && buckets[1].key.startsWith("cw_") ? 7 : 1;
-      if (diffDays === 1) {
-        return `cd_${date.getFullYear()}_${date.getMonth()}_${date.getDate()}`;
-      } else if (buckets[0] && buckets[0].key.startsWith("cw_")) {
-        for (let i = 0; i < buckets.length; i++) {
-          const bucketStart = buckets[i].date;
-          const bucketEnd = new Date(bucketStart);
-          bucketEnd.setDate(bucketEnd.getDate() + 7);
-          if (date >= bucketStart && date < bucketEnd) {
-            return buckets[i].key;
-          }
-        }
-      } else {
-        return `cm_${date.getFullYear()}_${date.getMonth()}`;
-      }
-      return null;
-    }
-  }
 }

@@ -5,6 +5,7 @@ import AddDiscountModal from '../../components/owner/AddDiscountModal';
 import Header from '../../components/shared/header';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { API_ENDPOINTS } from '../../config/api';
 
 const icon20Percent = new URL('../../assets/owner/20.png', import.meta.url).href;
 const icon50Percent = new URL('../../assets/owner/50.png', import.meta.url).href;
@@ -65,7 +66,7 @@ const DiscountManagement = () => {
   const fetchDiscounts = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/discounts');
+      const response = await fetch(API_ENDPOINTS.discounts);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -102,7 +103,7 @@ const DiscountManagement = () => {
 
       const newStatus = discount.status === 'active' ? 'inactive' : 'active';
 
-      const response = await fetch(`http://localhost:5000/api/discounts/${id}`, {
+      const response = await fetch(API_ENDPOINTS.discountById(id), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -133,7 +134,7 @@ const DiscountManagement = () => {
     if (!discountToDelete) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/discounts/${discountToDelete._id}`, {
+      const response = await fetch(API_ENDPOINTS.discountById(discountToDelete._id), {
         method: 'DELETE'
       });
 
@@ -158,7 +159,7 @@ const DiscountManagement = () => {
     // If discount has productIds, fetch product details for the picker
     if (discount.appliesTo === 'products' && discount.productIds && discount.productIds.length > 0) {
       try {
-        const response = await fetch('http://localhost:5000/api/products');
+        const response = await fetch(API_ENDPOINTS.products);
         const data = await response.json();
         if (data.success && Array.isArray(data.data)) {
           const selectedProducts = data.data.filter(p =>
@@ -204,7 +205,7 @@ const DiscountManagement = () => {
         description: formData.description || ''
       };
 
-      const response = await fetch(`http://localhost:5000/api/discounts/${id}`, {
+      const response = await fetch(API_ENDPOINTS.discountById(id), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -245,7 +246,7 @@ const DiscountManagement = () => {
         status: 'active'
       };
 
-      const response = await fetch('http://localhost:5000/api/discounts', {
+      const response = await fetch(API_ENDPOINTS.discounts, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
