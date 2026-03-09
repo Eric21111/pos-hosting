@@ -30,24 +30,24 @@ export const buildReceiptLines = receipt => {
   const receiptNo = receipt.receiptNo || '000000';
   const paymentMethod = receipt.paymentMethod || 'Cash';
   const cashier = receipt.cashier || receipt.cashierName || receipt.performedByName || 'Staff';
-  
+
   // Format date/time
-  const receiptDate = receipt.date || new Date().toLocaleDateString('en-US', { 
-    month: 'numeric', 
-    day: 'numeric', 
-    year: 'numeric' 
+  const receiptDate = receipt.date || new Date().toLocaleDateString('en-US', {
+    month: 'numeric',
+    day: 'numeric',
+    year: 'numeric'
   });
-  const receiptTime = receipt.time || new Date().toLocaleTimeString('en-US', { 
-    hour: 'numeric', 
-    minute: '2-digit', 
-    hour12: true 
+  const receiptTime = receipt.time || new Date().toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
   });
 
   // Header (centered)
   lines.push(centerText(storeName));
   lines.push(centerText(location));
   lines.push('--------------------------------');
-  
+
   // Receipt number section
   lines.push(centerText('RECEIPT'));
   lines.push(centerText(`#${receiptNo}`));
@@ -64,7 +64,7 @@ export const buildReceiptLines = receipt => {
     // Remove colors/variants in parentheses from item name
     let itemName = (item.name || item.itemName || 'Item').toString();
     itemName = itemName.replace(/\s*\([^)]*\)\s*$/, '').trim();
-    
+
     const qty = item.qty || item.quantity || 1;
     const price = item.price || item.itemPrice || 0;
     const size = item.size || item.selectedSize || '';
@@ -117,29 +117,29 @@ const buildReceiptHTML = (receipt) => {
   const cash = receipt.cash !== undefined ? Number(receipt.cash) : null;
   const change = receipt.change !== undefined ? Number(receipt.change) : null;
   const cashier = receipt.cashier || receipt.cashierName || receipt.performedByName || 'Staff';
-  
+
   // Format date
-  const receiptDate = receipt.date || new Date().toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric', 
-    year: 'numeric' 
+  const receiptDate = receipt.date || new Date().toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
   });
-  const receiptTime = receipt.time || new Date().toLocaleTimeString('en-US', { 
-    hour: 'numeric', 
-    minute: '2-digit', 
-    hour12: true 
+  const receiptTime = receipt.time || new Date().toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
   });
 
   const itemsHTML = (receipt.items || []).map(item => {
     // Remove colors/variants in parentheses from item name
     let itemName = (item.name || item.itemName || 'Item').toString();
     itemName = itemName.replace(/\s*\([^)]*\)\s*$/, '').trim();
-    
+
     const qty = item.qty || item.quantity || 1;
     const price = Number(item.price || item.itemPrice || 0);
     const size = item.size || item.selectedSize || '';
     const color = item.selectedVariation || item.variant || '';
-    
+
     // Build size/color info line
     let sizeColorInfo = '';
     if (size || color) {
@@ -148,7 +148,7 @@ const buildReceiptHTML = (receipt) => {
       if (color) parts.push(`Color: ${color}`);
       sizeColorInfo = `<div style="font-size: 9px; color: #a0aec0;">${parts.join(' | ')}</div>`;
     }
-    
+
     return `
       <div style="margin-bottom: 8px;">
         <div style="font-weight: 600; font-size: 11px; color: #1a202c;">${itemName}</div>
@@ -343,16 +343,16 @@ export async function sendReceiptToPrinter(receipt) {
     storeName: receipt.storeName || 'Create Your Style',
     contactNumber: receipt.contactNumber || '+631112224444',
     location: receipt.location || 'Pasonanca, Zamboanga City',
-    
+
     // Receipt info
     receiptNo: receipt.receiptNo || '000000',
     referenceNo: receipt.referenceNo || receipt.reference || '-',
     date: receipt.date || new Date().toLocaleDateString(),
     time: receipt.time || new Date().toLocaleTimeString(),
-    
+
     // Cashier
     cashier: receipt.cashier || receipt.performedByName || 'N/A',
-    
+
     // Items
     items: (receipt.items || []).map(item => ({
       name: item.name || item.itemName || 'Item',
@@ -362,7 +362,7 @@ export async function sendReceiptToPrinter(receipt) {
       size: item.size || item.selectedSize || '',
       variant: item.variant || '',
     })),
-    
+
     // Payment
     paymentMethod: receipt.paymentMethod || 'CASH',
     subtotal: receipt.subtotal || 0,
@@ -374,14 +374,21 @@ export async function sendReceiptToPrinter(receipt) {
   };
 
   try {
-    // Try to send to the local print server first
+    // Try to send to the local print server first, with a short timeout
+    // so we don't wait 30 seconds before falling back to window.print
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1500);
+
     const response = await fetch('http://localhost:9100/print', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(printData),
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     const result = await response.json();
 
@@ -392,16 +399,26 @@ export async function sendReceiptToPrinter(receipt) {
     }
   } catch (error) {
     console.warn('Print server not available, falling back to window.print()', error);
-    
+
     // Fallback to window.print() if print server is not available
     return new Promise((resolve, reject) => {
       try {
         // Build the receipt HTML
         const receiptHTML = buildReceiptHTML(receipt);
-        
-        // Open a new window for printing
-        const printWindow = window.open('', '_blank', 'width=300,height=600');
-        
+
+        // Calculate the center position for the new window
+        const width = 350;
+        const height = 650;
+        const left = (window.screen.width - width) / 2;
+        const top = (window.screen.height - height) / 2;
+
+        // Open a new window for printing, centered on screen
+        const printWindow = window.open(
+          '',
+          '_blank',
+          `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,status=no,titlebar=no,toolbar=no,menubar=no`
+        );
+
         if (!printWindow) {
           throw new Error('Unable to open print window. Please allow pop-ups for this site.');
         }
@@ -409,7 +426,7 @@ export async function sendReceiptToPrinter(receipt) {
         // Write the receipt HTML to the new window
         printWindow.document.write(receiptHTML);
         printWindow.document.close();
-        
+
         // Focus the print window
         printWindow.focus();
 
