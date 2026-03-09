@@ -5,7 +5,11 @@ const { sendEmail } = require('../utils/emailService');
 // Get all employees
 exports.getAllEmployees = async (req, res) => {
   try {
-    const employees = await Employee.find({}).sort({ dateJoined: -1 }).lean();
+    // Exclude profileImage from the list payload to massively reduce size and increase speed
+    const employees = await Employee.find({})
+      .select('-profileImage')
+      .sort({ dateJoined: -1 })
+      .lean();
 
     // Remove PIN from response
     const employeesWithoutPin = employees.map(emp => {
@@ -40,6 +44,9 @@ exports.getEmployeeById = async (req, res) => {
       });
     }
 
+    // We still return profileImage here if they request the single employee,
+    // but in a production system we'd ideally not send it here either, keeping it purely in the `/image` route.
+    // However, keeping it for backward compatibility with view/edit components.
     const { pin, ...employeeWithoutPin } = employee;
 
     res.json({
@@ -55,6 +62,28 @@ exports.getEmployeeById = async (req, res) => {
   }
 };
 
+
+// Get employee image directly (for massive speed boost on list views)
+exports.getEmployeeImage = async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.id).select('profileImage').lean();
+
+    if (!employee || !employee.profileImage) {
+      return res.status(404).send('No image found');
+    }
+
+    // Extract base64 and send as image buffer
+    const base64Data = employee.profileImage.replace(/^data:image\/\w+;base64,/, "");
+    const imgBuffer = Buffer.from(base64Data, 'base64');
+
+    res.setHeader('Content-Type', 'image/jpeg'); // Assuming JPEG for now, could parse MIME type
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+    res.send(imgBuffer);
+  } catch (error) {
+    console.error('Error fetching employee image:', error);
+    res.status(500).send('Error loading image');
+  }
+};
 
 // Create new employee
 exports.createEmployee = async (req, res) => {
@@ -537,7 +566,10 @@ exports.searchEmployees = async (req, res) => {
         { email: { $regex: query, $options: 'i' } },
         { role: { $regex: query, $options: 'i' } }
       ]
-    }).sort({ dateJoined: -1 }).lean();
+    })
+      .select('-profileImage') // Exclude profileImage for search results as well
+      .sort({ dateJoined: -1 })
+      .lean();
 
     const employeesWithoutPin = employees.map(emp => {
       const { pin, ...rest } = emp;

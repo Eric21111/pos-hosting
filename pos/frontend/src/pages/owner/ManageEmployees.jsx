@@ -1,11 +1,11 @@
 import { memo, useEffect, useState } from "react";
 import {
-    FaEdit,
-    FaEllipsisV,
-    FaPlus,
-    FaSearch,
-    FaTrash,
-    FaUndo,
+  FaEdit,
+  FaEllipsisV,
+  FaPlus,
+  FaSearch,
+  FaTrash,
+  FaUndo,
 } from "react-icons/fa";
 import defaultAvatar from "../../assets/default.jpeg";
 import Pagination from "../../components/inventory/Pagination";
@@ -69,10 +69,11 @@ const ManageEmployees = () => {
       const data = await response.json();
 
       if (data.success) {
-        // Add image property to each employee (using default avatar as default)
+        // Use the new endpoint for images, but append a timestamp to bust cache when updating
+        const timestamp = new Date().getTime();
         const employeesWithImages = data.data.map((emp) => ({
           ...emp,
-          image: emp.profileImage || defaultAvatar,
+          image: `http://localhost:5000/api/employees/${emp._id}/image?t=${timestamp}`,
           id: emp._id,
           contactNumber: emp.contactNo || emp.contactNumber || '', // Map contactNo to contactNumber
         }));
@@ -279,42 +280,38 @@ const ManageEmployees = () => {
                 placeholder="Search For..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full h-10 pl-16 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
-                  theme === "dark"
+                className={`w-full h-10 pl-16 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark"
                     ? "bg-[#2A2724] border-[#4A4037] text-white placeholder-gray-500"
                     : "bg-white border-gray-300 text-gray-900"
-                }`}
+                  }`}
               />
             </div>
 
             <div className="flex gap-3 ml-4">
               <button
                 onClick={() => setFilterStatus("All")}
-                className={`px-6 py-2.5 text-sm font-bold rounded-xl transition-all shadow-sm border ${
-                  filterStatus === "All"
+                className={`px-6 py-2.5 text-sm font-bold rounded-xl transition-all shadow-sm border ${filterStatus === "All"
                     ? "bg-white text-[#AD7F65] border-gray-100 border-b-[4px] border-b-[#AD7F65]"
                     : "bg-white text-gray-800 border-gray-200 border-b-[4px] border-b-gray-200 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 All
               </button>
               <button
                 onClick={() => setFilterStatus("Active")}
-                className={`px-6 py-2.5 text-sm font-bold rounded-xl transition-all shadow-sm border ${
-                  filterStatus === "Active"
+                className={`px-6 py-2.5 text-sm font-bold rounded-xl transition-all shadow-sm border ${filterStatus === "Active"
                     ? "bg-white text-[#AD7F65] border-gray-100 border-b-[4px] border-b-[#AD7F65]"
                     : "bg-white text-gray-800 border-gray-200 border-b-[4px] border-b-gray-200 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 Active
               </button>
               <button
                 onClick={() => setFilterStatus("Archived")}
-                className={`px-6 py-2.5 text-sm font-bold rounded-xl transition-all shadow-sm border ${
-                  filterStatus === "Archived"
+                className={`px-6 py-2.5 text-sm font-bold rounded-xl transition-all shadow-sm border ${filterStatus === "Archived"
                     ? "bg-white text-[#AD7F65] border-gray-100 border-b-[4px] border-b-[#AD7F65]"
                     : "bg-white text-gray-800 border-gray-200 border-b-[4px] border-b-gray-200 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 Archived
               </button>
@@ -343,16 +340,14 @@ const ManageEmployees = () => {
           </div>
         ) : employees.length === 0 ? (
           <div
-            className={`flex flex-col items-center justify-center py-20 rounded-2xl shadow-inner border border-dashed ${
-              theme === "dark"
+            className={`flex flex-col items-center justify-center py-20 rounded-2xl shadow-inner border border-dashed ${theme === "dark"
                 ? "bg-[#2A2724] border-gray-600"
                 : "bg-white border-gray-300"
-            }`}
+              }`}
           >
             <p
-              className={`text-2xl font-semibold mb-3 ${
-                theme === "dark" ? "text-gray-200" : "text-gray-700"
-              }`}
+              className={`text-2xl font-semibold mb-3 ${theme === "dark" ? "text-gray-200" : "text-gray-700"
+                }`}
             >
               No accounts yet
             </p>
@@ -379,15 +374,18 @@ const ManageEmployees = () => {
                     <img
                       src={employee.image}
                       alt={employee.name}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = defaultAvatar;
+                      }}
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div
-                    className={`absolute bottom-1 right-1 w-5 h-5 rounded-full border-2 border-white ${
-                      employee.status === "Active"
+                    className={`absolute bottom-1 right-1 w-5 h-5 rounded-full border-2 border-white ${employee.status === "Active"
                         ? "bg-green-500"
                         : "bg-red-500"
-                    }`}
+                      }`}
                   ></div>
                 </div>
 
@@ -449,17 +447,17 @@ const ManageEmployees = () => {
                     {(employee.dateJoinedActual ||
                       employee.dateJoined ||
                       employee.createdAt) && (
-                      <p
-                        className={`text-xs flex items-center gap-1 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}
-                      >
-                        📅{" "}
-                        {new Date(
-                          employee.dateJoinedActual ||
+                        <p
+                          className={`text-xs flex items-center gap-1 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}
+                        >
+                          📅{" "}
+                          {new Date(
+                            employee.dateJoinedActual ||
                             employee.dateJoined ||
                             employee.createdAt,
-                        ).toLocaleDateString()}
-                      </p>
-                    )}
+                          ).toLocaleDateString()}
+                        </p>
+                      )}
                   </div>
 
                   {employee.role !== "Owner" && (
@@ -484,11 +482,10 @@ const ManageEmployees = () => {
                       {/* Archive/Toggle Status Button */}
                       <button
                         onClick={() => handleToggleStatus(employee)}
-                        className={`w-8 h-8 flex items-center justify-center rounded-lg text-white hover:opacity-90 transition-colors shadow-sm ${
-                          employee.status === "Active"
+                        className={`w-8 h-8 flex items-center justify-center rounded-lg text-white hover:opacity-90 transition-colors shadow-sm ${employee.status === "Active"
                             ? "bg-[#FFA500]"
                             : "bg-[#10B981]"
-                        }`}
+                          }`}
                         title={
                           employee.status === "Active"
                             ? "Disable Account"

@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   getAllEmployees,
   getEmployeeById,
+  getEmployeeImage,
   createEmployee,
   updateEmployee,
   deleteEmployee,
@@ -24,6 +25,8 @@ router.route('/:id')
   .get(getEmployeeById)
   .put(updateEmployee)
   .delete(deleteEmployee);
+
+router.get('/:id/image', getEmployeeImage);
 
 router.put('/:id/pin', updatePin);
 

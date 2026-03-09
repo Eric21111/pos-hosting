@@ -41,7 +41,8 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
         viewTransactions: employee.permissions?.viewTransactions ?? false,
         generateReports: employee.permissions?.generateReports ?? false
       });
-      setProfilePreview(employee.profileImage || employee.image || defaultAvatar);
+      // Set to URL if it exists, otherwise default
+      setProfilePreview(employee._id ? `http://localhost:5000/api/employees/${employee._id}/image?t=${new Date().getTime()}` : defaultAvatar);
       setMessage('');
       setError('');
     }
@@ -78,16 +79,23 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
     setError('');
     setMessage('');
     try {
+      const payload = {
+        ...formData,
+        status,
+        permissions,
+        dateJoinedActual: formData.dateJoined
+      };
+
+      // Only send profileImage if a new file was selected (base64 string)
+      // Otherwise, keep the backend image as is.
+      if (profilePreview && profilePreview.startsWith('data:image')) {
+        payload.profileImage = profilePreview;
+      }
+
       const response = await fetch(`http://localhost:5000/api/employees/${employee._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          status,
-          permissions,
-          profileImage: profilePreview,
-          dateJoinedActual: formData.dateJoined
-        })
+        body: JSON.stringify(payload)
       });
       const data = await response.json();
       if (!data.success) {
