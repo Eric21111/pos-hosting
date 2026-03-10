@@ -352,9 +352,9 @@ const Terminal = () => {
     setCurrentPage(1);
   }, [selectedCategory, searchQuery]);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (background = false) => {
     try {
-      setLoading(true);
+      if (!background) setLoading(true);
       const response = await fetch(`${API_BASE_URL}/api/products`);
       const data = await response.json();
 
@@ -365,7 +365,7 @@ const Terminal = () => {
     } catch (error) {
       console.error("Error fetching products:", error);
     } finally {
-      setLoading(false);
+      if (!background) setLoading(false);
     }
   };
 
@@ -1410,6 +1410,12 @@ const Terminal = () => {
     // Store cart snapshot for restoration on error
     const cartSnapshot = [...cart];
 
+    // Snapshot cart data BEFORE clearing — needed for stock update payload
+    const stockItems = mapCartItemsForStockUpdate();
+    const transactionItems = mapCartItemsForTransaction();
+    const currentTotal = total;
+    const currentDiscountIds = selectedDiscounts.map((d) => d._id);
+
     try {
       // Step 1: Record the transaction FIRST (before updating stock)
       const transactionResponse = await fetch(
@@ -1421,17 +1427,17 @@ const Terminal = () => {
           },
           body: JSON.stringify({
             userId,
-            items: mapCartItemsForTransaction(),
+            items: transactionItems,
             paymentMethod: meta.paymentMethod || "cash",
             amountReceived: meta.amountReceived,
             changeGiven: meta.change,
             referenceNo: meta.referenceNo,
             receiptNo: meta.receiptNo,
-            totalAmount: total,
+            totalAmount: currentTotal,
             performedById: currentUser?._id || currentUser?.id,
             performedByName: currentUser?.name,
             status: "Completed",
-            appliedDiscountIds: selectedDiscounts.map((d) => d._id),
+            appliedDiscountIds: currentDiscountIds,
           }),
         },
       );
@@ -1455,8 +1461,7 @@ const Terminal = () => {
         );
       }
 
-      // Step 2: Transaction succeeded - NOW update stock
-      // Clear cart after successful transaction
+      // Step 2: Transaction succeeded — clear cart immediately
       setCart([]);
       setSelectedDiscounts([]);
       setDiscountAmount("");
@@ -1465,44 +1470,33 @@ const Terminal = () => {
       invalidateCache("products");
       invalidateCache("transactions");
 
-      const stockUpdateResponse = await fetch(
-        `${API_BASE_URL}/api/products/update-stock`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            items: mapCartItemsForStockUpdate(),
-            performedByName:
-              currentUser?.name ||
-              `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
-              "System",
-            performedById: currentUser?._id || currentUser?.id || "",
-          }),
-        },
-      );
+      // Step 3: Fire stock update + product refresh in background (non-blocking)
+      // Uses the snapshot taken BEFORE cart was cleared
+      fetch(`${API_BASE_URL}/api/products/update-stock`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: stockItems,
+          performedByName:
+            currentUser?.name ||
+            `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
+            "System",
+          performedById: currentUser?._id || currentUser?.id || "",
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (!data.success) console.error("Stock update failed:", data);
+          // Refresh products after stock is updated
+          return fetchProducts(true);
+        })
+        .catch((err) => {
+          console.error("Stock update error:", err);
+          // Still try to refresh products
+          fetchProducts(true).catch(() => { });
+        });
 
-      // Check stock update result
-      if (!stockUpdateResponse.ok) {
-        const errorData = await stockUpdateResponse.json().catch(() => ({}));
-        console.error("Stock update failed after transaction:", errorData);
-        // Don't restore cart - transaction already succeeded
-        // Just log the error and continue
-      } else {
-        const stockData = await stockUpdateResponse.json();
-        if (!stockData.success) {
-          console.error("Stock update failed after transaction:", stockData);
-          // Don't restore cart - transaction already succeeded
-        }
-      }
-
-      // Success - products will refresh on next view automatically due to cache invalidation
-      fetchProducts().catch((err) =>
-        console.warn("Background product refresh failed:", err),
-      );
-
-      // Return the transaction data including the receipt number
+      // Return immediately — receipt/print flow starts without waiting for stock update
       return transactionData.data;
     } catch (error) {
       console.error("Error finalizing transaction:", error);
@@ -1551,7 +1545,7 @@ const Terminal = () => {
     // Stock is updated asynchronously on the server after webhook confirmation,
     // so we need a short delay before refreshing to get updated stock values.
     setTimeout(() => {
-      fetchProducts().catch((err) =>
+      fetchProducts(true).catch((err) =>
         console.warn("Background product refresh failed:", err),
       );
     }, 1500);
@@ -1559,7 +1553,7 @@ const Terminal = () => {
     // Second refresh to catch any slower stock updates
     setTimeout(() => {
       invalidateCache("products");
-      fetchProducts().catch((err) =>
+      fetchProducts(true).catch((err) =>
         console.warn("Second product refresh failed:", err),
       );
     }, 4000);
@@ -1654,10 +1648,10 @@ const Terminal = () => {
                 key={cat.name}
                 onClick={() => setSelectedCategory(cat.name)}
                 className={`flex items-center justify-center px-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border truncate ${selectedCategory === cat.name
-                    ? "bg-[#AD7F65] text-white border-[#AD7F65] shadow-md"
-                    : theme === "dark"
-                      ? "bg-[#2A2724] text-gray-300 border-gray-600 hover:bg-[#352F2A]"
-                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                  ? "bg-[#AD7F65] text-white border-[#AD7F65] shadow-md"
+                  : theme === "dark"
+                    ? "bg-[#2A2724] text-gray-300 border-gray-600 hover:bg-[#352F2A]"
+                    : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
                   }`}
                 title={cat.name}
               >
