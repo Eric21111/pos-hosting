@@ -1147,7 +1147,6 @@ const Inventory = () => {
     setShowArchiveModal(false);
 
     try {
-      setLoading(true);
       const response = await fetch(
         `${API_BASE_URL}/api/products/${productToArchive}/archive`,
         {
@@ -1158,9 +1157,14 @@ const Inventory = () => {
       const data = await response.json();
 
       if (data.success) {
+        // Optimistically remove the archived item from the UI immediately
+        setProducts((prev) =>
+          prev.filter((p) => (p._id || p.id) !== productToArchive),
+        );
         setShowSuccessModal(true);
         setSuccessMessage("The item was archived successfully!");
         invalidateCache("products");
+        // Sync cache in the background (non-blocking)
         fetchProducts();
       } else {
         alert(data.message || "Failed to archive product");
@@ -1169,7 +1173,6 @@ const Inventory = () => {
       console.error("Error archiving product:", error);
       alert("Failed to archive product. Please try again.");
     } finally {
-      setLoading(false);
       setProductToArchive(null);
     }
   };
@@ -2150,10 +2153,10 @@ const Inventory = () => {
           <button
             onClick={handleExportButtonClick}
             className={`rounded-2xl shadow-md flex flex-col items-center justify-center px-5 py-4 transition-colors ${isExportSelectionMode
-                ? "border border-[#AD7F65] bg-[#AD7F65]/5"
-                : theme === "dark"
-                  ? "bg-[#2A2724] hover:bg-[#352F2A]"
-                  : "bg-white hover:bg-gray-50"
+              ? "border border-[#AD7F65] bg-[#AD7F65]/5"
+              : theme === "dark"
+                ? "bg-[#2A2724] hover:bg-[#352F2A]"
+                : "bg-white hover:bg-gray-50"
               }`}
             style={{ minWidth: "100px" }}
           >
@@ -2180,8 +2183,8 @@ const Inventory = () => {
             <button
               onClick={handleCancelExportSelection}
               className={`rounded-2xl shadow-md px-4 py-2 text-xs font-medium border transition-colors ${theme === "dark"
-                  ? "bg-[#2A2724] border-gray-600 text-gray-400 hover:bg-[#352F2A]"
-                  : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                ? "bg-[#2A2724] border-gray-600 text-gray-400 hover:bg-[#352F2A]"
+                : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
                 }`}
             >
               Cancel
@@ -2191,8 +2194,8 @@ const Inventory = () => {
           <button
             onClick={() => document.getElementById("csv-file-input").click()}
             className={`rounded-2xl shadow-md flex flex-col items-center justify-center px-5 py-4 transition-colors ${theme === "dark"
-                ? "bg-[#2A2724] hover:bg-[#352F2A]"
-                : "bg-white hover:bg-gray-50"
+              ? "bg-[#2A2724] hover:bg-[#352F2A]"
+              : "bg-white hover:bg-gray-50"
               }`}
             style={{ minWidth: "100px" }}
           >
@@ -2237,8 +2240,8 @@ const Inventory = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`w-full h-10 pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark"
-                  ? "bg-[#2A2724] border-gray-600 text-white placeholder-gray-500"
-                  : "bg-white border-gray-300"
+                ? "bg-[#2A2724] border-gray-600 text-white placeholder-gray-500"
+                : "bg-white border-gray-300"
                 }`}
             />
           </div>
@@ -2247,8 +2250,8 @@ const Inventory = () => {
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
             className={`h-10 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] ${theme === "dark"
-                ? "bg-[#2A2724] border-gray-600 text-white"
-                : "bg-white border-gray-300"
+              ? "bg-[#2A2724] border-gray-600 text-white"
+              : "bg-white border-gray-300"
               }`}
           >
             <option value="All">By Category</option>
@@ -2265,8 +2268,8 @@ const Inventory = () => {
             value={filterBrand}
             onChange={(e) => setFilterBrand(e.target.value)}
             className={`h-10 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] ${theme === "dark"
-                ? "bg-[#2A2724] border-gray-600 text-white"
-                : "bg-white border-gray-300"
+              ? "bg-[#2A2724] border-gray-600 text-white"
+              : "bg-white border-gray-300"
               }`}
           >
             <option value="All">By Brand</option>
@@ -2281,8 +2284,8 @@ const Inventory = () => {
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             className={`h-10 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] ${theme === "dark"
-                ? "bg-[#2A2724] border-gray-600 text-white"
-                : "bg-white border-gray-300"
+              ? "bg-[#2A2724] border-gray-600 text-white"
+              : "bg-white border-gray-300"
               }`}
           >
             <option value="All">By Status</option>
@@ -2295,8 +2298,8 @@ const Inventory = () => {
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             className={`h-10 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] ${theme === "dark"
-                ? "bg-[#2A2724] border-gray-600 text-white"
-                : "bg-white border-gray-300"
+              ? "bg-[#2A2724] border-gray-600 text-white"
+              : "bg-white border-gray-300"
               }`}
           >
             <option value="sku-new">SKU: Newest First</option>
