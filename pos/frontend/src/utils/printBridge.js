@@ -305,26 +305,7 @@ const buildReceiptHTML = (receipt) => {
           <div style="font-size: 10px; color: #a0aec0; margin-top: 2px;">This is not an official receipt</div>
         </div>
 
-        <button class="no-print" style="display: block; width: 100%; padding: 12px; margin-top: 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; font-size: 14px; cursor: pointer;" onclick="window.print(); return false;">
-          🖨️ Print Receipt
-        </button>
       </div>
-
-      <script>
-        // Auto-print when opened
-        window.onload = function() {
-          setTimeout(function() {
-            window.print();
-          }, 300);
-        };
-        
-        // Close window after printing (optional)
-        window.onafterprint = function() {
-          setTimeout(function() {
-            window.close();
-          }, 500);
-        };
-      </script>
     </body>
     </html>
   `;
@@ -377,7 +358,7 @@ export async function sendReceiptToPrinter(receipt) {
     // Try to send to the local print server first, with a short timeout
     // so we don't wait 30 seconds before falling back to window.print
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1500);
+    const timeoutId = setTimeout(() => controller.abort(), 500);
 
     const response = await fetch('http://localhost:9100/print', {
       method: 'POST',
@@ -400,41 +381,35 @@ export async function sendReceiptToPrinter(receipt) {
   } catch (error) {
     console.warn('Print server not available, falling back to window.print()', error);
 
-    // Fallback to window.print() if print server is not available
+    // Fallback: use a hidden iframe for fast printing (no popup overhead)
     return new Promise((resolve, reject) => {
       try {
-        // Build the receipt HTML
         const receiptHTML = buildReceiptHTML(receipt);
 
-        // Calculate the center position for the new window
-        const width = 350;
-        const height = 650;
-        const left = (window.screen.width - width) / 2;
-        const top = (window.screen.height - height) / 2;
-
-        // Open a new window for printing, centered on screen
-        const printWindow = window.open(
-          '',
-          '_blank',
-          `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,status=no,titlebar=no,toolbar=no,menubar=no`
-        );
-
-        if (!printWindow) {
-          throw new Error('Unable to open print window. Please allow pop-ups for this site.');
+        // Reuse a single hidden iframe for all prints
+        let iframe = document.getElementById('receipt-print-iframe');
+        if (!iframe) {
+          iframe = document.createElement('iframe');
+          iframe.id = 'receipt-print-iframe';
+          iframe.style.cssText = 'position:fixed;top:-10000px;left:-10000px;width:0;height:0;border:none;visibility:hidden;';
+          document.body.appendChild(iframe);
         }
 
-        // Write the receipt HTML to the new window
-        printWindow.document.write(receiptHTML);
-        printWindow.document.close();
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write(receiptHTML);
+        doc.close();
 
-        // Focus the print window
-        printWindow.focus();
-
-        // Resolve after a short delay to allow the print dialog to open
-        setTimeout(() => {
-          resolve({ success: true, message: 'Print dialog opened (fallback)' });
-        }, 500);
-
+        // Print as soon as the iframe content has loaded
+        iframe.onload = () => {
+          try {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            resolve({ success: true, message: 'Print dialog opened (iframe fallback)' });
+          } catch (printErr) {
+            reject(printErr);
+          }
+        };
       } catch (fallbackError) {
         reject(fallbackError);
       }
