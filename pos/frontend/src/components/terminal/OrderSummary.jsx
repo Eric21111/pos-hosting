@@ -40,12 +40,12 @@ const OrderSummary = memo(({
   const [itemsToVoid, setItemsToVoid] = useState([]);
   const [isBulkVoid, setIsBulkVoid] = useState(false);
   const isProcessingVoidRef = useRef(false);
-  // Track pending quantity changes per item (key: item._id + selectedSize)
+
   const [pendingQuantities, setPendingQuantities] = useState({});
   const [availableDiscounts, setAvailableDiscounts] = useState([]);
   const discountFetchedRef = useRef(false);
 
-  // Fetch discounts on mount for auto-apply functionality (only once)
+
   useEffect(() => {
     if (discountFetchedRef.current) return;
     discountFetchedRef.current = true;
@@ -55,7 +55,7 @@ const OrderSummary = memo(({
         const response = await fetch('http://localhost:5000/api/discounts');
         const data = await response.json();
         if (data.success && Array.isArray(data.data)) {
-          setAvailableDiscounts(data.data.filter(d => d.status === 'active'));
+          setAvailableDiscounts(data.data.filter((d) => d.status === 'active'));
         }
       } catch (error) {
         console.error('Error fetching discounts for auto-apply:', error);
@@ -64,18 +64,18 @@ const OrderSummary = memo(({
     fetchDiscounts();
   }, []);
 
-  // Debounced auto-apply discount when code matches
+
   useEffect(() => {
     if (!discountCode || !discountCode.trim() || applyingDiscount) return;
 
     const codeToFind = discountCode.trim().toLowerCase();
-    const matchingDiscount = availableDiscounts.find(discount =>
+    const matchingDiscount = availableDiscounts.find((discount) =>
       (discount.discountCode || '').trim().toLowerCase() === codeToFind
     );
 
     if (matchingDiscount) {
-      // Check if already applied to avoid loops
-      const isAlreadyApplied = selectedDiscounts.some(d => d._id === matchingDiscount._id);
+
+      const isAlreadyApplied = selectedDiscounts.some((d) => d._id === matchingDiscount._id);
 
       if (!isAlreadyApplied) {
         if (onSelectDiscount) {
@@ -96,62 +96,62 @@ const OrderSummary = memo(({
     }
   };
 
-  // Get unique key for an item (includes size and variant)
+
   const getItemKey = (item) => {
     return `${item._id || item.productId}-${item.selectedSize || item.size || ''}-${item.selectedVariation || ''}`;
   };
 
-  // Get the displayed quantity (pending or actual)
+
   const getDisplayQuantity = (item) => {
     const key = getItemKey(item);
     return pendingQuantities[key] !== undefined ? pendingQuantities[key] : item.quantity;
   };
 
-  // Check if item has pending changes
+
   const hasPendingChange = (item) => {
     const key = getItemKey(item);
     return pendingQuantities[key] !== undefined && pendingQuantities[key] !== item.quantity;
   };
 
-  // Handle minus click - decrease pending quantity
+
   const handleMinusClick = (item) => {
     const key = getItemKey(item);
     const currentPending = pendingQuantities[key] !== undefined ? pendingQuantities[key] : item.quantity;
 
     if (currentPending > 1) {
-      setPendingQuantities(prev => ({
+      setPendingQuantities((prev) => ({
         ...prev,
         [key]: currentPending - 1
       }));
     }
   };
 
-  // Handle plus click for pending quantity
+
   const handlePlusClickPending = (item) => {
     const key = getItemKey(item);
     const currentPending = pendingQuantities[key] !== undefined ? pendingQuantities[key] : item.quantity;
 
-    // Check max stock
+
     let maxQty = item.currentStock;
     if (item.selectedSize && item.sizes && item.sizes[item.selectedSize] !== undefined) {
       const sizeData = item.sizes[item.selectedSize];
-      maxQty = typeof sizeData === 'object' && sizeData !== null && sizeData.quantity !== undefined
-        ? sizeData.quantity
-        : (typeof sizeData === 'number' ? sizeData : 0);
+      maxQty = typeof sizeData === 'object' && sizeData !== null && sizeData.quantity !== undefined ?
+        sizeData.quantity :
+        typeof sizeData === 'number' ? sizeData : 0;
     }
 
-    if (!maxQty || currentPending < maxQty) {
-      setPendingQuantities(prev => ({
+    if (maxQty === undefined || maxQty === null || currentPending < maxQty) {
+      setPendingQuantities((prev) => ({
         ...prev,
         [key]: currentPending + 1
       }));
     }
   };
 
-  // Cancel pending change
+
   const handleCancelPending = (item) => {
     const key = getItemKey(item);
-    setPendingQuantities(prev => {
+    setPendingQuantities((prev) => {
       const newState = { ...prev };
       delete newState[key];
       return newState;
@@ -163,27 +163,27 @@ const OrderSummary = memo(({
     const pendingQty = pendingQuantities[key];
 
     if (pendingQty < item.quantity) {
-      // Reducing quantity - need PIN verification for void
+
       const voidQuantity = item.quantity - pendingQty;
       const voidTotalAmount = item.itemPrice * voidQuantity;
       setItemToRemove({
         ...item,
         voidQuantity: voidQuantity,
         newQuantity: pendingQty,
-        // Set itemPrice to total void amount for display in modal
+
         itemPrice: voidTotalAmount,
-        // Keep original unit price for void log
+
         originalUnitPrice: item.itemPrice
       });
       setIsRemoveModalOpen(true);
     } else if (pendingQty > item.quantity) {
-      // Increasing quantity - no PIN needed
+
       updateQuantity(item, pendingQty);
       handleCancelPending(item);
     }
   };
 
-  // O(1) Product Lookup Map
+
   const productMap = useMemo(() => {
     const map = new Map();
     products.forEach((p) => {
@@ -195,16 +195,16 @@ const OrderSummary = memo(({
     return map;
   }, [products]);
 
-  // Memoized map of item discount percentages to avoid recalculating on every render
+
   const itemDiscountPercentMap = useMemo(() => {
     const map = new Map();
     if (!selectedDiscounts || selectedDiscounts.length === 0) return map;
 
-    cart.forEach(item => {
+    cart.forEach((item) => {
       const key = getItemKey(item);
       let totalPercent = 0;
 
-      // Resolve item category
+
       let itemCategory = item.category;
       if (!itemCategory && products.length > 0) {
         const productId = String(item._id || item.productId || item.id);
@@ -212,7 +212,7 @@ const OrderSummary = memo(({
         itemCategory = product?.category;
       }
 
-      selectedDiscounts.forEach(discount => {
+      selectedDiscounts.forEach((discount) => {
         const appliesToType = discount.appliesToType || discount.appliesTo;
         let applies = false;
 
@@ -224,7 +224,7 @@ const OrderSummary = memo(({
           }
         } else if (appliesToType === 'products' && discount.productIds && discount.productIds.length > 0) {
           const itemId = item._id || item.productId || item.id;
-          const isMatch = discount.productIds.some(pid => {
+          const isMatch = discount.productIds.some((pid) => {
             const pidStr = pid.toString ? pid.toString() : pid;
             const itemIdStr = itemId.toString ? itemId.toString() : itemId;
             return pidStr === itemIdStr;
@@ -249,7 +249,7 @@ const OrderSummary = memo(({
     return map;
   }, [cart, selectedDiscounts, products]);
 
-  // Fast lookup for item discount percentage
+
   const getItemTotalDiscountPercent = useCallback((item) => {
     return itemDiscountPercentMap.get(getItemKey(item)) || 0;
   }, [itemDiscountPercentMap]);
@@ -262,12 +262,12 @@ const OrderSummary = memo(({
     }
 
     try {
-      // Calculate the quantity to void (use voidQuantity if set, otherwise 1)
+
       const voidQuantity = itemToRemove.voidQuantity || 1;
-      const newQuantity = itemToRemove.newQuantity !== undefined ? itemToRemove.newQuantity : (itemToRemove.quantity - 1);
+      const newQuantity = itemToRemove.newQuantity !== undefined ? itemToRemove.newQuantity : itemToRemove.quantity - 1;
       const voidAmount = itemToRemove.itemPrice * voidQuantity;
 
-      // Prepare the voided item with voidReason
+
       const voidedItem = {
         productId: itemToRemove.productId || itemToRemove._id || itemToRemove.id,
         itemName: itemToRemove.itemName,
@@ -280,31 +280,31 @@ const OrderSummary = memo(({
         voidReason: reason
       };
 
-      // --- OPTIMISTIC UI UPDATE ---
-      // 1. Close modal instantly
+
+
       setIsRemoveModalOpen(false);
       setItemToRemove(null);
 
-      // 2. Remove or decrease quantity instantly
+
       if (newQuantity <= 0) {
         removeFromCart(itemToRemove);
       } else {
         updateQuantity(itemToRemove, newQuantity);
       }
 
-      // 3. Clear pending quantity instantly
+
       const key = getItemKey(itemToRemove);
-      setPendingQuantities(prev => {
+      setPendingQuantities((prev) => {
         const newState = { ...prev };
         delete newState[key];
         return newState;
       });
 
-      // --- BACKGROUND NETWORK REQUESTS ---
-      // We do not await these so the UI doesn't freeze
+
+
       (async () => {
         try {
-          // Record void transaction
+
           const response = await fetch('http://localhost:5000/api/transactions', {
             method: 'POST',
             headers: {
@@ -327,7 +327,7 @@ const OrderSummary = memo(({
             console.error('Failed to record void transaction:', data.message);
           }
 
-          // Create a void log entry
+
           const voidLogResponse = await fetch('http://localhost:5000/api/void-logs', {
             method: 'POST',
             headers: {
@@ -357,8 +357,8 @@ const OrderSummary = memo(({
 
     } catch (error) {
       console.error('Error preparing void transaction data:', error);
-      // Fallback optimistic UI update on prepare failure
-      const newQuantity = itemToRemove.newQuantity !== undefined ? itemToRemove.newQuantity : (itemToRemove.quantity - 1);
+
+      const newQuantity = itemToRemove.newQuantity !== undefined ? itemToRemove.newQuantity : itemToRemove.quantity - 1;
       if (newQuantity <= 0) {
         removeFromCart(itemToRemove);
       } else {
@@ -376,7 +376,7 @@ const OrderSummary = memo(({
     setIsBulkVoid(false);
   };
 
-  // Void Transaction Modal handlers
+
   const handleVoidButtonClick = () => {
     if (cart.length > 0) {
       setIsVoidModalOpen(true);
@@ -392,8 +392,8 @@ const OrderSummary = memo(({
       setItemsToVoid(selectedItems);
       setIsBulkVoid(true);
       setIsVoidModalOpen(false);
-      // Create a synthetic item for the PIN modal to show total
-      const totalAmount = selectedItems.reduce((sum, item) => sum + (item.itemPrice * item.quantity), 0);
+
+      const totalAmount = selectedItems.reduce((sum, item) => sum + item.itemPrice * item.quantity, 0);
       setItemToRemove({
         itemPrice: totalAmount,
         quantity: 1,
@@ -404,7 +404,7 @@ const OrderSummary = memo(({
   };
 
   const handleBulkVoidConfirm = async (reason, approverInfo = {}) => {
-    // Prevent duplicate calls
+
     if (isProcessingVoidRef.current) {
       console.log('[OrderSummary] Already processing void, skipping');
       return;
@@ -417,26 +417,26 @@ const OrderSummary = memo(({
       return;
     }
 
-    // Mark as processing
+
     isProcessingVoidRef.current = true;
 
-    // Store items to remove before clearing state
+
     const itemsToRemove = [...itemsToVoid];
 
-    // Clear all modal state FIRST to prevent reopening
+
     setIsRemoveModalOpen(false);
     setItemToRemove(null);
     setItemsToVoid([]);
     setIsBulkVoid(false);
 
-    // Small delay to ensure modal state is fully cleared before cart operations
-    await new Promise(resolve => setTimeout(resolve, 100));
 
-    // Calculate total amount for all items
-    const totalAmount = itemsToRemove.reduce((sum, item) => sum + (item.itemPrice * item.quantity), 0);
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
-    // Prepare all voided items for a single transaction
-    const voidedItems = itemsToRemove.map(item => ({
+
+    const totalAmount = itemsToRemove.reduce((sum, item) => sum + item.itemPrice * item.quantity, 0);
+
+
+    const voidedItems = itemsToRemove.map((item) => ({
       productId: item.productId || item._id || item.id,
       itemName: item.itemName,
       sku: item.sku,
@@ -448,8 +448,8 @@ const OrderSummary = memo(({
       voidReason: reason
     }));
 
-    // --- OPTIMISTIC UI UPDATE ---
-    // Remove all items from cart using direct remove instantly
+
+
     for (const item of itemsToRemove) {
       if (removeFromCartDirect) {
         removeFromCartDirect(item);
@@ -458,13 +458,13 @@ const OrderSummary = memo(({
       }
     }
 
-    // Reset processing flag immediately
+
     isProcessingVoidRef.current = false;
 
-    // --- BACKGROUND NETWORK REQUESTS ---
+
     (async () => {
       try {
-        // Record single void transaction for all items
+
         const response = await fetch('http://localhost:5000/api/transactions', {
           method: 'POST',
           headers: {
@@ -487,7 +487,7 @@ const OrderSummary = memo(({
           console.error('Failed to record void transaction:', data.message);
         }
 
-        // Create a void log entry for the void logs page
+
         const voidLogResponse = await fetch('http://localhost:5000/api/void-logs', {
           method: 'POST',
           headers: {
@@ -525,7 +525,7 @@ const OrderSummary = memo(({
     try {
       setApplyingDiscount(true);
 
-      // Fetch all discounts
+
       const response = await fetch('http://localhost:5000/api/discounts');
       const data = await response.json();
 
@@ -534,9 +534,9 @@ const OrderSummary = memo(({
         return;
       }
 
-      // Find discount by code (case-insensitive)
+
       const codeToFind = discountCode.trim().toLowerCase();
-      const matchingDiscount = data.data.find(discount => {
+      const matchingDiscount = data.data.find((discount) => {
         const discountCodeStr = (discount.discountCode || '').trim().toLowerCase();
         return discountCodeStr === codeToFind && discount.status === 'active';
       });
@@ -547,7 +547,7 @@ const OrderSummary = memo(({
         return;
       }
 
-      // Apply the discount using the onSelectDiscount function
+
       if (onSelectDiscount) {
         onSelectDiscount(matchingDiscount);
         setDiscountCode('');
@@ -564,27 +564,27 @@ const OrderSummary = memo(({
   return (
     <div className={`h-full rounded-[22px] border flex flex-col ${theme === 'dark' ? 'bg-[#1E1B18] border-gray-700' : 'bg-white border-gray-200'}`} style={{ boxShadow: '5px 0 15px rgba(0,0,0,0.08), 0 7px 17px rgba(0,0,0,0.05)' }}>
       <div className="px-6 py-5 flex items-center justify-between">
-        <div className="w-8"></div> {/* Spacer for centering */}
+        <div className="w-8"></div> { }
         <h2 className={`text-xl font-bold text-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Order Summary</h2>
         <button
           onClick={handleVoidButtonClick}
           disabled={cart.length === 0}
-          className={`w-8 h-8 flex items-center justify-center transition-all ${cart.length === 0
-            ? 'text-gray-300 cursor-not-allowed'
-            : 'text-red-500 hover:text-red-700'
-            }`}
-          title="Void Transaction"
-        >
+          className={`w-8 h-8 flex items-center justify-center transition-all ${cart.length === 0 ?
+            'text-gray-300 cursor-not-allowed' :
+            'text-red-500 hover:text-red-700'}`
+          }
+          title="Void Transaction">
+
           <HiDocumentRemove className="w-6 h-6" />
         </button>
       </div>
 
       <div className="flex-1 overflow-auto px-6 pb-6">
-        {cart.length === 0 ? (
+        {cart.length === 0 ?
           <div className="text-center text-gray-400 py-10">
             <p>No items in cart</p>
-          </div>
-        ) : (
+          </div> :
+
           <div className="space-y-4">
             {cart.map((item, index) => {
               const displayQty = getDisplayQuantity(item);
@@ -592,10 +592,10 @@ const OrderSummary = memo(({
               const isReducing = hasPending && displayQty < item.quantity;
 
               return (
-                <div key={item._id || item.productId || `cart-item-${index}`} className={`relative rounded-xl border shadow-[0_3px_8px_rgba(0,0,0,0.04)] p-3 ${hasPending
-                  ? (theme === 'dark' ? 'border-orange-700 bg-orange-900/20' : 'border-orange-300 bg-orange-50')
-                  : (theme === 'dark' ? 'bg-[#2A2724] border-gray-700' : 'bg-white border-gray-200')
-                  }`}>
+                <div key={item._id || item.productId || `cart-item-${index}`} className={`relative rounded-xl border shadow-[0_3px_8px_rgba(0,0,0,0.04)] p-3 ${hasPending ?
+                  theme === 'dark' ? 'border-orange-700 bg-orange-900/20' : 'border-orange-300 bg-orange-50' :
+                  theme === 'dark' ? 'bg-[#2A2724] border-gray-700' : 'bg-white border-gray-200'}`
+                }>
                   <div className="flex items-center gap-3">
                     <div className={`w-16 h-16 rounded-lg shrink-0 overflow-hidden relative ${theme === 'dark' ? 'bg-[#1E1B18]' : 'bg-gray-100'}`}>
                       {(() => {
@@ -604,26 +604,26 @@ const OrderSummary = memo(({
                           return (
                             <div className="absolute top-0 left-0 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-br-lg z-10">
                               -{discountPercent}%
-                            </div>
-                          );
+                            </div>);
+
                         }
                         return null;
                       })()}
-                      {item.itemImage && item.itemImage.trim() !== '' ? (
+                      {item.itemImage && item.itemImage.trim() !== '' ?
                         <img
                           src={item.itemImage}
                           alt={item.itemName}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
+                          className="w-full h-full object-cover" /> :
+
+
                         <div className="w-full h-full flex items-center justify-center">
                           <MdCategory className="text-2xl text-gray-400" />
                         </div>
-                      )}
+                      }
                     </div>
                     <div className="flex-1">
                       <h3 className={`font-medium text-sm mb-1 pr-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                        {/* Remove colors/variants from item name if they're in parentheses */}
+                        { }
                         {item.itemName ? item.itemName.replace(/\s*\([^)]*\)\s*$/, '').trim() : 'Item'}
                       </h3>
                       <p className={`text-xs mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -634,97 +634,97 @@ const OrderSummary = memo(({
                       <p className="text-sm font-bold text-[#AD7F65]">
                         PHP {((item.itemPrice || 0) * displayQty).toFixed(2)}
                       </p>
-                      {displayQty > 1 && (
+                      {displayQty > 1 &&
                         <p className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>
                           ₱{(item.itemPrice || 0).toFixed(2)} × {displayQty}
                         </p>
-                      )}
-                      {hasPending && isReducing && (
+                      }
+                      {hasPending && isReducing &&
                         <p className="text-xs text-orange-600 mt-1">
                           Voiding {item.quantity - displayQty} item(s)
                         </p>
-                      )}
+                      }
                     </div>
                     <div className="flex flex-col items-end justify-end gap-2">
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleMinusClick(item)}
                           disabled={displayQty <= 1}
-                          className={`w-6 h-6 flex items-center justify-center rounded-full shadow-sm transition-all ${displayQty <= 1
-                            ? 'bg-gray-300 text-white cursor-not-allowed'
-                            : 'bg-[#AD7F65] text-white hover:bg-[#8B5F45]'
-                            }`}
-                        >
+                          className={`w-6 h-6 flex items-center justify-center rounded-full shadow-sm transition-all ${displayQty <= 1 ?
+                            'bg-gray-300 text-white cursor-not-allowed' :
+                            'bg-[#AD7F65] text-white hover:bg-[#8B5F45]'}`
+                          }>
+
                           <FaMinus className="text-[10px]" />
                         </button>
-                        <span className={`font-semibold min-w-[18px] text-center text-sm ${hasPending ? 'text-orange-600' : (theme === 'dark' ? 'text-white' : 'text-gray-800')}`}>
+                        <span className={`font-semibold min-w-[18px] text-center text-sm ${hasPending ? 'text-orange-600' : theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>
                           {displayQty}
                         </span>
                         <button
                           onClick={() => handlePlusClickPending(item)}
                           className={`w-6 h-6 flex items-center justify-center rounded-full shadow-sm transition-all ${(() => {
+                            let maxQty = item.currentStock;
                             if (item.selectedSize && item.sizes && item.sizes[item.selectedSize] !== undefined) {
                               const sizeData = item.sizes[item.selectedSize];
-                              const maxQty = typeof sizeData === 'object' && sizeData !== null && sizeData.quantity !== undefined
-                                ? sizeData.quantity
-                                : (typeof sizeData === 'number' ? sizeData : 0);
-                              return displayQty >= maxQty;
+                              maxQty = typeof sizeData === 'object' && sizeData !== null && sizeData.quantity !== undefined ?
+                                sizeData.quantity :
+                                typeof sizeData === 'number' ? sizeData : 0;
                             }
-                            return false;
-                          })()
-                            ? 'bg-gray-300 text-white cursor-not-allowed'
-                            : 'bg-[#AD7F65] text-white hover:bg-[#8B5F45]'
-                            }`}
+                            return maxQty !== undefined && maxQty !== null && displayQty >= maxQty;
+                          })() ?
+                            'bg-gray-300 text-white cursor-not-allowed' :
+                            'bg-[#AD7F65] text-white hover:bg-[#8B5F45]'}`
+                          }
                           disabled={
                             (() => {
+                              let maxQty = item.currentStock;
                               if (item.selectedSize && item.sizes && item.sizes[item.selectedSize] !== undefined) {
                                 const sizeData = item.sizes[item.selectedSize];
-                                const maxQty = typeof sizeData === 'object' && sizeData !== null && sizeData.quantity !== undefined
-                                  ? sizeData.quantity
-                                  : (typeof sizeData === 'number' ? sizeData : 0);
-                                return displayQty >= maxQty;
+                                maxQty = typeof sizeData === 'object' && sizeData !== null && sizeData.quantity !== undefined ?
+                                  sizeData.quantity :
+                                  typeof sizeData === 'number' ? sizeData : 0;
                               }
-                              return false;
+                              return maxQty !== undefined && maxQty !== null && displayQty >= maxQty;
                             })()
-                          }
-                        >
+                          }>
+
                           <FaPlus className="text-[10px]" />
                         </button>
                       </div>
-                      {/* Confirm/Cancel buttons when there's a pending change */}
-                      {hasPending && (
+                      { }
+                      {hasPending &&
                         <div className="flex items-center gap-1 mt-1">
                           <button
                             onClick={() => handleCancelPending(item)}
-                            className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-all"
-                          >
+                            className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-all">
+
                             Cancel
                           </button>
                           <button
                             onClick={() => handleConfirmPending(item)}
-                            className="px-2 py-1 text-xs bg-[#AD7F65] text-white rounded hover:bg-[#8B5F45] transition-all"
-                          >
+                            className="px-2 py-1 text-xs bg-[#AD7F65] text-white rounded hover:bg-[#8B5F45] transition-all">
+
                             Confirm
                           </button>
                         </div>
-                      )}
+                      }
                     </div>
                   </div>
-                </div>
-              );
+                </div>);
+
             })}
           </div>
-        )}
+        }
       </div>
 
       <div className={`px-6 py-6 ${theme === 'dark' ? 'bg-[#1E1B18]' : 'bg-white'}`}>
         <div className="mb-6">
           <label className="block text-xs font-semibold text-[#8B7355] mb-2">Discount</label>
 
-          {/* Display applied discounts */}
-          {selectedDiscounts.length > 0 && (
+          { }
+          {selectedDiscounts.length > 0 &&
             <div className="space-y-2 mb-3">
-              {selectedDiscounts.map((discount) => (
+              {selectedDiscounts.map((discount) =>
                 <div key={discount._id} className={`flex items-center gap-2 p-2 rounded-lg border ${theme === 'dark' ? 'bg-[#2A2724] border-gray-600' : 'bg-gray-50 border-[#d6c1b5]'}`}>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
@@ -738,16 +738,16 @@ const OrderSummary = memo(({
                   <button
                     onClick={() => onRemoveDiscount(discount._id)}
                     className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-all"
-                    title="Remove discount"
-                  >
+                    title="Remove discount">
+
                     <FaTimes className="w-4 h-4" />
                   </button>
                 </div>
-              ))}
+              )}
             </div>
-          )}
+          }
 
-          {/* Always show discount input to add more discounts */}
+          { }
           <div className="flex items-center gap-2">
             <input
               type="text"
@@ -759,24 +759,24 @@ const OrderSummary = memo(({
                   applyDiscountCode();
                 }
               }}
-              className={`flex-1 px-4 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === 'dark'
-                ? 'bg-[#2A2724] border-gray-600 text-white placeholder-gray-500'
-                : 'bg-white border-[#d6c1b5] text-gray-900'
-                }`}
-            />
+              className={`flex-1 px-4 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === 'dark' ?
+                'bg-[#2A2724] border-gray-600 text-white placeholder-gray-500' :
+                'bg-white border-[#d6c1b5] text-gray-900'}`
+              } />
+
             <button
               onClick={onOpenDiscountModal}
               className={`p-2 rounded-lg transition-all ${theme === 'dark' ? 'bg-[#2A2724] text-gray-300 hover:bg-[#322f2c]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-              title="Browse discounts"
-            >
+              title="Browse discounts">
+
               <FaTag className="w-4 h-4" />
             </button>
             <button
               onClick={applyDiscountCode}
               disabled={applyingDiscount || !discountCode || !discountCode.trim()}
               className="px-4 py-2 text-white rounded-lg font-medium hover:opacity-90 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ background: 'linear-gradient(135deg, #AD7F65 0%, #76462B 100%)' }}
-            >
+              style={{ background: 'linear-gradient(135deg, #AD7F65 0%, #76462B 100%)' }}>
+
               {applyingDiscount ? 'Applying...' : 'Apply'}
             </button>
           </div>
@@ -802,23 +802,23 @@ const OrderSummary = memo(({
           <div className="flex gap-2 justify-center">
             <button
               onClick={() => setSelectedPaymentMethod('cash')}
-              className={`w-24 flex flex-col items-center justify-center py-2 rounded-lg border-2 transition-all ${selectedPaymentMethod === 'cash'
-                ? 'border-[#AD7F65] bg-[#f5f0ed]'
-                : (theme === 'dark' ? 'border-gray-600 bg-[#2A2724] hover:border-gray-500' : 'border-gray-300 bg-white hover:border-gray-400')
-                }`}
-            >
+              className={`w-24 flex flex-col items-center justify-center py-2 rounded-lg border-2 transition-all ${selectedPaymentMethod === 'cash' ?
+                'border-[#AD7F65] bg-[#f5f0ed]' :
+                theme === 'dark' ? 'border-gray-600 bg-[#2A2724] hover:border-gray-500' : 'border-gray-300 bg-white hover:border-gray-400'}`
+              }>
+
               <img src={cashIcon} alt="Cash" className="w-7 h-7 mb-1" />
-              <span className={`text-xs font-medium ${selectedPaymentMethod === 'cash' ? 'text-gray-900' : (theme === 'dark' ? 'text-gray-300' : 'text-gray-700')}`}>Cash</span>
+              <span className={`text-xs font-medium ${selectedPaymentMethod === 'cash' ? 'text-gray-900' : theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Cash</span>
             </button>
             <button
               onClick={() => setSelectedPaymentMethod('qr')}
-              className={`w-24 flex flex-col items-center justify-center py-0 rounded-lg border-2 transition-all ${selectedPaymentMethod === 'qr'
-                ? 'border-[#AD7F65] bg-[#f5f0ed]'
-                : (theme === 'dark' ? 'border-gray-600 bg-[#2A2724] hover:border-gray-500' : 'border-gray-300 bg-white hover:border-gray-400')
-                }`}
-            >
+              className={`w-24 flex flex-col items-center justify-center py-0 rounded-lg border-2 transition-all ${selectedPaymentMethod === 'qr' ?
+                'border-[#AD7F65] bg-[#f5f0ed]' :
+                theme === 'dark' ? 'border-gray-600 bg-[#2A2724] hover:border-gray-500' : 'border-gray-300 bg-white hover:border-gray-400'}`
+              }>
+
               <img src={qrIcon} alt="QR Code" className="w-12 h-12 mb-4 " />
-              <span className={`absolute text-xs font-medium translate-y-4 ${selectedPaymentMethod === 'qr' ? 'text-gray-900' : (theme === 'dark' ? 'text-gray-300' : 'text-gray-700')}`}>Gcash</span>
+              <span className={`absolute text-xs font-medium translate-y-4 ${selectedPaymentMethod === 'qr' ? 'text-gray-900' : theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Gcash</span>
             </button>
           </div>
         </div>
@@ -827,8 +827,8 @@ const OrderSummary = memo(({
           onClick={handleProceed}
           disabled={cart.length === 0 || !selectedPaymentMethod}
           className="w-full py-3 text-white rounded-lg font-bold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
-          style={{ background: 'linear-gradient(135deg, #AD7F65 0%, #76462B 100%)' }}
-        >
+          style={{ background: 'linear-gradient(135deg, #AD7F65 0%, #76462B 100%)' }}>
+
           Proceed
         </button>
       </div>
@@ -837,19 +837,17 @@ const OrderSummary = memo(({
         isOpen={isVoidModalOpen}
         onClose={handleVoidModalClose}
         onConfirm={handleVoidItemsConfirm}
-        cartItems={cart}
-      />
+        cartItems={cart} />
+
 
       <RemoveItemPinModal
         isOpen={isRemoveModalOpen}
         onClose={handleRemoveModalClose}
         onConfirm={isBulkVoid ? handleBulkVoidConfirm : handleRemoveConfirm}
-        item={itemToRemove}
-      />
-    </div>
-  );
+        item={itemToRemove} />
+
+    </div>);
+
 });
 
 export default OrderSummary;
-
-
