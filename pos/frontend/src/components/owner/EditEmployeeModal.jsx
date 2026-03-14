@@ -30,9 +30,9 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
         contactNo: employee.contactNo || '',
         email: employee.email || '',
         role: employee.role || 'Sales Clerk',
-        dateJoined: employee.dateJoinedActual
-          ? new Date(employee.dateJoinedActual).toISOString().split('T')[0]
-          : ''
+        dateJoined: employee.dateJoinedActual ?
+        new Date(employee.dateJoinedActual).toISOString().split('T')[0] :
+        ''
       });
       setStatus(employee.status || 'Active');
       setPermissions({
@@ -41,7 +41,7 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
         viewTransactions: employee.permissions?.viewTransactions ?? false,
         generateReports: employee.permissions?.generateReports ?? false
       });
-      // Set to URL if it exists, otherwise default
+
       setProfilePreview(employee._id ? `http://localhost:5000/api/employees/${employee._id}/image?t=${new Date().getTime()}` : defaultAvatar);
       setMessage('');
       setError('');
@@ -86,8 +86,8 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
         dateJoinedActual: formData.dateJoined
       };
 
-      // Only send profileImage if a new file was selected (base64 string)
-      // Otherwise, keep the backend image as is.
+
+
       if (profilePreview && profilePreview.startsWith('data:image')) {
         payload.profileImage = profilePreview;
       }
@@ -118,7 +118,7 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
     <div className="fixed inset-0 flex items-center justify-center z-[10002] p-4 backdrop-blur-sm bg-black/20">
       <div className="bg-white w-full max-w-2xl relative shadow-2xl overflow-hidden animate-fadeIn" style={{ borderRadius: '24px' }}>
 
-        {/* Header */}
+        {}
         <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#AD7F65] flex items-center justify-center text-white">
@@ -128,23 +128,23 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full"
-          >
+            className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full">
+            
             <FaTimes className="w-5 h-5" />
           </button>
         </div>
 
         <div className="p-8 max-h-[80vh] overflow-y-auto custom-scrollbar">
 
-          {/* Profile Section */}
+          {}
           <div className="flex items-start gap-8 mb-10">
             <div className="shrink-0 relative group cursor-pointer" onClick={handlePhotoClick}>
               <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg relative">
                 <img
                   src={profilePreview}
                   alt={formData.name}
-                  className="w-full h-full object-cover transition-opacity group-hover:opacity-75"
-                />
+                  className="w-full h-full object-cover transition-opacity group-hover:opacity-75" />
+                
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
                   <FaCamera className="text-white w-8 h-8" />
                 </div>
@@ -154,8 +154,8 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
                 accept="image/*"
                 ref={fileInputRef}
                 onChange={handleImageChange}
-                className="hidden"
-              />
+                className="hidden" />
+              
             </div>
 
             <div className="flex-1 pt-2">
@@ -166,29 +166,29 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
                 <div>
                   <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Permissions:</label>
                   <div className="flex gap-2 flex-wrap">
-                    {permissions.posTerminal && (
-                      <span className="px-3 py-1 rounded-full text-xs font-medium border border-[#E5E7EB] text-gray-600 bg-gray-50">
+                    {permissions.posTerminal &&
+                    <span className="px-3 py-1 rounded-full text-xs font-medium border border-[#E5E7EB] text-gray-600 bg-gray-50">
                         POS Terminal
                       </span>
-                    )}
-                    {permissions.inventory && (
-                      <span className="px-3 py-1 rounded-full text-xs font-medium border border-[#E5E7EB] text-gray-600 bg-gray-50">
+                    }
+                    {permissions.inventory &&
+                    <span className="px-3 py-1 rounded-full text-xs font-medium border border-[#E5E7EB] text-gray-600 bg-gray-50">
                         Inventory
                       </span>
-                    )}
-                    {permissions.viewTransactions && (
-                      <span className="px-3 py-1 rounded-full text-xs font-medium border border-[#E5E7EB] text-gray-600 bg-gray-50">
+                    }
+                    {permissions.viewTransactions &&
+                    <span className="px-3 py-1 rounded-full text-xs font-medium border border-[#E5E7EB] text-gray-600 bg-gray-50">
                         View Transactions
                       </span>
-                    )}
-                    {permissions.generateReports && (
-                      <span className="px-3 py-1 rounded-full text-xs font-medium border border-[#E5E7EB] text-gray-600 bg-gray-50">
+                    }
+                    {permissions.generateReports &&
+                    <span className="px-3 py-1 rounded-full text-xs font-medium border border-[#E5E7EB] text-gray-600 bg-gray-50">
                         Generate Reports
                       </span>
-                    )}
-                    {!permissions.posTerminal && !permissions.inventory && !permissions.viewTransactions && !permissions.generateReports && (
-                      <span className="text-xs text-gray-400 italic">No active permissions</span>
-                    )}
+                    }
+                    {!permissions.posTerminal && !permissions.inventory && !permissions.viewTransactions && !permissions.generateReports &&
+                    <span className="text-xs text-gray-400 italic">No active permissions</span>
+                    }
                   </div>
                 </div>
 
@@ -197,11 +197,11 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
-                    className={`inline-block px-3 py-1 rounded-lg text-xs font-bold border-none focus:ring-2 focus:ring-offset-1 focus:ring-[#AD7F65] cursor-pointer ${status === 'Active'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-red-100 text-red-700'
-                      }`}
-                  >
+                    className={`inline-block px-3 py-1 rounded-lg text-xs font-bold border-none focus:ring-2 focus:ring-offset-1 focus:ring-[#AD7F65] cursor-pointer ${status === 'Active' ?
+                    'bg-green-100 text-green-700' :
+                    'bg-red-100 text-red-700'}`
+                    }>
+                    
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                   </select>
@@ -210,7 +210,7 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
             </div>
           </div>
 
-          {/* Personal Details Form */}
+          {}
           <h4 className="text-base font-bold text-gray-800 mb-6">Personal Details</h4>
           <div className="grid grid-cols-2 gap-x-8 gap-y-6 mb-10">
             <div>
@@ -221,8 +221,8 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
                 value={formData.name}
                 onChange={handleInputChange}
                 className="w-full text-base font-semibold text-gray-800 border-b border-gray-200 focus:border-[#AD7F65] focus:outline-none py-1 placeholder-gray-300"
-                placeholder="Enter name"
-              />
+                placeholder="Enter name" />
+              
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500 mb-1 block">Contact number</label>
@@ -232,8 +232,8 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
                 value={formData.contactNo}
                 onChange={handleInputChange}
                 className="w-full text-lg font-bold text-gray-800 border-b border-gray-200 focus:border-[#AD7F65] focus:outline-none py-1 placeholder-gray-300"
-                placeholder="09123456789"
-              />
+                placeholder="09123456789" />
+              
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500 mb-1 block">Email</label>
@@ -243,8 +243,8 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
                 value={formData.email}
                 onChange={handleInputChange}
                 className="w-full text-lg font-bold text-gray-800 border-b border-gray-200 focus:border-[#AD7F65] focus:outline-none py-1 placeholder-gray-300"
-                placeholder="email@example.com"
-              />
+                placeholder="email@example.com" />
+              
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500 mb-1 block">Date Joined</label>
@@ -253,8 +253,8 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
                 name="dateJoined"
                 value={formData.dateJoined}
                 onChange={handleInputChange}
-                className="w-full text-lg font-bold text-gray-800 border-b border-gray-200 focus:border-[#AD7F65] focus:outline-none py-1"
-              />
+                className="w-full text-lg font-bold text-gray-800 border-b border-gray-200 focus:border-[#AD7F65] focus:outline-none py-1" />
+              
             </div>
             <div className="col-span-2">
               <label className="text-sm font-medium text-gray-500 mb-1 block">Position</label>
@@ -264,62 +264,62 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
                   name="role"
                   value={formData.role}
                   onChange={handleInputChange}
-                  className="bg-transparent border-b border-gray-200 focus:border-[#AD7F65] focus:outline-none py-1 font-bold text-gray-800 cursor-pointer"
-                >
-                  {['Cashier', 'Sales Clerk', 'Manager', 'Supervisor'].map((role) => (
-                    <option value={role} key={role}>
+                  className="bg-transparent border-b border-gray-200 focus:border-[#AD7F65] focus:outline-none py-1 font-bold text-gray-800 cursor-pointer">
+                  
+                  {['Cashier', 'Sales Clerk', 'Manager', 'Supervisor'].map((role) =>
+                  <option value={role} key={role}>
                       {role}
                     </option>
-                  ))}
+                  )}
                 </select>
               </div>
             </div>
           </div>
 
-          {/* Permissions Section */}
+          {}
           <h4 className="text-base font-bold text-gray-800 mb-6">Permissions</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             {[
-              { label: 'POS Terminal', desc: 'Access to Point of Sale Terminal', key: 'posTerminal' },
-              { label: 'Inventory', desc: 'Add, Edit, Delete Products', key: 'inventory' },
-              { label: 'View Transactions', desc: 'View Sales History', key: 'viewTransactions' },
-              { label: 'Generate Reports', desc: 'Create and Download Business Reports', key: 'generateReports' },
-            ].map(({ label, desc, key }) => (
-              <div key={key} className="border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:border-[#AD7F65] transition-colors bg-white">
+            { label: 'POS Terminal', desc: 'Access to Point of Sale Terminal', key: 'posTerminal' },
+            { label: 'Inventory', desc: 'Add, Edit, Delete Products', key: 'inventory' },
+            { label: 'View Transactions', desc: 'View Sales History', key: 'viewTransactions' },
+            { label: 'Generate Reports', desc: 'Create and Download Business Reports', key: 'generateReports' }].
+            map(({ label, desc, key }) =>
+            <div key={key} className="border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:border-[#AD7F65] transition-colors bg-white">
                 <div>
                   <p className="font-bold text-gray-800 text-sm">{label}</p>
                   <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={permissions[key]}
-                    onChange={() => handlePermissionToggle(key)}
-                  />
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={permissions[key]}
+                  onChange={() => handlePermissionToggle(key)} />
+                
                   <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-[#AD7F65] peer-focus:ring-2 peer-focus:ring-[#AD7F65]/20 transition-all"></div>
                   <div className="absolute left-[2px] top-[2px] w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
                 </label>
               </div>
-            ))}
+            )}
           </div>
 
-          {/* Error Message */}
-          {(error || message) && (
-            <div
-              className={`px-4 py-3 rounded-xl text-sm mb-6 ${error ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-                }`}
-            >
+          {}
+          {(error || message) &&
+          <div
+            className={`px-4 py-3 rounded-xl text-sm mb-6 ${error ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`
+            }>
+            
               {error || message}
             </div>
-          )}
+          }
 
-          {/* Footer Actions */}
+          {}
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
             <button
               onClick={onClose}
-              className="px-6 py-2.5 rounded-lg bg-gray-200 font-bold text-gray-700 hover:bg-gray-300 transition-all"
-            >
+              className="px-6 py-2.5 rounded-lg bg-gray-200 font-bold text-gray-700 hover:bg-gray-300 transition-all">
+              
               Cancel
             </button>
             <button
@@ -328,16 +328,16 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
               className="px-8 py-2.5 rounded-lg text-white font-bold transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
               style={{
                 background: '#007AFF'
-              }}
-            >
+              }}>
+              
               {loading ? 'Updating...' : 'Update'}
             </button>
           </div>
 
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default EditEmployeeProfile;

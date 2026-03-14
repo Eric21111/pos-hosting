@@ -105,7 +105,7 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
@@ -119,10 +119,10 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
   };
 
   const toggleProductSelection = (product) => {
-    setTempSelectedProducts(prev => {
-      const exists = prev.find(p => p._id === product._id);
+    setTempSelectedProducts((prev) => {
+      const exists = prev.find((p) => p._id === product._id);
       if (exists) {
-        return prev.filter(p => p._id !== product._id);
+        return prev.filter((p) => p._id !== product._id);
       }
       return [...prev, {
         _id: product._id,
@@ -136,7 +136,7 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
   };
 
   const confirmProductSelection = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       selectedProducts: tempSelectedProducts
     }));
@@ -144,17 +144,17 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
   };
 
   const removeSelectedProduct = (productId) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      selectedProducts: prev.selectedProducts.filter(p => p._id !== productId)
+      selectedProducts: prev.selectedProducts.filter((p) => p._id !== productId)
     }));
   };
 
   const isDark = theme === 'dark';
-  const inputClass = `w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${isDark
-    ? 'bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500'
-    : 'bg-white border-gray-300 text-gray-900'
-    }`;
+  const inputClass = `w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${isDark ?
+  'bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500' :
+  'bg-white border-gray-300 text-gray-900'}`;
+
 
   return (
     <>
@@ -164,8 +164,8 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
             className="h-6"
             style={{
               background: 'linear-gradient(135deg, #AD7F65 0%, #76462B 100%)'
-            }}
-          />
+            }} />
+          
 
           <div className={`px-6 py-4 border-b flex items-center justify-between ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
             <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>
@@ -173,8 +173,8 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
+              className="text-gray-400 hover:text-gray-600 transition-colors">
+              
               <FaTimes className="w-5 h-5" />
             </button>
           </div>
@@ -197,8 +197,8 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                         onChange={handleChange}
                         placeholder="e.g ANNIVERSARY SALE"
                         className={inputClass}
-                        required
-                      />
+                        required />
+                      
                     </div>
 
                     <div>
@@ -212,8 +212,8 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                         value={formData.discountCode}
                         onChange={handleChange}
                         placeholder="e.g DRESS10"
-                        className={inputClass}
-                      />
+                        className={inputClass} />
+                      
                     </div>
 
                     <div>
@@ -228,8 +228,8 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                             value="percentage"
                             checked={formData.discountType === 'percentage'}
                             onChange={handleChange}
-                            className="w-4 h-4 text-[#AD7F65] focus:ring-[#AD7F65]"
-                          />
+                            className="w-4 h-4 text-[#AD7F65] focus:ring-[#AD7F65]" />
+                          
                           <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Percentage</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
@@ -239,8 +239,8 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                             value="fixed"
                             checked={formData.discountType === 'fixed'}
                             onChange={handleChange}
-                            className="w-4 h-4 text-[#AD7F65] focus:ring-[#AD7F65]"
-                          />
+                            className="w-4 h-4 text-[#AD7F65] focus:ring-[#AD7F65]" />
+                          
                           <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Fixed Amount</span>
                         </label>
                       </div>
@@ -257,12 +257,12 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                           value={formData.discountValue}
                           onChange={handleChange}
                           placeholder="e.g 15"
-                          className={`flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${isDark
-                            ? 'bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500'
-                            : 'bg-white border-gray-300 text-gray-900'
-                            }`}
-                          required
-                        />
+                          className={`flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${isDark ?
+                          'bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500' :
+                          'bg-white border-gray-300 text-gray-900'}`
+                          }
+                          required />
+                        
                         <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-black'}`}>
                           {formData.discountType === 'percentage' ? '% OFF' : '₱ OFF'}
                         </span>
@@ -281,8 +281,8 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                             value="all"
                             checked={formData.appliesTo === 'all'}
                             onChange={handleChange}
-                            className="w-4 h-4 text-[#AD7F65] focus:ring-[#AD7F65]"
-                          />
+                            className="w-4 h-4 text-[#AD7F65] focus:ring-[#AD7F65]" />
+                          
                           <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>All Products</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
@@ -292,8 +292,8 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                             value="category"
                             checked={formData.appliesTo === 'category'}
                             onChange={handleChange}
-                            className="w-4 h-4 text-[#AD7F65] focus:ring-[#AD7F65]"
-                          />
+                            className="w-4 h-4 text-[#AD7F65] focus:ring-[#AD7F65]" />
+                          
                           <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Specific Category</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
@@ -303,82 +303,82 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                             value="products"
                             checked={formData.appliesTo === 'products'}
                             onChange={handleChange}
-                            className="w-4 h-4 text-[#AD7F65] focus:ring-[#AD7F65]"
-                          />
+                            className="w-4 h-4 text-[#AD7F65] focus:ring-[#AD7F65]" />
+                          
                           <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Specific Products</span>
                         </label>
                       </div>
-                      {formData.appliesTo === 'category' && (
-                        <div className="mt-3">
+                      {formData.appliesTo === 'category' &&
+                      <div className="mt-3">
                           <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             Select Category <span className="text-red-500">*</span>
                           </label>
                           <select
-                            name="category"
-                            value={formData.category}
-                            onChange={handleChange}
-                            className={inputClass}
-                            required={formData.appliesTo === 'category'}
-                          >
+                          name="category"
+                          value={formData.category}
+                          onChange={handleChange}
+                          className={inputClass}
+                          required={formData.appliesTo === 'category'}>
+                          
                             <option value="">Select a category</option>
-                            {categories.map(cat => (
-                              <option key={cat} value={cat}>{cat}</option>
-                            ))}
+                            {categories.map((cat) =>
+                          <option key={cat} value={cat}>{cat}</option>
+                          )}
                           </select>
                         </div>
-                      )}
-                      {formData.appliesTo === 'products' && (
-                        <div className="mt-3">
+                      }
+                      {formData.appliesTo === 'products' &&
+                      <div className="mt-3">
                           <button
-                            type="button"
-                            onClick={openProductPicker}
-                            className={`w-full px-4 py-3 border-2 border-dashed rounded-xl flex items-center justify-center gap-2 transition-all hover:border-[#AD7F65] ${isDark
-                              ? 'border-gray-600 text-gray-300 hover:bg-[#352F2A]'
-                              : 'border-gray-300 text-gray-600 hover:bg-[#FDF7F1]'
-                              }`}
-                          >
+                          type="button"
+                          onClick={openProductPicker}
+                          className={`w-full px-4 py-3 border-2 border-dashed rounded-xl flex items-center justify-center gap-2 transition-all hover:border-[#AD7F65] ${isDark ?
+                          'border-gray-600 text-gray-300 hover:bg-[#352F2A]' :
+                          'border-gray-300 text-gray-600 hover:bg-[#FDF7F1]'}`
+                          }>
+                          
                             <FaBox className="text-[#AD7F65]" />
                             <span className="font-medium">
                               Select Products
-                              {formData.selectedProducts.length > 0 && (
-                                <span className="ml-2 px-2 py-0.5 text-xs font-bold text-white bg-[#AD7F65] rounded-full">
+                              {formData.selectedProducts.length > 0 &&
+                            <span className="ml-2 px-2 py-0.5 text-xs font-bold text-white bg-[#AD7F65] rounded-full">
                                   {formData.selectedProducts.length}
                                 </span>
-                              )}
+                            }
                             </span>
                           </button>
 
-                          {formData.selectedProducts.length > 0 && (
-                            <div className="mt-3 flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                              {formData.selectedProducts.map(product => (
-                                <span
-                                  key={product._id}
-                                  className={`inline-flex items-center gap-1.5 pl-2 pr-1 py-1 rounded-full text-xs font-medium ${isDark
-                                    ? 'bg-[#352F2A] text-gray-200 border border-gray-600'
-                                    : 'bg-[#FDF7F1] text-[#76462B] border border-[#E8D5C8]'
-                                    }`}
-                                >
-                                  {product.itemImage && (
-                                    <img
-                                      src={product.itemImage}
-                                      alt=""
-                                      className="w-4 h-4 rounded-full object-cover"
-                                    />
-                                  )}
+                          {formData.selectedProducts.length > 0 &&
+                        <div className="mt-3 flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                              {formData.selectedProducts.map((product) =>
+                          <span
+                            key={product._id}
+                            className={`inline-flex items-center gap-1.5 pl-2 pr-1 py-1 rounded-full text-xs font-medium ${isDark ?
+                            'bg-[#352F2A] text-gray-200 border border-gray-600' :
+                            'bg-[#FDF7F1] text-[#76462B] border border-[#E8D5C8]'}`
+                            }>
+                            
+                                  {product.itemImage &&
+                            <img
+                              src={product.itemImage}
+                              alt=""
+                              className="w-4 h-4 rounded-full object-cover" />
+
+                            }
                                   <span className="max-w-[120px] truncate">{product.itemName}</span>
                                   <button
-                                    type="button"
-                                    onClick={() => removeSelectedProduct(product._id)}
-                                    className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-red-100 hover:text-red-500 transition-colors"
-                                  >
+                              type="button"
+                              onClick={() => removeSelectedProduct(product._id)}
+                              className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-red-100 hover:text-red-500 transition-colors">
+                              
                                     <FaTimes className="w-2.5 h-2.5" />
                                   </button>
                                 </span>
-                              ))}
-                            </div>
                           )}
+                            </div>
+                        }
                         </div>
-                      )}
+                      }
                     </div>
 
                     <div>
@@ -394,11 +394,11 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                             value={formData.validFrom}
                             onChange={handleChange}
                             disabled={formData.noExpiration}
-                            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed ${isDark
-                              ? 'bg-[#1E1B18] border-gray-600 text-white'
-                              : 'bg-white border-gray-300 text-gray-900 disabled:bg-gray-100'
-                              }`}
-                          />
+                            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed ${isDark ?
+                            'bg-[#1E1B18] border-gray-600 text-white' :
+                            'bg-white border-gray-300 text-gray-900 disabled:bg-gray-100'}`
+                            } />
+                          
                         </div>
                         <div>
                           <label className="text-xs text-gray-500 block mb-1">Valid until</label>
@@ -408,11 +408,11 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                             value={formData.validUntil}
                             onChange={handleChange}
                             disabled={formData.noExpiration}
-                            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed ${isDark
-                              ? 'bg-[#1E1B18] border-gray-600 text-white'
-                              : 'bg-white border-gray-300 text-gray-900 disabled:bg-gray-100'
-                              }`}
-                          />
+                            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed ${isDark ?
+                            'bg-[#1E1B18] border-gray-600 text-white' :
+                            'bg-white border-gray-300 text-gray-900 disabled:bg-gray-100'}`
+                            } />
+                          
                         </div>
                       </div>
                       <label className="flex items-center gap-2 cursor-pointer">
@@ -421,8 +421,8 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                           name="noExpiration"
                           checked={formData.noExpiration}
                           onChange={handleChange}
-                          className="w-4 h-4 text-[#AD7F65] rounded focus:ring-[#AD7F65]"
-                        />
+                          className="w-4 h-4 text-[#AD7F65] rounded focus:ring-[#AD7F65]" />
+                        
                         <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>No expiration date</span>
                       </label>
                     </div>
@@ -446,8 +446,8 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                           value={formData.minPurchaseAmount}
                           onChange={handleChange}
                           step="0.01"
-                          className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent"
-                        />
+                          className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent" />
+                        
                       </div>
                       <p className="text-xs text-gray-400 mt-1">Customer must spend at least this amount</p>
                     </div>
@@ -463,8 +463,8 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                         value={formData.usageLimit}
                         onChange={handleChange}
                         min="0"
-                        className={inputClass}
-                      />
+                        className={inputClass} />
+                      
                       <p className="text-xs text-gray-400 mt-1">Total number of times this discount can be used</p>
                     </div>
 
@@ -478,11 +478,11 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                         onChange={handleChange}
                         placeholder="Notes about this discount..."
                         rows="4"
-                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent resize-none ${isDark
-                          ? 'bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500'
-                          : 'bg-white border-gray-300 text-gray-900'
-                          }`}
-                      />
+                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent resize-none ${isDark ?
+                        'bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500' :
+                        'bg-white border-gray-300 text-gray-900'}`
+                        } />
+                      
                     </div>
                   </div>
                 </div>
@@ -495,8 +495,8 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                 className="px-8 py-3 text-white rounded-lg font-bold text-lg shadow-md hover:shadow-lg transition-all"
                 style={{
                   background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                }}
-              >
+                }}>
+                
                 {discountToEdit ? 'Update Discount' : 'Add New Discount'}
               </button>
             </div>
@@ -504,28 +504,28 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
         </div>
       </div>
 
-      {/* Product Picker Modal */}
-      {showProductPicker && (
-        <ProductPickerModal
-          isDark={isDark}
-          allProducts={allProducts}
-          productsLoading={productsLoading}
-          productSearch={productSearch}
-          setProductSearch={setProductSearch}
-          productCategoryFilter={productCategoryFilter}
-          setProductCategoryFilter={setProductCategoryFilter}
-          categories={categories}
-          tempSelectedProducts={tempSelectedProducts}
-          toggleProductSelection={toggleProductSelection}
-          confirmProductSelection={confirmProductSelection}
-          onClose={() => setShowProductPicker(false)}
-        />
-      )}
-    </>
-  );
+      {}
+      {showProductPicker &&
+      <ProductPickerModal
+        isDark={isDark}
+        allProducts={allProducts}
+        productsLoading={productsLoading}
+        productSearch={productSearch}
+        setProductSearch={setProductSearch}
+        productCategoryFilter={productCategoryFilter}
+        setProductCategoryFilter={setProductCategoryFilter}
+        categories={categories}
+        tempSelectedProducts={tempSelectedProducts}
+        toggleProductSelection={toggleProductSelection}
+        confirmProductSelection={confirmProductSelection}
+        onClose={() => setShowProductPicker(false)} />
+
+      }
+    </>);
+
 };
 
-// Separated into its own component for cleanliness
+
 const ProductPickerModal = ({
   isDark,
   allProducts,
@@ -541,31 +541,31 @@ const ProductPickerModal = ({
   onClose
 }) => {
   const filteredProducts = useMemo(() => {
-    return allProducts.filter(product => {
+    return allProducts.filter((product) => {
       const matchesSearch = !productSearch ||
-        product.itemName?.toLowerCase().includes(productSearch.toLowerCase()) ||
-        product.sku?.toLowerCase().includes(productSearch.toLowerCase()) ||
-        product.brandName?.toLowerCase().includes(productSearch.toLowerCase());
+      product.itemName?.toLowerCase().includes(productSearch.toLowerCase()) ||
+      product.sku?.toLowerCase().includes(productSearch.toLowerCase()) ||
+      product.brandName?.toLowerCase().includes(productSearch.toLowerCase());
 
       const matchesCategory = productCategoryFilter === 'All' ||
-        product.category === productCategoryFilter;
+      product.category === productCategoryFilter;
 
       return matchesSearch && matchesCategory;
     });
   }, [allProducts, productSearch, productCategoryFilter]);
 
   const isSelected = useCallback((productId) => {
-    return tempSelectedProducts.some(p => p._id === productId);
+    return tempSelectedProducts.some((p) => p._id === productId);
   }, [tempSelectedProducts]);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-[10003] p-4 backdrop-blur-sm bg-black/30">
       <div className={`rounded-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col ${isDark ? 'bg-[#2A2724]' : 'bg-white'}`}>
-        {/* Header */}
+        {}
         <div
           className="h-2"
-          style={{ background: 'linear-gradient(135deg, #AD7F65 0%, #76462B 100%)' }}
-        />
+          style={{ background: 'linear-gradient(135deg, #AD7F65 0%, #76462B 100%)' }} />
+        
         <div className={`px-6 py-4 border-b flex items-center justify-between ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
           <div>
             <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>
@@ -577,13 +577,13 @@ const ProductPickerModal = ({
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
+            className="text-gray-400 hover:text-gray-600 transition-colors">
+            
             <FaTimes className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Search & Filter Bar */}
+        {}
         <div className={`px-6 py-3 flex gap-3 border-b ${isDark ? 'border-gray-700 bg-[#1E1B18]' : 'border-gray-100 bg-gray-50'}`}>
           <div className="flex-1 relative">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -592,78 +592,78 @@ const ProductPickerModal = ({
               value={productSearch}
               onChange={(e) => setProductSearch(e.target.value)}
               placeholder="Search by name, SKU, or brand..."
-              className={`w-full pl-10 pr-4 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent text-sm ${isDark
-                ? 'bg-[#2A2724] border-gray-600 text-white placeholder-gray-500'
-                : 'bg-white border-gray-300 text-gray-900'
-                }`}
-              autoFocus
-            />
+              className={`w-full pl-10 pr-4 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent text-sm ${isDark ?
+              'bg-[#2A2724] border-gray-600 text-white placeholder-gray-500' :
+              'bg-white border-gray-300 text-gray-900'}`
+              }
+              autoFocus />
+            
           </div>
           <select
             value={productCategoryFilter}
             onChange={(e) => setProductCategoryFilter(e.target.value)}
-            className={`px-4 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent text-sm min-w-[150px] ${isDark
-              ? 'bg-[#2A2724] border-gray-600 text-white'
-              : 'bg-white border-gray-300 text-gray-900'
-              }`}
-          >
+            className={`px-4 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent text-sm min-w-[150px] ${isDark ?
+            'bg-[#2A2724] border-gray-600 text-white' :
+            'bg-white border-gray-300 text-gray-900'}`
+            }>
+            
             <option value="All">All Categories</option>
-            {categories.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
+            {categories.map((cat) =>
+            <option key={cat} value={cat}>{cat}</option>
+            )}
           </select>
         </div>
 
-        {/* Product List */}
+        {}
         <div className="flex-1 overflow-y-auto px-6 py-4">
-          {productsLoading ? (
-            <div className="flex items-center justify-center py-16">
+          {productsLoading ?
+          <div className="flex items-center justify-center py-16">
               <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#AD7F65] border-t-transparent" />
               <span className={`ml-3 text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Loading products...</span>
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16">
+            </div> :
+          filteredProducts.length === 0 ?
+          <div className="flex flex-col items-center justify-center py-16">
               <FaBox className={`w-12 h-12 mb-3 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No products found</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-2">
-              {filteredProducts.map(product => {
-                const selected = isSelected(product._id);
-                return (
-                  <button
-                    key={product._id}
-                    type="button"
-                    onClick={() => toggleProductSelection(product)}
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl border transition-all text-left ${selected
-                      ? isDark
-                        ? 'border-[#AD7F65] bg-[#352F2A] shadow-sm'
-                        : 'border-[#AD7F65] bg-[#FDF7F1] shadow-sm'
-                      : isDark
-                        ? 'border-gray-700 hover:border-gray-500 hover:bg-[#352F2A]'
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                      }`}
-                  >
-                    {/* Checkbox */}
-                    <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 transition-colors ${selected
-                      ? 'bg-[#AD7F65] border-[#AD7F65]'
-                      : isDark ? 'border-gray-500' : 'border-gray-300'
-                      }`}>
+            </div> :
+
+          <div className="grid grid-cols-1 gap-2">
+              {filteredProducts.map((product) => {
+              const selected = isSelected(product._id);
+              return (
+                <button
+                  key={product._id}
+                  type="button"
+                  onClick={() => toggleProductSelection(product)}
+                  className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl border transition-all text-left ${selected ?
+                  isDark ?
+                  'border-[#AD7F65] bg-[#352F2A] shadow-sm' :
+                  'border-[#AD7F65] bg-[#FDF7F1] shadow-sm' :
+                  isDark ?
+                  'border-gray-700 hover:border-gray-500 hover:bg-[#352F2A]' :
+                  'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`
+                  }>
+                  
+                    {}
+                    <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 transition-colors ${selected ?
+                  'bg-[#AD7F65] border-[#AD7F65]' :
+                  isDark ? 'border-gray-500' : 'border-gray-300'}`
+                  }>
                       {selected && <FaCheck className="w-3 h-3 text-white" />}
                     </div>
 
-                    {/* Product Image */}
+                    {}
                     <div className={`w-10 h-10 rounded-lg flex-shrink-0 overflow-hidden ${isDark ? 'bg-[#1E1B18]' : 'bg-gray-100'}`}>
-                      {product.itemImage ? (
-                        <img src={product.itemImage} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
+                      {product.itemImage ?
+                    <img src={product.itemImage} alt="" className="w-full h-full object-cover" /> :
+
+                    <div className="w-full h-full flex items-center justify-center">
                           <FaBox className={`w-4 h-4 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
                         </div>
-                      )}
+                    }
                     </div>
 
-                    {/* Product Info */}
+                    {}
                     <div className="flex-1 min-w-0">
                       <p className={`text-sm font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
                         {product.itemName}
@@ -674,21 +674,21 @@ const ProductPickerModal = ({
                       </p>
                     </div>
 
-                    {/* Category Badge */}
-                    <span className={`text-xs px-2.5 py-1 rounded-full flex-shrink-0 ${isDark
-                      ? 'bg-[#1E1B18] text-gray-400'
-                      : 'bg-gray-100 text-gray-500'
-                      }`}>
+                    {}
+                    <span className={`text-xs px-2.5 py-1 rounded-full flex-shrink-0 ${isDark ?
+                  'bg-[#1E1B18] text-gray-400' :
+                  'bg-gray-100 text-gray-500'}`
+                  }>
                       {product.category || 'Uncategorized'}
                     </span>
-                  </button>
-                );
-              })}
+                  </button>);
+
+            })}
             </div>
-          )}
+          }
         </div>
 
-        {/* Footer */}
+        {}
         <div className={`px-6 py-4 border-t flex items-center justify-between ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
           <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
             {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} shown
@@ -697,11 +697,11 @@ const ProductPickerModal = ({
             <button
               type="button"
               onClick={onClose}
-              className={`px-5 py-2.5 rounded-lg text-sm font-medium border transition-colors ${isDark
-                ? 'border-gray-600 text-gray-300 hover:bg-[#352F2A]'
-                : 'border-gray-300 text-gray-600 hover:bg-gray-50'
-                }`}
-            >
+              className={`px-5 py-2.5 rounded-lg text-sm font-medium border transition-colors ${isDark ?
+              'border-gray-600 text-gray-300 hover:bg-[#352F2A]' :
+              'border-gray-300 text-gray-600 hover:bg-gray-50'}`
+              }>
+              
               Cancel
             </button>
             <button
@@ -710,15 +710,15 @@ const ProductPickerModal = ({
               className="px-5 py-2.5 rounded-lg text-sm font-bold text-white transition-all hover:shadow-lg"
               style={{
                 background: 'linear-gradient(135deg, #AD7F65 0%, #76462B 100%)'
-              }}
-            >
+              }}>
+              
               Confirm Selection ({tempSelectedProducts.length})
             </button>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default AddDiscountModal;

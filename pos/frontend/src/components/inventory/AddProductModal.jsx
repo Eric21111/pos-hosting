@@ -3,33 +3,33 @@ import { useTheme } from "../../context/ThemeContext";
 import AddBrandModal from "./AddBrandModal";
 import AddCategoryModal from "./AddCategoryModal";
 
-// Common colors for variant dropdown
+
 const COMMON_COLORS = [
-  "Black",
-  "White",
-  "Red",
-  "Blue",
-  "Navy Blue",
-  "Green",
-  "Yellow",
-  "Orange",
-  "Pink",
-  "Purple",
-  "Brown",
-  "Gray",
-  "Beige",
-  "Cream",
-  "Maroon",
-  "Olive",
-  "Teal",
-  "Coral",
-  "Lavender",
-  "Mint",
-  "Gold",
-  "Silver",
-  "Rose Gold",
-  "Custom", // Allows custom color input
-];
+"Black",
+"White",
+"Red",
+"Blue",
+"Navy Blue",
+"Green",
+"Yellow",
+"Orange",
+"Pink",
+"Purple",
+"Brown",
+"Gray",
+"Beige",
+"Cream",
+"Maroon",
+"Olive",
+"Teal",
+"Coral",
+"Lavender",
+"Mint",
+"Gold",
+"Silver",
+"Rose Gold",
+"Custom"];
+
 
 const AddProductModal = ({
   showAddModal,
@@ -48,45 +48,45 @@ const AddProductModal = ({
   categories = [],
   brandPartners = [],
   onCategoryAdd,
-  onBrandAdd,
+  onBrandAdd
 }) => {
   const { theme } = useTheme();
-  // Built-in categories that have specific size options
+
   const builtInCategories = [
-    "Tops",
-    "Bottoms",
-    "Dresses",
-    "Makeup",
-    "Accessories",
-    "Shoes",
-    "Head Wear",
-    "Foods",
-  ];
+  "Tops",
+  "Bottoms",
+  "Dresses",
+  "Makeup",
+  "Accessories",
+  "Shoes",
+  "Head Wear",
+  "Foods"];
+
   const [showDraftNotice, setShowDraftNotice] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showBrandModal, setShowBrandModal] = useState(false);
   const [customVariant, setCustomVariant] = useState("");
   const [multipleVariantsPerSize, setMultipleVariantsPerSize] = useState({});
   const [sizeMultiVariants, setSizeMultiVariants] = useState({});
-  const [selectedVariants, setSelectedVariants] = useState([]); // Multi-select variants
-  const [showVariantDropdown, setShowVariantDropdown] = useState(false); // Dropdown visibility
-  const [customColorInput, setCustomColorInput] = useState(""); // Custom color input
-  const [showCustomInput, setShowCustomInput] = useState(false); // Show custom input field
-  const [variantQuantities, setVariantQuantities] = useState({}); // Track quantity per variant per size: { "S": { "Blue": 5, "White": 7 }, "M": { "Blue": 3 } }
-  const [differentPricesPerVariant, setDifferentPricesPerVariant] = useState({}); // Track if size has different prices per variant: { "S": true, "M": false }
-  const [variantPrices, setVariantPrices] = useState({}); // Track price per variant per size: { "S": { "Blue": 100, "White": 120 }, "M": { "Blue": 95 } }
-  const [variantCostPrices, setVariantCostPrices] = useState({}); // Track cost price per variant per size: { "S": { "Blue": 50, "White": 60 }, "M": { "Blue": 45 } }
+  const [selectedVariants, setSelectedVariants] = useState([]);
+  const [showVariantDropdown, setShowVariantDropdown] = useState(false);
+  const [customColorInput, setCustomColorInput] = useState("");
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [variantQuantities, setVariantQuantities] = useState({});
+  const [differentPricesPerVariant, setDifferentPricesPerVariant] = useState({});
+  const [variantPrices, setVariantPrices] = useState({});
+  const [variantCostPrices, setVariantCostPrices] = useState({});
 
-  // State for editing existing size/variant prices
+
   const [editableSizePrices, setEditableSizePrices] = useState({});
 
-  // Initialize editable size prices when editing a product
+
   useEffect(() => {
     if (editingProduct && editingProduct.sizes && typeof editingProduct.sizes === 'object') {
       const sizePrices = {};
       Object.entries(editingProduct.sizes).forEach(([size, sizeData]) => {
         if (typeof sizeData === 'object' && sizeData !== null) {
-          // Check if this size has variants with prices
+
           if (sizeData.variants && typeof sizeData.variants === 'object') {
             sizePrices[size] = {
               hasVariants: true,
@@ -110,7 +110,7 @@ const AddProductModal = ({
               }
             });
           } else {
-            // Size without variants
+
             sizePrices[size] = {
               hasVariants: false,
               price: sizeData.price || editingProduct.itemPrice || 0,
@@ -119,7 +119,7 @@ const AddProductModal = ({
             };
           }
         } else if (typeof sizeData === 'number') {
-          // Simple number quantity
+
           sizePrices[size] = {
             hasVariants: false,
             price: editingProduct.itemPrice || 0,
@@ -134,9 +134,9 @@ const AddProductModal = ({
     }
   }, [editingProduct]);
 
-  // Handle updating size price when editing
+
   const handleEditableSizePriceChange = (size, price) => {
-    setEditableSizePrices(prev => ({
+    setEditableSizePrices((prev) => ({
       ...prev,
       [size]: {
         ...prev[size],
@@ -145,9 +145,9 @@ const AddProductModal = ({
     }));
   };
 
-  // Handle updating size cost price when editing
+
   const handleEditableSizeCostPriceChange = (size, costPrice) => {
-    setEditableSizePrices(prev => ({
+    setEditableSizePrices((prev) => ({
       ...prev,
       [size]: {
         ...prev[size],
@@ -156,9 +156,9 @@ const AddProductModal = ({
     }));
   };
 
-  // Handle updating variant price when editing
+
   const handleEditableVariantPriceChange = (size, variant, price) => {
-    setEditableSizePrices(prev => ({
+    setEditableSizePrices((prev) => ({
       ...prev,
       [size]: {
         ...prev[size],
@@ -173,9 +173,9 @@ const AddProductModal = ({
     }));
   };
 
-  // Handle updating variant cost price when editing
+
   const handleEditableVariantCostPriceChange = (size, variant, costPrice) => {
-    setEditableSizePrices(prev => ({
+    setEditableSizePrices((prev) => ({
       ...prev,
       [size]: {
         ...prev[size],
@@ -190,66 +190,66 @@ const AddProductModal = ({
     }));
   };
 
-  // Handle variant price change for a specific size and variant
+
   const handleVariantPriceChange = (size, variant, price) => {
     const priceValue = parseFloat(price) || 0;
     setVariantPrices((prev) => ({
       ...prev,
       [size]: {
         ...(prev[size] || {}),
-        [variant]: priceValue,
-      },
+        [variant]: priceValue
+      }
     }));
   };
 
-  // Handle variant cost price change for a specific size and variant
+
   const handleVariantCostPriceChange = (size, variant, price) => {
     const priceValue = parseFloat(price) || 0;
     setVariantCostPrices((prev) => ({
       ...prev,
       [size]: {
         ...(prev[size] || {}),
-        [variant]: priceValue,
-      },
+        [variant]: priceValue
+      }
     }));
   };
 
-  // Handle variant quantity change for a specific size and variant
+
   const handleVariantQuantityChange = (size, variant, quantity) => {
     const qty = parseInt(quantity) || 0;
     setVariantQuantities((prev) => ({
       ...prev,
       [size]: {
         ...(prev[size] || {}),
-        [variant]: qty,
-      },
+        [variant]: qty
+      }
     }));
-    
-    // Also update the total sizeQuantities for this size
+
+
     const updatedSizeVariants = {
       ...(variantQuantities[size] || {}),
-      [variant]: qty,
+      [variant]: qty
     };
     const totalForSize = Object.values(updatedSizeVariants).reduce((sum, q) => sum + q, 0);
     handleSizeQuantityChange(size, totalForSize.toString());
   };
 
-  // Handle variant selection toggle
+
   const handleVariantToggle = (color) => {
     setSelectedVariants((prev) => {
-      const newVariants = prev.includes(color)
-        ? prev.filter((v) => v !== color)
-        : [...prev, color];
-      
-      // Update newProduct.variant with comma-separated list or empty
+      const newVariants = prev.includes(color) ?
+      prev.filter((v) => v !== color) :
+      [...prev, color];
+
+
       const variantString = newVariants.join(", ");
       setNewProduct((prevProduct) => ({ ...prevProduct, variant: variantString }));
-      
+
       return newVariants;
     });
   };
 
-  // Add custom color to selected variants
+
   const addCustomColor = () => {
     const trimmedColor = customColorInput.trim();
     if (trimmedColor && !selectedVariants.includes(trimmedColor)) {
@@ -261,7 +261,7 @@ const AddProductModal = ({
     }
   };
 
-  // Handle Enter key for custom color input
+
   const handleCustomColorKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -269,7 +269,7 @@ const AddProductModal = ({
     }
   };
 
-  // Remove a selected variant
+
   const removeVariant = (color) => {
     setSelectedVariants((prev) => {
       const newVariants = prev.filter((v) => v !== color);
@@ -279,28 +279,28 @@ const AddProductModal = ({
     });
   };
 
-  // Check if there's a recovered draft when modal opens
+
   useEffect(() => {
     if (showAddModal && !editingProduct) {
       const hasData =
-        newProduct.itemName ||
-        newProduct.variant ||
-        newProduct.itemPrice ||
-        newProduct.costPrice ||
-        newProduct.currentStock ||
-        newProduct.itemImage ||
-        (newProduct.selectedSizes && newProduct.selectedSizes.length > 0);
+      newProduct.itemName ||
+      newProduct.variant ||
+      newProduct.itemPrice ||
+      newProduct.costPrice ||
+      newProduct.currentStock ||
+      newProduct.itemImage ||
+      newProduct.selectedSizes && newProduct.selectedSizes.length > 0;
       setShowDraftNotice(hasData);
-      
-      // Initialize selectedVariants from existing variant string (for draft recovery)
+
+
       if (newProduct.variant) {
-        const variants = newProduct.variant.split(", ").filter(v => v.trim());
+        const variants = newProduct.variant.split(", ").filter((v) => v.trim());
         setSelectedVariants(variants);
       } else {
         setSelectedVariants([]);
       }
     } else if (!showAddModal) {
-      // Reset when modal closes
+
       setSelectedVariants([]);
       setShowVariantDropdown(false);
       setCustomColorInput("");
@@ -314,63 +314,63 @@ const AddProductModal = ({
   if (!showAddModal) return null;
 
   const partnerNames = Array.from(
-    new Set(brandPartners.map((partner) => partner.brandName).filter(Boolean)),
+    new Set(brandPartners.map((partner) => partner.brandName).filter(Boolean))
   ).sort((a, b) => a.localeCompare(b));
 
   const legacyBrandSelected =
-    newProduct.brandName &&
-    newProduct.brandName !== "Default" &&
-    !partnerNames.includes(newProduct.brandName);
+  newProduct.brandName &&
+  newProduct.brandName !== "Default" &&
+  !partnerNames.includes(newProduct.brandName);
 
-  // Wrapper function to include custom variant and multi-variant data
+
   const handleFormSubmit = (e) => {
     e.preventDefault();
 
-    // Build the complete product data object with all variant info
+
     const completeProductData = {
       ...newProduct,
-      // Custom variant
+
       ...(newProduct.variant === "Custom" && customVariant && { variant: customVariant }),
-      // Multi-variant data
+
       ...(Object.keys(sizeMultiVariants).length > 0 && {
         sizeMultiVariants: sizeMultiVariants,
-        multipleVariantsPerSize: multipleVariantsPerSize,
+        multipleVariantsPerSize: multipleVariantsPerSize
       }),
-      // Variant quantities
+
       ...(Object.keys(variantQuantities).length > 0 && {
-        variantQuantities: variantQuantities,
+        variantQuantities: variantQuantities
       }),
-      // Variant pricing - always include differentPricesPerVariant
+
       differentPricesPerVariant: differentPricesPerVariant,
       ...(Object.keys(variantPrices).length > 0 && { variantPrices: variantPrices }),
       ...(Object.keys(variantCostPrices).length > 0 && { variantCostPrices: variantCostPrices }),
-      // Editable size prices for edit mode - convert to sizes format
+
       ...(editingProduct && Object.keys(editableSizePrices).length > 0 && {
-        editableSizePrices: editableSizePrices,
-      }),
+        editableSizePrices: editableSizePrices
+      })
     };
 
-    // Update newProduct with complete data
+
     setNewProduct(completeProductData);
 
-    // Use requestAnimationFrame to ensure state is updated before validation
+
     requestAnimationFrame(() => {
       handleAddProduct(e);
     });
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4 backdrop-blur-sm pointer-events-none">
+    <div className="fixed inset-0 flex items-center justify-center z-9999 p-4 backdrop-blur-sm pointer-events-none">
       <div
         className={`rounded-2xl w-full max-w-5xl relative pointer-events-auto shadow-2xl ${theme === "dark" ? "bg-[#2A2724] text-white" : "bg-white text-gray-900"}`}
         style={{
           maxHeight: "95vh",
           boxShadow:
-            theme === "dark"
-              ? "0 25px 50px -12px rgba(0, 0, 0, 0.7)"
-              : "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.1)",
-        }}
-      >
+          theme === "dark" ?
+          "0 25px 50px -12px rgba(0, 0, 0, 0.7)" :
+          "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.1)"
+        }}>
+        
         <div className="flex justify-between items-center px-6 py-4">
           <h2 className="text-xl font-bold">
             {editingProduct ? "Edit Product Details" : "Add Product Details"}
@@ -378,57 +378,57 @@ const AddProductModal = ({
           <button
             onClick={() => {
               setShowAddModal(false);
-              // Don't clear storage when closing - keep the draft
+
             }}
-            className={`text-2xl hover:text-gray-500 transition-colors ${theme === "dark" ? "text-gray-400" : "text-gray-400"}`}
-          >
+            className={`text-2xl hover:text-gray-500 transition-colors ${theme === "dark" ? "text-gray-400" : "text-gray-400"}`}>
+            
             ×
           </button>
         </div>
 
-        {/* Draft Recovery Notice */}
-        {showDraftNotice && !editingProduct && (
-          <div
-            className={`mx-6 mt-4 p-3 border rounded-lg flex items-center justify-between ${theme === "dark" ? "bg-amber-900/20 border-amber-800" : "bg-amber-50 border-amber-200"}`}
-          >
+        {}
+        {showDraftNotice && !editingProduct &&
+        <div
+          className={`mx-6 mt-4 p-3 border rounded-lg flex items-center justify-between ${theme === "dark" ? "bg-amber-900/20 border-amber-800" : "bg-amber-50 border-amber-200"}`}>
+          
             <div className="flex items-center gap-2">
               <svg
-                className={`w-5 h-5 ${theme === "dark" ? "text-amber-500" : "text-amber-600"}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              className={`w-5 h-5 ${theme === "dark" ? "text-amber-500" : "text-amber-600"}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24">
+              
                 <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              
               </svg>
               <span
-                className={`text-sm ${theme === "dark" ? "text-amber-200" : "text-amber-800"}`}
-              >
+              className={`text-sm ${theme === "dark" ? "text-amber-200" : "text-amber-800"}`}>
+              
                 Draft recovered from your previous session
               </span>
             </div>
             <button
-              type="button"
-              onClick={() => {
-                resetProductForm();
-                setShowDraftNotice(false);
-              }}
-              className={`text-xs underline hover:opacity-80 ${theme === "dark" ? "text-amber-300" : "text-amber-700"}`}
-            >
+            type="button"
+            onClick={() => {
+              resetProductForm();
+              setShowDraftNotice(false);
+            }}
+            className={`text-xs underline hover:opacity-80 ${theme === "dark" ? "text-amber-300" : "text-amber-700"}`}>
+            
               Clear Draft
             </button>
           </div>
-        )}
+        }
 
         <form onSubmit={handleFormSubmit}>
           <div
             className="px-10 pb-6 pt-6 overflow-y-auto"
-            style={{ maxHeight: "calc(95vh - 80px)" }}
-          >
+            style={{ maxHeight: "calc(95vh - 80px)" }}>
+            
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>
@@ -436,8 +436,8 @@ const AddProductModal = ({
                   <div className="space-y-3">
                     <div>
                       <label
-                        className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
-                      >
+                        className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                        
                         Product Name
                       </label>
                       <input
@@ -448,17 +448,17 @@ const AddProductModal = ({
                         required
                         placeholder="Product name"
                         className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
-                          theme === "dark"
-                            ? "bg-[#1E1B18] border-gray-600 text-white placeholder-gray-300"
-                            : "bg-gray-50 border-gray-300 placeholder-gray-400"
-                        }`}
-                      />
+                        theme === "dark" ?
+                        "bg-[#1E1B18] border-gray-600 text-white placeholder-gray-300" :
+                        "bg-gray-50 border-gray-300 placeholder-gray-400"}`
+                        } />
+                      
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label
-                          className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
-                        >
+                          className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                          
                           Choose a Category
                         </label>
                         <select
@@ -467,14 +467,14 @@ const AddProductModal = ({
                           onChange={(e) => {
                             if (e.target.value === "__add_new__") {
                               setShowCategoryModal(true);
-                              // Don't actually select "__add_new__", stick with previous or default
-                              // The modal success handler will set the new category
+
+
                               return;
                             }
 
                             handleInputChange(e);
 
-                            // Reset variants when category changes
+
                             setSelectedVariants([]);
                             setCustomColorInput("");
                             setVariantQuantities({});
@@ -482,49 +482,49 @@ const AddProductModal = ({
                             setVariantCostPrices({});
                             setDifferentPricesPerVariant({});
 
-                            // Reset foodSubtype when category changes
+
                             if (e.target.value !== "Foods") {
                               setNewProduct((prev) => ({
                                 ...prev,
-                                foodSubtype: "",
+                                foodSubtype: ""
                               }));
                             }
                           }}
                           required
                           className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
-                            theme === "dark"
-                              ? "bg-[#1E1B18] border-gray-600 text-white"
-                              : "bg-gray-50 border-gray-300"
-                          }`}
-                        >
-                          {categories
-                            .filter(
-                              (cat) =>
-                                cat.name !== "All" && cat.name !== "Others",
-                            )
-                            .map((category) => (
-                              <option
-                                key={category.name}
-                                value={category.name}
-                                className={
-                                  theme === "dark" ? "bg-[#2A2724]" : ""
-                                }
-                              >
+                          theme === "dark" ?
+                          "bg-[#1E1B18] border-gray-600 text-white" :
+                          "bg-gray-50 border-gray-300"}`
+                          }>
+                          
+                          {categories.
+                          filter(
+                            (cat) =>
+                            cat.name !== "All" && cat.name !== "Others"
+                          ).
+                          map((category) =>
+                          <option
+                            key={category.name}
+                            value={category.name}
+                            className={
+                            theme === "dark" ? "bg-[#2A2724]" : ""
+                            }>
+                            
                                 {category.name}
                               </option>
-                            ))}
+                          )}
                           <option
                             value="__add_new__"
-                            className="font-semibold text-[#AD7F65]"
-                          >
+                            className="font-semibold text-[#AD7F65]">
+                            
                             + Add Category
                           </option>
                         </select>
                       </div>
                       <div>
                         <label
-                          className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
-                        >
+                          className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                          
                           Brand
                         </label>
                         <select
@@ -533,109 +533,109 @@ const AddProductModal = ({
                           onChange={(e) => {
                             if (e.target.value === "__add_new_brand__") {
                               setShowBrandModal(true);
-                              // Don't change the value yet
+
                               return;
                             }
                             handleInputChange(e);
                           }}
                           className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
-                            theme === "dark"
-                              ? "bg-[#1E1B18] border-gray-600 text-white"
-                              : "bg-gray-50 border-gray-300"
-                          }`}
-                        >
+                          theme === "dark" ?
+                          "bg-[#1E1B18] border-gray-600 text-white" :
+                          "bg-gray-50 border-gray-300"}`
+                          }>
+                          
                           <option
                             value="Default"
-                            className={theme === "dark" ? "bg-[#2A2724]" : ""}
-                          >
+                            className={theme === "dark" ? "bg-[#2A2724]" : ""}>
+                            
                             Default
                           </option>
-                          {partnerNames.map((name) => (
-                            <option
-                              key={name}
-                              value={name}
-                              className={theme === "dark" ? "bg-[#2A2724]" : ""}
-                            >
+                          {partnerNames.map((name) =>
+                          <option
+                            key={name}
+                            value={name}
+                            className={theme === "dark" ? "bg-[#2A2724]" : ""}>
+                            
                               {name}
                             </option>
-                          ))}
+                          )}
                           <option
                             value="__add_new_brand__"
-                            className="font-semibold text-[#AD7F65]"
-                          >
+                            className="font-semibold text-[#AD7F65]">
+                            
                             + Add Brand
                           </option>
-                          {legacyBrandSelected && (
-                            <option value={newProduct.brandName}>
+                          {legacyBrandSelected &&
+                          <option value={newProduct.brandName}>
                               {newProduct.brandName} (Inactive)
                             </option>
-                          )}
+                          }
                         </select>
                       </div>
                     </div>
-                    {newProduct.category === "Foods" && (
-                      <div className="mt-3">
+                    {newProduct.category === "Foods" &&
+                    <div className="mt-3">
                         <label
-                          className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
-                        >
+                        className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                        
                           Food Type
                         </label>
                         <select
-                          name="foodSubtype"
-                          value={newProduct.foodSubtype || ""}
-                          onChange={handleInputChange}
-                          required
-                          className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
-                            theme === "dark"
-                              ? "bg-[#1E1B18] border-gray-600 text-white"
-                              : "bg-gray-50 border-gray-300"
-                          }`}
-                        >
+                        name="foodSubtype"
+                        value={newProduct.foodSubtype || ""}
+                        onChange={handleInputChange}
+                        required
+                        className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
+                        theme === "dark" ?
+                        "bg-[#1E1B18] border-gray-600 text-white" :
+                        "bg-gray-50 border-gray-300"}`
+                        }>
+                        
                           <option
-                            value=""
-                            className={theme === "dark" ? "bg-[#2A2724]" : ""}
-                          >
+                          value=""
+                          className={theme === "dark" ? "bg-[#2A2724]" : ""}>
+                          
                             Select Food Type
                           </option>
                           <option
-                            value="Beverages"
-                            className={theme === "dark" ? "bg-[#2A2724]" : ""}
-                          >
+                          value="Beverages"
+                          className={theme === "dark" ? "bg-[#2A2724]" : ""}>
+                          
                             Beverages
                           </option>
                           <option
-                            value="Snacks"
-                            className={theme === "dark" ? "bg-[#2A2724]" : ""}
-                          >
+                          value="Snacks"
+                          className={theme === "dark" ? "bg-[#2A2724]" : ""}>
+                          
                             Snacks
                           </option>
                           <option
-                            value="Meals"
-                            className={theme === "dark" ? "bg-[#2A2724]" : ""}
-                          >
+                          value="Meals"
+                          className={theme === "dark" ? "bg-[#2A2724]" : ""}>
+                          
                             Meals
                           </option>
                           <option
-                            value="Desserts"
-                            className={theme === "dark" ? "bg-[#2A2724]" : ""}
-                          >
+                          value="Desserts"
+                          className={theme === "dark" ? "bg-[#2A2724]" : ""}>
+                          
                             Desserts
                           </option>
                           <option
-                            value="Ingredients"
-                            className={theme === "dark" ? "bg-[#2A2724]" : ""}
-                          >
+                          value="Ingredients"
+                          className={theme === "dark" ? "bg-[#2A2724]" : ""}>
+                          
                             Ingredients
                           </option>
                           <option
-                            value="Other"
-                            className={theme === "dark" ? "bg-[#2A2724]" : ""}
-                          >
+                          value="Other"
+                          className={theme === "dark" ? "bg-[#2A2724]" : ""}>
+                          
                             Other
                           </option>
                         </select>
                       </div>
-                    )}
+                    }
                   </div>
                 </div>
 
@@ -644,34 +644,34 @@ const AddProductModal = ({
                     Stock Details
                   </h3>
                   <div className="space-y-3">
-                    {/* Edit mode: Show existing sizes/variants with editable prices */}
-                    {editingProduct && Object.keys(editableSizePrices).length > 0 ? (
-                      <div className="space-y-4">
+                    {}
+                    {editingProduct && Object.keys(editableSizePrices).length > 0 ?
+                    <div className="space-y-4">
                         <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
                           Update prices for each size/variant below. Stock adjustments should be done via Stock In/Out.
                         </p>
-                        {Object.entries(editableSizePrices).map(([size, sizeData]) => (
-                          <div
-                            key={size}
-                            className={`p-4 rounded-lg border ${
-                              theme === "dark" ? "bg-[#1E1B18] border-gray-700" : "bg-gray-50 border-gray-200"
-                            }`}
-                          >
+                        {Object.entries(editableSizePrices).map(([size, sizeData]) =>
+                      <div
+                        key={size}
+                        className={`p-4 rounded-lg border ${
+                        theme === "dark" ? "bg-[#1E1B18] border-gray-700" : "bg-gray-50 border-gray-200"}`
+                        }>
+                        
                             <div className="flex justify-between items-center mb-3">
                               <span className={`font-semibold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>
                                 {size}
                               </span>
                               <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                                {sizeData.hasVariants
-                                  ? `${Object.keys(sizeData.variants || {}).length} variants`
-                                  : `Stock: ${sizeData.quantity || 0}`}
+                                {sizeData.hasVariants ?
+                            `${Object.keys(sizeData.variants || {}).length} variants` :
+                            `Stock: ${sizeData.quantity || 0}`}
                               </span>
                             </div>
                             
-                            {sizeData.hasVariants ? (
-                              <div className="space-y-2">
-                                {Object.entries(sizeData.variants || {}).map(([variant, variantData]) => (
-                                  <div key={variant} className="flex items-center gap-3 flex-wrap">
+                            {sizeData.hasVariants ?
+                        <div className="space-y-2">
+                                {Object.entries(sizeData.variants || {}).map(([variant, variantData]) =>
+                          <div key={variant} className="flex items-center gap-3 flex-wrap">
                                     <span className={`min-w-[100px] text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
                                       {variant}
                                     </span>
@@ -682,323 +682,323 @@ const AddProductModal = ({
                                       <span className={`text-xs ${theme === "dark" ? "text-red-400" : "text-red-500"}`}>Cost:</span>
                                       <span className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>₱</span>
                                       <input
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        value={variantData.costPrice || ""}
-                                        onChange={(e) => handleEditableVariantCostPriceChange(size, variant, e.target.value)}
-                                        placeholder="Cost"
-                                        className={`w-20 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
-                                          theme === "dark"
-                                            ? "bg-[#2A2724] border-gray-600 text-white"
-                                            : "bg-white border-gray-300"
-                                        }`}
-                                      />
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={variantData.costPrice || ""}
+                                onChange={(e) => handleEditableVariantCostPriceChange(size, variant, e.target.value)}
+                                placeholder="Cost"
+                                className={`w-20 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
+                                theme === "dark" ?
+                                "bg-[#2A2724] border-gray-600 text-white" :
+                                "bg-white border-gray-300"}`
+                                } />
+                              
                                     </div>
                                     <div className="flex items-center gap-1">
                                       <span className={`text-xs ${theme === "dark" ? "text-green-400" : "text-green-500"}`}>Price:</span>
                                       <span className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>₱</span>
                                       <input
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        value={variantData.price || ""}
-                                        onChange={(e) => handleEditableVariantPriceChange(size, variant, e.target.value)}
-                                        placeholder="Price"
-                                        className={`w-20 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
-                                          theme === "dark"
-                                            ? "bg-[#2A2724] border-gray-600 text-white"
-                                            : "bg-white border-gray-300"
-                                        }`}
-                                      />
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={variantData.price || ""}
+                                onChange={(e) => handleEditableVariantPriceChange(size, variant, e.target.value)}
+                                placeholder="Price"
+                                className={`w-20 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
+                                theme === "dark" ?
+                                "bg-[#2A2724] border-gray-600 text-white" :
+                                "bg-white border-gray-300"}`
+                                } />
+                              
                                     </div>
                                   </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-4">
+                          )}
+                              </div> :
+
+                        <div className="flex items-center gap-4">
                                 <div className="flex items-center gap-1">
                                   <span className={`text-xs ${theme === "dark" ? "text-red-400" : "text-red-500"}`}>Cost:</span>
                                   <span className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>₱</span>
                                   <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={sizeData.costPrice || ""}
-                                    onChange={(e) => handleEditableSizeCostPriceChange(size, e.target.value)}
-                                    placeholder="Cost"
-                                    className={`w-24 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
-                                      theme === "dark"
-                                        ? "bg-[#2A2724] border-gray-600 text-white"
-                                        : "bg-white border-gray-300"
-                                    }`}
-                                  />
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={sizeData.costPrice || ""}
+                              onChange={(e) => handleEditableSizeCostPriceChange(size, e.target.value)}
+                              placeholder="Cost"
+                              className={`w-24 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
+                              theme === "dark" ?
+                              "bg-[#2A2724] border-gray-600 text-white" :
+                              "bg-white border-gray-300"}`
+                              } />
+                            
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <span className={`text-xs ${theme === "dark" ? "text-green-400" : "text-green-500"}`}>Price:</span>
                                   <span className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>₱</span>
                                   <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={sizeData.price || ""}
-                                    onChange={(e) => handleEditableSizePriceChange(size, e.target.value)}
-                                    placeholder="Price"
-                                    className={`w-24 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
-                                      theme === "dark"
-                                        ? "bg-[#2A2724] border-gray-600 text-white"
-                                        : "bg-white border-gray-300"
-                                    }`}
-                                  />
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={sizeData.price || ""}
+                              onChange={(e) => handleEditableSizePriceChange(size, e.target.value)}
+                              placeholder="Price"
+                              className={`w-24 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
+                              theme === "dark" ?
+                              "bg-[#2A2724] border-gray-600 text-white" :
+                              "bg-white border-gray-300"}`
+                              } />
+                            
                                 </div>
                               </div>
-                            )}
+                        }
                           </div>
-                        ))}
-                      </div>
-                    ) : !editingProduct ? (
+                      )}
+                      </div> :
+                    !editingProduct ?
                     <div className="grid grid-cols-2 gap-3">
                       <div className="relative">
                         <label
-                          className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
-                        >
+                          className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                          
                           Variant{" "}
                           <span className="text-gray-400">
-                            {newProduct.category === "Foods" || newProduct.category === "Makeup"
-                              ? "Optional - Add variants (e.g., Strawberry, Vanilla)"
-                              : "Optional - Select multiple colors"}
+                            {newProduct.category === "Foods" || newProduct.category === "Makeup" ?
+                            "Optional - Add variants (e.g., Strawberry, Vanilla)" :
+                            "Optional - Select multiple colors"}
                           </span>
                         </label>
                         
-                        {/* Stackable text input for Foods and Makeup categories */}
-                        {(newProduct.category === "Foods" || newProduct.category === "Makeup") ? (
-                          <>
+                        {}
+                        {newProduct.category === "Foods" || newProduct.category === "Makeup" ?
+                        <>
                             <div className="flex gap-2">
                               <input
-                                type="text"
-                                value={customColorInput}
-                                onChange={(e) => setCustomColorInput(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") {
-                                    e.preventDefault();
-                                    if (customColorInput.trim() && !selectedVariants.includes(customColorInput.trim())) {
-                                      setSelectedVariants([...selectedVariants, customColorInput.trim()]);
-                                      setCustomColorInput("");
-                                    }
-                                  }
-                                }}
-                                placeholder={newProduct.category === "Foods" ? "e.g., Strawberry, Chocolate..." : "e.g., Nude, Red, Coral..."}
-                                disabled={newProduct.differentVariantsPerSize}
-                                className={`flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
-                                  newProduct.differentVariantsPerSize
-                                    ? theme === "dark"
-                                      ? "bg-[#1E1B18] border-gray-600 text-gray-500 cursor-not-allowed"
-                                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                    : theme === "dark"
-                                      ? "bg-[#1E1B18] border-gray-600 text-white"
-                                      : "bg-gray-50 border-gray-300"
-                                }`}
-                              />
-                              <button
-                                type="button"
-                                onClick={() => {
+                              type="text"
+                              value={customColorInput}
+                              onChange={(e) => setCustomColorInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
                                   if (customColorInput.trim() && !selectedVariants.includes(customColorInput.trim())) {
                                     setSelectedVariants([...selectedVariants, customColorInput.trim()]);
                                     setCustomColorInput("");
                                   }
-                                }}
-                                disabled={!customColorInput.trim() || newProduct.differentVariantsPerSize}
-                                className={`px-3 py-2 text-sm rounded-lg font-medium transition-colors ${
-                                  customColorInput.trim() && !newProduct.differentVariantsPerSize
-                                    ? "bg-[#AD7F65] text-white hover:bg-[#8B6553]"
-                                    : theme === "dark"
-                                      ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-                                      : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                }`}
-                              >
+                                }
+                              }}
+                              placeholder={newProduct.category === "Foods" ? "e.g., Strawberry, Chocolate..." : "e.g., Nude, Red, Coral..."}
+                              disabled={newProduct.differentVariantsPerSize}
+                              className={`flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
+                              newProduct.differentVariantsPerSize ?
+                              theme === "dark" ?
+                              "bg-[#1E1B18] border-gray-600 text-gray-500 cursor-not-allowed" :
+                              "bg-gray-100 text-gray-400 cursor-not-allowed" :
+                              theme === "dark" ?
+                              "bg-[#1E1B18] border-gray-600 text-white" :
+                              "bg-gray-50 border-gray-300"}`
+                              } />
+                            
+                              <button
+                              type="button"
+                              onClick={() => {
+                                if (customColorInput.trim() && !selectedVariants.includes(customColorInput.trim())) {
+                                  setSelectedVariants([...selectedVariants, customColorInput.trim()]);
+                                  setCustomColorInput("");
+                                }
+                              }}
+                              disabled={!customColorInput.trim() || newProduct.differentVariantsPerSize}
+                              className={`px-3 py-2 text-sm rounded-lg font-medium transition-colors ${
+                              customColorInput.trim() && !newProduct.differentVariantsPerSize ?
+                              "bg-[#AD7F65] text-white hover:bg-[#8B6553]" :
+                              theme === "dark" ?
+                              "bg-gray-700 text-gray-500 cursor-not-allowed" :
+                              "bg-gray-200 text-gray-400 cursor-not-allowed"}`
+                              }>
+                              
                                 Add
                               </button>
                             </div>
                             
-                            {/* Selected variants pills for Foods/Makeup */}
-                            {selectedVariants.length > 0 && !newProduct.differentVariantsPerSize && (
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {selectedVariants.map((variant) => (
-                                  <span
-                                    key={variant}
-                                    className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
-                                      theme === "dark"
-                                        ? "bg-[#AD7F65]/20 text-[#AD7F65] border border-[#AD7F65]/30"
-                                        : "bg-[#AD7F65]/10 text-[#AD7F65] border border-[#AD7F65]/20"
-                                    }`}
-                                  >
+                            {}
+                            {selectedVariants.length > 0 && !newProduct.differentVariantsPerSize &&
+                          <div className="flex flex-wrap gap-1 mt-2">
+                                {selectedVariants.map((variant) =>
+                            <span
+                              key={variant}
+                              className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
+                              theme === "dark" ?
+                              "bg-[#AD7F65]/20 text-[#AD7F65] border border-[#AD7F65]/30" :
+                              "bg-[#AD7F65]/10 text-[#AD7F65] border border-[#AD7F65]/20"}`
+                              }>
+                              
                                     {variant}
                                     <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        removeVariant(variant);
-                                      }}
-                                      className="hover:text-red-500 transition-colors"
-                                    >
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeVariant(variant);
+                                }}
+                                className="hover:text-red-500 transition-colors">
+                                
                                       ×
                                     </button>
                                   </span>
-                                ))}
-                              </div>
                             )}
-                          </>
-                        ) : (
-                          <>
-                            {/* Multi-select dropdown trigger for other categories */}
+                              </div>
+                          }
+                          </> :
+
+                        <>
+                            {}
                             <div
-                              onClick={() => !newProduct.differentVariantsPerSize && setShowVariantDropdown(!showVariantDropdown)}
-                              className={`w-full px-3 py-2 text-sm border rounded-lg cursor-pointer flex items-center justify-between ${
-                                newProduct.differentVariantsPerSize
-                                  ? theme === "dark"
-                                    ? "bg-[#1E1B18] border-gray-600 text-gray-500 cursor-not-allowed"
-                                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                  : theme === "dark"
-                                    ? "bg-[#1E1B18] border-gray-600 text-white hover:border-[#AD7F65]"
-                                    : "bg-gray-50 border-gray-300 hover:border-[#AD7F65]"
-                              }`}
-                            >
+                            onClick={() => !newProduct.differentVariantsPerSize && setShowVariantDropdown(!showVariantDropdown)}
+                            className={`w-full px-3 py-2 text-sm border rounded-lg cursor-pointer flex items-center justify-between ${
+                            newProduct.differentVariantsPerSize ?
+                            theme === "dark" ?
+                            "bg-[#1E1B18] border-gray-600 text-gray-500 cursor-not-allowed" :
+                            "bg-gray-100 text-gray-400 cursor-not-allowed" :
+                            theme === "dark" ?
+                            "bg-[#1E1B18] border-gray-600 text-white hover:border-[#AD7F65]" :
+                            "bg-gray-50 border-gray-300 hover:border-[#AD7F65]"}`
+                            }>
+                            
                               <span className={selectedVariants.length === 0 ? "text-gray-400" : ""}>
-                                {newProduct.differentVariantsPerSize
-                                  ? "Multiple variants selected"
-                                  : selectedVariants.length === 0
-                                    ? "Select colors..."
-                                    : `${selectedVariants.length} color${selectedVariants.length > 1 ? 's' : ''} selected`}
+                                {newProduct.differentVariantsPerSize ?
+                              "Multiple variants selected" :
+                              selectedVariants.length === 0 ?
+                              "Select colors..." :
+                              `${selectedVariants.length} color${selectedVariants.length > 1 ? 's' : ''} selected`}
                               </span>
                               <svg
-                                className={`w-4 h-4 transition-transform ${showVariantDropdown ? 'rotate-180' : ''}`}
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
+                              className={`w-4 h-4 transition-transform ${showVariantDropdown ? 'rotate-180' : ''}`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24">
+                              
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                               </svg>
                             </div>
                             
-                            {/* Selected variants pills */}
-                            {selectedVariants.length > 0 && !newProduct.differentVariantsPerSize && (
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {selectedVariants.map((color) => (
-                                  <span
-                                    key={color}
-                                    className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
-                                      theme === "dark"
-                                        ? "bg-[#AD7F65]/20 text-[#AD7F65] border border-[#AD7F65]/30"
-                                        : "bg-[#AD7F65]/10 text-[#AD7F65] border border-[#AD7F65]/20"
-                                    }`}
-                                  >
+                            {}
+                            {selectedVariants.length > 0 && !newProduct.differentVariantsPerSize &&
+                          <div className="flex flex-wrap gap-1 mt-2">
+                                {selectedVariants.map((color) =>
+                            <span
+                              key={color}
+                              className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
+                              theme === "dark" ?
+                              "bg-[#AD7F65]/20 text-[#AD7F65] border border-[#AD7F65]/30" :
+                              "bg-[#AD7F65]/10 text-[#AD7F65] border border-[#AD7F65]/20"}`
+                              }>
+                              
                                     {color}
                                     <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        removeVariant(color);
-                                      }}
-                                      className="hover:text-red-500 transition-colors"
-                                    >
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeVariant(color);
+                                }}
+                                className="hover:text-red-500 transition-colors">
+                                
                                       ×
                                     </button>
                                   </span>
-                                ))}
-                              </div>
                             )}
+                              </div>
+                          }
                             
-                            {/* Dropdown menu */}
-                            {showVariantDropdown && !newProduct.differentVariantsPerSize && (
-                              <div
-                                className={`absolute z-50 w-full mt-1 max-h-48 overflow-y-auto border rounded-lg shadow-lg ${
-                                  theme === "dark"
-                                    ? "bg-[#2A2724] border-gray-600"
-                                    : "bg-white border-gray-200"
-                                }`}
-                              >
-                                {COMMON_COLORS.filter(c => c !== "Custom").map((color) => (
-                                  <div
-                                    key={color}
-                                    onClick={() => handleVariantToggle(color)}
-                                    className={`px-3 py-2 text-sm cursor-pointer flex items-center justify-between ${
-                                      selectedVariants.includes(color)
-                                        ? theme === "dark"
-                                          ? "bg-[#AD7F65]/20 text-[#AD7F65]"
-                                          : "bg-[#AD7F65]/10 text-[#AD7F65]"
-                                        : theme === "dark"
-                                          ? "hover:bg-[#3A3734]"
-                                          : "hover:bg-gray-100"
-                                    }`}
-                                  >
+                            {}
+                            {showVariantDropdown && !newProduct.differentVariantsPerSize &&
+                          <div
+                            className={`absolute z-50 w-full mt-1 max-h-48 overflow-y-auto border rounded-lg shadow-lg ${
+                            theme === "dark" ?
+                            "bg-[#2A2724] border-gray-600" :
+                            "bg-white border-gray-200"}`
+                            }>
+                            
+                                {COMMON_COLORS.filter((c) => c !== "Custom").map((color) =>
+                            <div
+                              key={color}
+                              onClick={() => handleVariantToggle(color)}
+                              className={`px-3 py-2 text-sm cursor-pointer flex items-center justify-between ${
+                              selectedVariants.includes(color) ?
+                              theme === "dark" ?
+                              "bg-[#AD7F65]/20 text-[#AD7F65]" :
+                              "bg-[#AD7F65]/10 text-[#AD7F65]" :
+                              theme === "dark" ?
+                              "hover:bg-[#3A3734]" :
+                              "hover:bg-gray-100"}`
+                              }>
+                              
                                     <span>{color}</span>
-                                    {selectedVariants.includes(color) && (
-                                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    {selectedVariants.includes(color) &&
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                       </svg>
-                                    )}
+                              }
                                   </div>
-                                ))}
-                                {/* Custom color input inside dropdown */}
+                            )}
+                                {}
                                 <div
-                                  className={`px-3 py-2 border-t ${
-                                    theme === "dark"
-                                      ? "border-gray-600"
-                                      : "border-gray-200"
-                                  }`}
-                                  onClick={(e) => e.stopPropagation()}
-                                >
+                              className={`px-3 py-2 border-t ${
+                              theme === "dark" ?
+                              "border-gray-600" :
+                              "border-gray-200"}`
+                              }
+                              onClick={(e) => e.stopPropagation()}>
+                              
                                   <div className="flex gap-2">
                                     <input
-                                      type="text"
-                                      value={customColorInput}
-                                      onChange={(e) => setCustomColorInput(e.target.value)}
-                                      onKeyDown={handleCustomColorKeyDown}
-                                      placeholder="Add custom color..."
-                                      className={`flex-1 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
-                                        theme === "dark"
-                                          ? "bg-[#1E1B18] border-gray-600 text-white"
-                                          : "bg-gray-50 border-gray-300"
-                                      }`}
-                                    />
+                                  type="text"
+                                  value={customColorInput}
+                                  onChange={(e) => setCustomColorInput(e.target.value)}
+                                  onKeyDown={handleCustomColorKeyDown}
+                                  placeholder="Add custom color..."
+                                  className={`flex-1 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
+                                  theme === "dark" ?
+                                  "bg-[#1E1B18] border-gray-600 text-white" :
+                                  "bg-gray-50 border-gray-300"}`
+                                  } />
+                                
                                     <button
-                                      type="button"
-                                      onClick={addCustomColor}
-                                      disabled={!customColorInput.trim()}
-                                      className={`px-3 py-1 text-sm rounded font-medium transition-colors ${
-                                        customColorInput.trim()
-                                          ? "bg-[#AD7F65] text-white hover:bg-[#8B6553]"
-                                          : theme === "dark"
-                                            ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-                                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                      }`}
-                                    >
+                                  type="button"
+                                  onClick={addCustomColor}
+                                  disabled={!customColorInput.trim()}
+                                  className={`px-3 py-1 text-sm rounded font-medium transition-colors ${
+                                  customColorInput.trim() ?
+                                  "bg-[#AD7F65] text-white hover:bg-[#8B6553]" :
+                                  theme === "dark" ?
+                                  "bg-gray-700 text-gray-500 cursor-not-allowed" :
+                                  "bg-gray-200 text-gray-400 cursor-not-allowed"}`
+                                  }>
+                                  
                                       Add
                                     </button>
                                   </div>
                                 </div>
                               </div>
-                            )}
+                          }
                             
-                            {/* Click outside to close dropdown */}
-                            {showVariantDropdown && (
-                              <div
-                                className="fixed inset-0 z-40"
-                                onClick={() => setShowVariantDropdown(false)}
-                              />
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    ) : null}
+                            {}
+                            {showVariantDropdown &&
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => setShowVariantDropdown(false)} />
 
-                    {!editingProduct && (
-                      <>
+                          }
+                          </>
+                        }
+                      </div>
+                    </div> :
+                    null}
+
+                    {!editingProduct &&
+                    <>
                         <div>
                           <label
-                            className={`block text-xs mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
-                          >
+                          className={`block text-xs mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                          
                             Sizes{" "}
                             <span className="text-gray-400">
                               Optional - Select multiple sizes
@@ -1006,204 +1006,204 @@ const AddProductModal = ({
                           </label>
                           <div className="grid grid-cols-4 gap-2 mb-3">
                             {(() => {
-                              const category = newProduct.category;
-                              const foodSubtype = newProduct.foodSubtype || "";
-                              let sizes = [];
+                            const category = newProduct.category;
+                            const foodSubtype = newProduct.foodSubtype || "";
+                            let sizes = [];
 
-                              // Check if category is built-in
-                              const isBuiltIn =
-                                builtInCategories.includes(category);
 
-                              if (!isBuiltIn) {
-                                // All custom/added categories should have Free Size only
-                                sizes = ["Free Size"];
-                              }
-                              // Foods - size depends on subtype
-                              else if (category === "Foods") {
-                                switch (foodSubtype) {
-                                  case "Beverages":
-                                    sizes = [
-                                      "Small",
-                                      "Medium",
-                                      "Large",
-                                      "Extra Large",
-                                      "Free Size",
-                                    ];
-                                    break;
-                                  case "Snacks":
-                                    sizes = [
-                                      "Small",
-                                      "Medium",
-                                      "Large",
-                                      "Family Size",
-                                      "Free Size",
-                                    ];
-                                    break;
-                                  case "Meals":
-                                    sizes = [
-                                      "Regular",
-                                      "Large",
-                                      "Family Size",
-                                      "Free Size",
-                                    ];
-                                    break;
-                                  case "Desserts":
-                                    sizes = [
-                                      "Small",
-                                      "Medium",
-                                      "Large",
-                                      "Free Size",
-                                    ];
-                                    break;
-                                  case "Ingredients":
-                                    sizes = [
-                                      "100g",
-                                      "250g",
-                                      "500g",
-                                      "1kg",
-                                      "Free Size",
-                                    ];
-                                    break;
-                                  case "Other":
-                                    sizes = [
-                                      "Small",
-                                      "Medium",
-                                      "Large",
-                                      "Free Size",
-                                    ];
-                                    break;
-                                  default:
-                                    // Default sizes when no subtype selected
-                                    sizes = [
-                                      "Small",
-                                      "Medium",
-                                      "Large",
-                                      "Free Size",
-                                    ];
-                                }
-                              }
-                              // Clothing categories (Tops, Bottoms, Dresses)
-                              else if (
-                                ["Tops", "Bottoms", "Dresses"].includes(
-                                  category,
-                                )
-                              ) {
-                                sizes = [
-                                  "XS",
-                                  "S",
-                                  "M",
-                                  "L",
-                                  "XL",
-                                  "XXL",
-                                  "XXXL",
-                                  "Free Size",
-                                ];
-                              }
-                              // Shoes
-                              else if (category === "Shoes") {
-                                sizes = [
-                                  "5",
-                                  "6",
-                                  "7",
-                                  "8",
-                                  "9",
-                                  "10",
-                                  "11",
-                                  "12",
-                                ];
-                              }
-                              // Accessories, Head Wear, Makeup
-                              else if (
-                                ["Accessories", "Head Wear", "Makeup"].includes(
-                                  category,
-                                )
-                              ) {
-                                sizes = ["Free Size"];
-                              }
+                            const isBuiltIn =
+                            builtInCategories.includes(category);
 
-                              return sizes.map((size) => (
-                                <label
-                                  key={size}
-                                  className="flex items-center gap-2 cursor-pointer"
-                                >
+                            if (!isBuiltIn) {
+
+                              sizes = ["Free Size"];
+                            } else
+
+                            if (category === "Foods") {
+                              switch (foodSubtype) {
+                                case "Beverages":
+                                  sizes = [
+                                  "Small",
+                                  "Medium",
+                                  "Large",
+                                  "Extra Large",
+                                  "Free Size"];
+
+                                  break;
+                                case "Snacks":
+                                  sizes = [
+                                  "Small",
+                                  "Medium",
+                                  "Large",
+                                  "Family Size",
+                                  "Free Size"];
+
+                                  break;
+                                case "Meals":
+                                  sizes = [
+                                  "Regular",
+                                  "Large",
+                                  "Family Size",
+                                  "Free Size"];
+
+                                  break;
+                                case "Desserts":
+                                  sizes = [
+                                  "Small",
+                                  "Medium",
+                                  "Large",
+                                  "Free Size"];
+
+                                  break;
+                                case "Ingredients":
+                                  sizes = [
+                                  "100g",
+                                  "250g",
+                                  "500g",
+                                  "1kg",
+                                  "Free Size"];
+
+                                  break;
+                                case "Other":
+                                  sizes = [
+                                  "Small",
+                                  "Medium",
+                                  "Large",
+                                  "Free Size"];
+
+                                  break;
+                                default:
+
+                                  sizes = [
+                                  "Small",
+                                  "Medium",
+                                  "Large",
+                                  "Free Size"];
+
+                              }
+                            } else
+
+                            if (
+                            ["Tops", "Bottoms", "Dresses"].includes(
+                              category
+                            ))
+                            {
+                              sizes = [
+                              "XS",
+                              "S",
+                              "M",
+                              "L",
+                              "XL",
+                              "XXL",
+                              "XXXL",
+                              "Free Size"];
+
+                            } else
+
+                            if (category === "Shoes") {
+                              sizes = [
+                              "5",
+                              "6",
+                              "7",
+                              "8",
+                              "9",
+                              "10",
+                              "11",
+                              "12"];
+
+                            } else
+
+                            if (
+                            ["Accessories", "Head Wear", "Makeup"].includes(
+                              category
+                            ))
+                            {
+                              sizes = ["Free Size"];
+                            }
+
+                            return sizes.map((size) =>
+                            <label
+                              key={size}
+                              className="flex items-center gap-2 cursor-pointer">
+                              
                                   <input
-                                    type="checkbox"
-                                    checked={
-                                      newProduct.selectedSizes?.includes(
-                                        size,
-                                      ) || false
-                                    }
-                                    onChange={() => handleSizeToggle(size)}
-                                    className="w-4 h-4 text-[#AD7F65] border-gray-300 rounded focus:ring-[#AD7F65]"
-                                  />
+                                type="checkbox"
+                                checked={
+                                newProduct.selectedSizes?.includes(
+                                  size
+                                ) || false
+                                }
+                                onChange={() => handleSizeToggle(size)}
+                                className="w-4 h-4 text-[#AD7F65] border-gray-300 rounded focus:ring-[#AD7F65]" />
+                              
                                   <span className="text-sm text-gray-700">
                                     {size}
                                   </span>
                                 </label>
-                              ));
-                            })()}
+                            );
+                          })()}
                           </div>
 
-                          {newProduct.selectedSizes?.length > 0 && (
-                            <>
+                          {newProduct.selectedSizes?.length > 0 &&
+                        <>
                               <div className="mt-3 mb-3">
                                 <label className="flex items-center gap-2 cursor-pointer">
                                   <input
-                                    type="checkbox"
-                                    checked={
-                                      newProduct.differentPricesPerSize || false
-                                    }
-                                    onChange={(e) => {
-                                      setNewProduct((prev) => {
-                                        const newSizePrices = {};
-                                        const newSizeCostPrices = {};
-                                        if (e.target.checked) {
-                                          // Initialize prices for all selected sizes with default price
-                                          prev.selectedSizes.forEach((size) => {
-                                            newSizePrices[size] =
-                                              prev.itemPrice || "";
-                                            newSizeCostPrices[size] =
-                                              prev.costPrice || "";
-                                          });
-                                        }
-                                        return {
-                                          ...prev,
-                                          differentPricesPerSize:
-                                            e.target.checked,
-                                          sizePrices: e.target.checked
-                                            ? newSizePrices
-                                            : {},
-                                          sizeCostPrices: e.target.checked
-                                            ? newSizeCostPrices
-                                            : {},
-                                        };
+                                type="checkbox"
+                                checked={
+                                newProduct.differentPricesPerSize || false
+                                }
+                                onChange={(e) => {
+                                  setNewProduct((prev) => {
+                                    const newSizePrices = {};
+                                    const newSizeCostPrices = {};
+                                    if (e.target.checked) {
+
+                                      prev.selectedSizes.forEach((size) => {
+                                        newSizePrices[size] =
+                                        prev.itemPrice || "";
+                                        newSizeCostPrices[size] =
+                                        prev.costPrice || "";
                                       });
-                                    }}
-                                    className="w-4 h-4 text-[#AD7F65] border-gray-300 rounded focus:ring-[#AD7F65]"
-                                  />
+                                    }
+                                    return {
+                                      ...prev,
+                                      differentPricesPerSize:
+                                      e.target.checked,
+                                      sizePrices: e.target.checked ?
+                                      newSizePrices :
+                                      {},
+                                      sizeCostPrices: e.target.checked ?
+                                      newSizeCostPrices :
+                                      {}
+                                    };
+                                  });
+                                }}
+                                className="w-4 h-4 text-[#AD7F65] border-gray-300 rounded focus:ring-[#AD7F65]" />
+                              
                                   <span className="text-sm text-gray-700">
                                     Different prices each size?
                                   </span>
                                 </label>
                               </div>
 
-                              {/* Quantity per Size - Show variant breakdown if variants selected */}
+                              {}
                               <div
-                                className={`space-y-2 mt-3 p-3 rounded-lg ${theme === "dark" ? "bg-[#1E1B18]" : "bg-gray-50"}`}
-                              >
+                            className={`space-y-2 mt-3 p-3 rounded-lg ${theme === "dark" ? "bg-[#1E1B18]" : "bg-gray-50"}`}>
+                            
                                 <label
-                                  className={`block text-xs font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}
-                                >
-                                  {selectedVariants.length > 0 
-                                    ? "Quantity per Variant per Size:"
-                                    : "Quantity per Size:"}
+                              className={`block text-xs font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                              
+                                  {selectedVariants.length > 0 ?
+                              "Quantity per Variant per Size:" :
+                              "Quantity per Size:"}
                                 </label>
                                 
-                                {/* If variants are selected, show matrix of size x variant */}
-                                {selectedVariants.length > 0 ? (
-                                  <div className="space-y-4">
-                                    {newProduct.selectedSizes.map((size) => (
-                                      <div key={size} className={`p-3 rounded-lg border ${theme === "dark" ? "bg-[#2A2724] border-gray-600" : "bg-white border-gray-200"}`}>
+                                {}
+                                {selectedVariants.length > 0 ?
+                            <div className="space-y-4">
+                                    {newProduct.selectedSizes.map((size) =>
+                              <div key={size} className={`p-3 rounded-lg border ${theme === "dark" ? "bg-[#2A2724] border-gray-600" : "bg-white border-gray-200"}`}>
                                         <div className="flex items-center justify-between mb-2">
                                           <label className="block text-sm font-medium text-gray-700">
                                             {size}
@@ -1213,13 +1213,13 @@ const AddProductModal = ({
                                           </span>
                                         </div>
                                         
-                                        {/* Cost Price and Selling Price - shown when:
-                                            1. differentPricesPerSize is enabled AND this size doesn't have differentPricesPerVariant, OR
-                                            2. Any other size has differentPricesPerVariant AND this size doesn't have it
-                                        */}
-                                        {!differentPricesPerVariant[size] && 
-                                         (newProduct.differentPricesPerSize || Object.values(differentPricesPerVariant).some(v => v)) && (
-                                          <div className="grid grid-cols-2 gap-2 mb-3">
+                                        {
+
+
+                                }
+                                        {!differentPricesPerVariant[size] && (
+                                newProduct.differentPricesPerSize || Object.values(differentPricesPerVariant).some((v) => v)) &&
+                                <div className="grid grid-cols-2 gap-2 mb-3">
                                             <div>
                                               <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
                                                 Cost Price
@@ -1227,27 +1227,27 @@ const AddProductModal = ({
                                               <div className="flex items-center gap-1">
                                                 <span className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>₱</span>
                                                 <input
-                                                  type="number"
-                                                  min="0"
-                                                  step="0.01"
-                                                  value={newProduct.sizeCostPrices?.[size] || ""}
-                                                  onChange={(e) => {
-                                                    const value = e.target.value;
-                                                    setNewProduct((prev) => ({
-                                                      ...prev,
-                                                      sizeCostPrices: {
-                                                        ...(prev.sizeCostPrices || {}),
-                                                        [size]: value,
-                                                      },
-                                                    }));
-                                                  }}
-                                                  placeholder="Cost"
-                                                  className={`flex-1 px-2 py-1.5 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
-                                                    theme === "dark"
-                                                      ? "bg-[#1E1B18] border-gray-600 text-white"
-                                                      : "bg-gray-50 border-gray-300"
-                                                  }`}
-                                                />
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={newProduct.sizeCostPrices?.[size] || ""}
+                                        onChange={(e) => {
+                                          const value = e.target.value;
+                                          setNewProduct((prev) => ({
+                                            ...prev,
+                                            sizeCostPrices: {
+                                              ...(prev.sizeCostPrices || {}),
+                                              [size]: value
+                                            }
+                                          }));
+                                        }}
+                                        placeholder="Cost"
+                                        className={`flex-1 px-2 py-1.5 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
+                                        theme === "dark" ?
+                                        "bg-[#1E1B18] border-gray-600 text-white" :
+                                        "bg-gray-50 border-gray-300"}`
+                                        } />
+                                      
                                               </div>
                                             </div>
                                             <div>
@@ -1257,542 +1257,542 @@ const AddProductModal = ({
                                               <div className="flex items-center gap-1">
                                                 <span className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>₱</span>
                                                 <input
-                                                  type="number"
-                                                  min="0"
-                                                  step="0.01"
-                                                  value={newProduct.sizePrices?.[size] || ""}
-                                                  onChange={(e) => handleSizePriceChange(size, e.target.value)}
-                                                  placeholder="Price"
-                                                  className={`flex-1 px-2 py-1.5 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
-                                                    theme === "dark"
-                                                      ? "bg-[#1E1B18] border-gray-600 text-white"
-                                                      : "bg-gray-50 border-gray-300"
-                                                  }`}
-                                                />
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={newProduct.sizePrices?.[size] || ""}
+                                        onChange={(e) => handleSizePriceChange(size, e.target.value)}
+                                        placeholder="Price"
+                                        className={`flex-1 px-2 py-1.5 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
+                                        theme === "dark" ?
+                                        "bg-[#1E1B18] border-gray-600 text-white" :
+                                        "bg-gray-50 border-gray-300"}`
+                                        } />
+                                      
                                               </div>
                                             </div>
                                           </div>
-                                        )}
+                                }
                                         
-                                        {/* Checkbox for different prices per variant in this size */}
+                                        {}
                                         <label className="flex items-center gap-2 cursor-pointer mb-3">
                                           <input
-                                            type="checkbox"
-                                            checked={differentPricesPerVariant[size] || false}
-                                              onChange={(e) => {
-                                                setDifferentPricesPerVariant((prev) => ({
-                                                  ...prev,
-                                                  [size]: e.target.checked,
-                                                }));
-                                                // Initialize prices with default price when enabled
-                                                if (e.target.checked) {
-                                                  const defaultPrice = parseFloat(newProduct.sizePrices?.[size]) || parseFloat(newProduct.itemPrice) || 0;
-                                                  const defaultCostPrice = parseFloat(newProduct.sizeCostPrices?.[size]) || parseFloat(newProduct.costPrice) || 0;
-                                                  const initialPrices = {};
-                                                  const initialCostPrices = {};
-                                                  selectedVariants.forEach((v) => {
-                                                    initialPrices[v] = defaultPrice;
-                                                    initialCostPrices[v] = defaultCostPrice;
-                                                  });
-                                                  setVariantPrices((prev) => ({
-                                                    ...prev,
-                                                    [size]: initialPrices,
-                                                  }));
-                                                  setVariantCostPrices((prev) => ({
-                                                    ...prev,
-                                                    [size]: initialCostPrices,
-                                                  }));
-                                                }
-                                              }}
-                                              className="w-4 h-4 text-[#AD7F65] border-gray-300 rounded focus:ring-[#AD7F65]"
-                                            />
+                                    type="checkbox"
+                                    checked={differentPricesPerVariant[size] || false}
+                                    onChange={(e) => {
+                                      setDifferentPricesPerVariant((prev) => ({
+                                        ...prev,
+                                        [size]: e.target.checked
+                                      }));
+
+                                      if (e.target.checked) {
+                                        const defaultPrice = parseFloat(newProduct.sizePrices?.[size]) || parseFloat(newProduct.itemPrice) || 0;
+                                        const defaultCostPrice = parseFloat(newProduct.sizeCostPrices?.[size]) || parseFloat(newProduct.costPrice) || 0;
+                                        const initialPrices = {};
+                                        const initialCostPrices = {};
+                                        selectedVariants.forEach((v) => {
+                                          initialPrices[v] = defaultPrice;
+                                          initialCostPrices[v] = defaultCostPrice;
+                                        });
+                                        setVariantPrices((prev) => ({
+                                          ...prev,
+                                          [size]: initialPrices
+                                        }));
+                                        setVariantCostPrices((prev) => ({
+                                          ...prev,
+                                          [size]: initialCostPrices
+                                        }));
+                                      }
+                                    }}
+                                    className="w-4 h-4 text-[#AD7F65] border-gray-300 rounded focus:ring-[#AD7F65]" />
+                                  
                                             <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
                                               Different prices each variant?
                                             </span>
                                           </label>
                                         
                                         <div className={differentPricesPerVariant[size] ? "space-y-2" : "grid grid-cols-3 gap-2"}>
-                                          {selectedVariants.map((variant) => (
-                                            <div key={variant} className={differentPricesPerVariant[size] ? "flex items-center gap-2 flex-wrap" : "flex items-center gap-1"}>
-                                              <span 
-                                                className={`text-xs px-2 py-1 rounded-full flex-shrink-0 ${
-                                                  theme === "dark"
-                                                    ? "bg-[#AD7F65]/20 text-[#AD7F65]"
-                                                    : "bg-[#AD7F65]/10 text-[#AD7F65]"
-                                                }`}
-                                                style={{ minWidth: '50px', textAlign: 'center' }}
-                                              >
+                                          {selectedVariants.map((variant) =>
+                                  <div key={variant} className={differentPricesPerVariant[size] ? "flex items-center gap-2 flex-wrap" : "flex items-center gap-1"}>
+                                              <span
+                                      className={`text-xs px-2 py-1 rounded-full shrink-0 ${
+                                      theme === "dark" ?
+                                      "bg-[#AD7F65]/20 text-[#AD7F65]" :
+                                      "bg-[#AD7F65]/10 text-[#AD7F65]"}`
+                                      }
+                                      style={{ minWidth: '50px', textAlign: 'center' }}>
+                                      
                                                 {variant}
                                               </span>
                                               <input
-                                                type="number"
-                                                min="0"
-                                                value={variantQuantities[size]?.[variant] || ""}
-                                                onChange={(e) => handleVariantQuantityChange(size, variant, e.target.value)}
-                                                placeholder="Qty"
-                                                className={`${differentPricesPerVariant[size] ? 'w-16' : 'w-20'} px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
-                                                  theme === "dark"
-                                                    ? "bg-[#1E1B18] border-gray-600 text-white"
-                                                    : "bg-gray-50 border-gray-300"
-                                                }`}
-                                              />
-                                              {differentPricesPerVariant[size] && (
-                                                <>
+                                      type="number"
+                                      min="0"
+                                      value={variantQuantities[size]?.[variant] || ""}
+                                      onChange={(e) => handleVariantQuantityChange(size, variant, e.target.value)}
+                                      placeholder="Qty"
+                                      className={`${differentPricesPerVariant[size] ? 'w-16' : 'w-20'} px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
+                                      theme === "dark" ?
+                                      "bg-[#1E1B18] border-gray-600 text-white" :
+                                      "bg-gray-50 border-gray-300"}`
+                                      } />
+                                    
+                                              {differentPricesPerVariant[size] &&
+                                    <>
                                                   <div className="flex items-center gap-1">
                                                     <span className={`text-[10px] ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Cost:</span>
                                                     <input
-                                                      type="number"
-                                                      min="0"
-                                                      step="0.01"
-                                                      value={variantCostPrices[size]?.[variant] || ""}
-                                                      onChange={(e) => handleVariantCostPriceChange(size, variant, e.target.value)}
-                                                      placeholder="₱"
-                                                      className={`w-20 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
-                                                        theme === "dark"
-                                                          ? "bg-[#1E1B18] border-gray-600 text-white"
-                                                          : "bg-gray-50 border-gray-300"
-                                                      }`}
-                                                    />
+                                          type="number"
+                                          min="0"
+                                          step="0.01"
+                                          value={variantCostPrices[size]?.[variant] || ""}
+                                          onChange={(e) => handleVariantCostPriceChange(size, variant, e.target.value)}
+                                          placeholder="₱"
+                                          className={`w-20 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
+                                          theme === "dark" ?
+                                          "bg-[#1E1B18] border-gray-600 text-white" :
+                                          "bg-gray-50 border-gray-300"}`
+                                          } />
+                                        
                                                   </div>
                                                   <div className="flex items-center gap-1">
                                                     <span className={`text-[10px] ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Price:</span>
                                                     <input
-                                                      type="number"
-                                                      min="0"
-                                                      step="0.01"
-                                                      value={variantPrices[size]?.[variant] || ""}
-                                                      onChange={(e) => handleVariantPriceChange(size, variant, e.target.value)}
-                                                      placeholder="₱"
-                                                      className={`w-20 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
-                                                        theme === "dark"
-                                                          ? "bg-[#1E1B18] border-gray-600 text-white"
-                                                          : "bg-gray-50 border-gray-300"
-                                                      }`}
-                                                    />
+                                          type="number"
+                                          min="0"
+                                          step="0.01"
+                                          value={variantPrices[size]?.[variant] || ""}
+                                          onChange={(e) => handleVariantPriceChange(size, variant, e.target.value)}
+                                          placeholder="₱"
+                                          className={`w-20 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${
+                                          theme === "dark" ?
+                                          "bg-[#1E1B18] border-gray-600 text-white" :
+                                          "bg-gray-50 border-gray-300"}`
+                                          } />
+                                        
                                                   </div>
                                                 </>
-                                              )}
+                                    }
                                             </div>
-                                          ))}
+                                  )}
                                         </div>
                                       </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  /* Original simple quantity per size */
-                                  <div className="grid grid-cols-2 gap-3">
-                                    {newProduct.selectedSizes.map((size) => (
-                                      <div key={size}>
+                              )}
+                                  </div> : (
+
+
+                            <div className="grid grid-cols-2 gap-3">
+                                    {newProduct.selectedSizes.map((size) =>
+                              <div key={size}>
                                         <label className="block text-xs text-gray-600 mb-1">
                                           {size}
                                         </label>
                                         <input
-                                          type="number"
-                                          min="0"
-                                          value={
-                                            newProduct.sizeQuantities?.[size] ||
-                                            ""
-                                          }
-                                          onChange={(e) =>
-                                            handleSizeQuantityChange(
-                                              size,
-                                              e.target.value,
-                                            )
-                                          }
-                                          placeholder="Enter quantity"
-                                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent"
-                                        />
+                                  type="number"
+                                  min="0"
+                                  value={
+                                  newProduct.sizeQuantities?.[size] ||
+                                  ""
+                                  }
+                                  onChange={(e) =>
+                                  handleSizeQuantityChange(
+                                    size,
+                                    e.target.value
+                                  )
+                                  }
+                                  placeholder="Enter quantity"
+                                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent" />
+                                
                                       </div>
-                                    ))}
-                                  </div>
-                                )}
+                              )}
+                                  </div>)
+                            }
                               </div>
 
-                              {newProduct.differentVariantsPerSize && (
-                                <div
-                                  className={`space-y-2 mt-3 p-3 rounded-lg ${theme === "dark" ? "bg-[#1E1B18]" : "bg-gray-50"}`}
-                                >
+                              {newProduct.differentVariantsPerSize &&
+                          <div
+                            className={`space-y-2 mt-3 p-3 rounded-lg ${theme === "dark" ? "bg-[#1E1B18]" : "bg-gray-50"}`}>
+                            
                                   <label
-                                    className={`block text-xs font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}
-                                  >
+                              className={`block text-xs font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                              
                                     Variant per Size:
                                   </label>
                                   <div className="space-y-4">
                                     {newProduct.selectedSizes.map((size) => {
-                                      const hasMultipleVariants =
-                                        multipleVariantsPerSize[size] || false;
-                                      const variants =
-                                        sizeMultiVariants[size] || [];
-                                      const singleVariant =
-                                        newProduct.sizeVariants?.[size] || "";
+                                const hasMultipleVariants =
+                                multipleVariantsPerSize[size] || false;
+                                const variants =
+                                sizeMultiVariants[size] || [];
+                                const singleVariant =
+                                newProduct.sizeVariants?.[size] || "";
 
-                                      return (
-                                        <div
-                                          key={size}
-                                          className={`p-3 rounded-lg border ${theme === "dark" ? "bg-[#2A2724] border-gray-600" : "bg-white border-gray-200"}`}
-                                        >
+                                return (
+                                  <div
+                                    key={size}
+                                    className={`p-3 rounded-lg border ${theme === "dark" ? "bg-[#2A2724] border-gray-600" : "bg-white border-gray-200"}`}>
+                                    
                                           <label
-                                            className={`block text-xs font-medium mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}
-                                          >
+                                      className={`block text-xs font-medium mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                                      
                                             {size}
                                           </label>
 
-                                          {/* Checkbox for multiple variants in this size */}
+                                          {}
                                           <label className="flex items-center gap-2 cursor-pointer mb-2">
                                             <input
-                                              type="checkbox"
-                                              checked={hasMultipleVariants}
-                                              onChange={(e) => {
-                                                setMultipleVariantsPerSize(
-                                                  (prev) => ({
-                                                    ...prev,
-                                                    [size]: e.target.checked,
-                                                  }),
-                                                );
-                                                if (e.target.checked) {
-                                                  // Initialize with single variant if any
-                                                  setSizeMultiVariants(
-                                                    (prev) => ({
-                                                      ...prev,
-                                                      [size]: singleVariant
-                                                        ? [singleVariant]
-                                                        : [],
-                                                    }),
-                                                  );
-                                                } else {
-                                                  // Clear multi-variants
-                                                  setSizeMultiVariants(
-                                                    (prev) => {
-                                                      const newState = {
-                                                        ...prev,
-                                                      };
-                                                      delete newState[size];
-                                                      return newState;
-                                                    },
-                                                  );
-                                                }
-                                              }}
-                                              className="w-4 h-4 text-[#AD7F65] border-gray-300 rounded focus:ring-[#AD7F65]"
-                                            />
+                                        type="checkbox"
+                                        checked={hasMultipleVariants}
+                                        onChange={(e) => {
+                                          setMultipleVariantsPerSize(
+                                            (prev) => ({
+                                              ...prev,
+                                              [size]: e.target.checked
+                                            })
+                                          );
+                                          if (e.target.checked) {
+
+                                            setSizeMultiVariants(
+                                              (prev) => ({
+                                                ...prev,
+                                                [size]: singleVariant ?
+                                                [singleVariant] :
+                                                []
+                                              })
+                                            );
+                                          } else {
+
+                                            setSizeMultiVariants(
+                                              (prev) => {
+                                                const newState = {
+                                                  ...prev
+                                                };
+                                                delete newState[size];
+                                                return newState;
+                                              }
+                                            );
+                                          }
+                                        }}
+                                        className="w-4 h-4 text-[#AD7F65] border-gray-300 rounded focus:ring-[#AD7F65]" />
+                                      
                                             <span className="text-xs text-gray-600">
                                               Different variant in this size?
                                             </span>
                                           </label>
 
                                           {!hasMultipleVariants ? (
-                                            /* Single variant dropdown */
-                                            <select
-                                              value={singleVariant}
-                                              onChange={(e) => {
-                                                setNewProduct((prev) => ({
-                                                  ...prev,
-                                                  sizeVariants: {
-                                                    ...prev.sizeVariants,
-                                                    [size]: e.target.value,
-                                                  },
-                                                }));
-                                              }}
-                                              className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
-                                                theme === "dark"
-                                                  ? "bg-[#1E1B18] border-gray-600 text-white"
-                                                  : "bg-gray-50 border-gray-300"
-                                              }`}
-                                            >
+
+                                    <select
+                                      value={singleVariant}
+                                      onChange={(e) => {
+                                        setNewProduct((prev) => ({
+                                          ...prev,
+                                          sizeVariants: {
+                                            ...prev.sizeVariants,
+                                            [size]: e.target.value
+                                          }
+                                        }));
+                                      }}
+                                      className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
+                                      theme === "dark" ?
+                                      "bg-[#1E1B18] border-gray-600 text-white" :
+                                      "bg-gray-50 border-gray-300"}`
+                                      }>
+                                      
                                               <option
-                                                value=""
-                                                className={
-                                                  theme === "dark"
-                                                    ? "bg-[#2A2724]"
-                                                    : ""
-                                                }
-                                              >
+                                        value=""
+                                        className={
+                                        theme === "dark" ?
+                                        "bg-[#2A2724]" :
+                                        ""
+                                        }>
+                                        
                                                 Select a color
                                               </option>
                                               {COMMON_COLORS.filter(
-                                                (c) => c !== "Custom",
-                                              ).map((color) => (
-                                                <option
-                                                  key={color}
-                                                  value={color}
-                                                  className={
-                                                    theme === "dark"
-                                                      ? "bg-[#2A2724]"
-                                                      : ""
-                                                  }
-                                                >
+                                        (c) => c !== "Custom"
+                                      ).map((color) =>
+                                      <option
+                                        key={color}
+                                        value={color}
+                                        className={
+                                        theme === "dark" ?
+                                        "bg-[#2A2724]" :
+                                        ""
+                                        }>
+                                        
                                                   {color}
                                                 </option>
-                                              ))}
-                                            </select>
-                                          ) : (
-                                            /* Multiple variants UI */
-                                            <div className="space-y-2">
-                                              {/* Display current variants as chips */}
+                                      )}
+                                            </select>) : (
+
+
+                                    <div className="space-y-2">
+                                              {}
                                               <div className="flex flex-wrap gap-2 min-h-[30px]">
-                                                {variants.map((v, index) => (
-                                                  <span
-                                                    key={index}
-                                                    className="inline-flex items-center gap-1 bg-[#AD7F65] text-white text-xs px-3 py-1 rounded-full"
-                                                  >
+                                                {variants.map((v, index) =>
+                                        <span
+                                          key={index}
+                                          className="inline-flex items-center gap-1 bg-[#AD7F65] text-white text-xs px-3 py-1 rounded-full">
+                                          
                                                     {v}
                                                     <button
-                                                      type="button"
-                                                      onClick={() => {
-                                                        setSizeMultiVariants(
-                                                          (prev) => ({
-                                                            ...prev,
-                                                            [size]:
-                                                              variants.filter(
-                                                                (_, i) =>
-                                                                  i !== index,
-                                                              ),
-                                                          }),
-                                                        );
-                                                      }}
-                                                      className="hover:opacity-80"
-                                                    >
+                                            type="button"
+                                            onClick={() => {
+                                              setSizeMultiVariants(
+                                                (prev) => ({
+                                                  ...prev,
+                                                  [size]:
+                                                  variants.filter(
+                                                    (_, i) =>
+                                                    i !== index
+                                                  )
+                                                })
+                                              );
+                                            }}
+                                            className="hover:opacity-80">
+                                            
                                                       <svg
-                                                        className="w-3 h-3"
-                                                        fill="currentColor"
-                                                        viewBox="0 0 20 20"
-                                                      >
+                                              className="w-3 h-3"
+                                              fill="currentColor"
+                                              viewBox="0 0 20 20">
+                                              
                                                         <path
-                                                          fillRule="evenodd"
-                                                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                                          clipRule="evenodd"
-                                                        />
+                                                fillRule="evenodd"
+                                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                                clipRule="evenodd" />
+                                              
                                                       </svg>
                                                     </button>
                                                   </span>
-                                                ))}
+                                        )}
                                               </div>
 
-                                              {/* Add variant dropdown */}
+                                              {}
                                               <select
-                                                value=""
-                                                onChange={(e) => {
-                                                  if (
-                                                    e.target.value &&
-                                                    !variants.includes(
-                                                      e.target.value,
-                                                    )
-                                                  ) {
-                                                    setSizeMultiVariants(
-                                                      (prev) => ({
-                                                        ...prev,
-                                                        [size]: [
-                                                          ...(prev[size] || []),
-                                                          e.target.value,
-                                                        ],
-                                                      }),
-                                                    );
-                                                  }
-                                                }}
-                                                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
-                                                  theme === "dark"
-                                                    ? "bg-[#1E1B18] border-gray-600 text-white"
-                                                    : "bg-gray-50 border-gray-300"
-                                                }`}
-                                              >
+                                        value=""
+                                        onChange={(e) => {
+                                          if (
+                                          e.target.value &&
+                                          !variants.includes(
+                                            e.target.value
+                                          ))
+                                          {
+                                            setSizeMultiVariants(
+                                              (prev) => ({
+                                                ...prev,
+                                                [size]: [
+                                                ...(prev[size] || []),
+                                                e.target.value]
+
+                                              })
+                                            );
+                                          }
+                                        }}
+                                        className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
+                                        theme === "dark" ?
+                                        "bg-[#1E1B18] border-gray-600 text-white" :
+                                        "bg-gray-50 border-gray-300"}`
+                                        }>
+                                        
                                                 <option
-                                                  value=""
-                                                  className={
-                                                    theme === "dark"
-                                                      ? "bg-[#2A2724]"
-                                                      : ""
-                                                  }
-                                                >
+                                          value=""
+                                          className={
+                                          theme === "dark" ?
+                                          "bg-[#2A2724]" :
+                                          ""
+                                          }>
+                                          
                                                   + Add variant
                                                 </option>
                                                 {COMMON_COLORS.filter(
-                                                  (c) =>
-                                                    c !== "Custom" &&
-                                                    !variants.includes(c),
-                                                ).map((color) => (
-                                                  <option
-                                                    key={color}
-                                                    value={color}
-                                                    className={
-                                                      theme === "dark"
-                                                        ? "bg-[#2A2724]"
-                                                        : ""
-                                                    }
-                                                  >
+                                          (c) =>
+                                          c !== "Custom" &&
+                                          !variants.includes(c)
+                                        ).map((color) =>
+                                        <option
+                                          key={color}
+                                          value={color}
+                                          className={
+                                          theme === "dark" ?
+                                          "bg-[#2A2724]" :
+                                          ""
+                                          }>
+                                          
                                                     {color}
                                                   </option>
-                                                ))}
+                                        )}
                                               </select>
-                                            </div>
-                                          )}
-                                        </div>
-                                      );
-                                    })}
+                                            </div>)
+                                    }
+                                        </div>);
+
+                              })}
                                   </div>
                                 </div>
-                              )}
+                          }
 
-                              {/* Pricing per Size - only show when differentPricesPerSize is checked AND no variants are selected */}
-                              {newProduct.differentPricesPerSize && selectedVariants.length === 0 && (
-                                <div
-                                  className={`space-y-2 mt-3 p-3 rounded-lg ${theme === "dark" ? "bg-[#1E1B18]" : "bg-gray-50"}`}
-                                >
+                              {}
+                              {newProduct.differentPricesPerSize && selectedVariants.length === 0 &&
+                          <div
+                            className={`space-y-2 mt-3 p-3 rounded-lg ${theme === "dark" ? "bg-[#1E1B18]" : "bg-gray-50"}`}>
+                            
                                   <label
-                                    className={`block text-xs font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}
-                                  >
+                              className={`block text-xs font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                              
                                     Pricing per Size:
                                   </label>
                                   <div className="space-y-3">
-                                    {newProduct.selectedSizes.map((size) => (
-                                      <div
-                                        key={size}
-                                        className="grid grid-cols-2 gap-3"
-                                      >
+                                    {newProduct.selectedSizes.map((size) =>
+                              <div
+                                key={size}
+                                className="grid grid-cols-2 gap-3">
+                                
                                         <div>
                                           <label
-                                            className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
-                                          >
+                                    className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                                    
                                             {size} Cost Price
                                           </label>
                                           <input
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            value={
-                                              newProduct.sizeCostPrices?.[
-                                                size
-                                              ] || ""
-                                            }
-                                            onChange={(e) => {
-                                              setNewProduct((prev) => ({
-                                                ...prev,
-                                                sizeCostPrices: {
-                                                  ...prev.sizeCostPrices,
-                                                  [size]: e.target.value,
-                                                },
-                                              }));
-                                            }}
-                                            placeholder="Enter cost price"
-                                            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
-                                              theme === "dark"
-                                                ? "bg-[#2A2724] border-gray-600 text-white"
-                                                : "bg-white border-gray-300"
-                                            }`}
-                                          />
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={
+                                    newProduct.sizeCostPrices?.[
+                                    size] ||
+                                    ""
+                                    }
+                                    onChange={(e) => {
+                                      setNewProduct((prev) => ({
+                                        ...prev,
+                                        sizeCostPrices: {
+                                          ...prev.sizeCostPrices,
+                                          [size]: e.target.value
+                                        }
+                                      }));
+                                    }}
+                                    placeholder="Enter cost price"
+                                    className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
+                                    theme === "dark" ?
+                                    "bg-[#2A2724] border-gray-600 text-white" :
+                                    "bg-white border-gray-300"}`
+                                    } />
+                                  
                                         </div>
                                         <div>
                                           <label
-                                            className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
-                                          >
+                                    className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                                    
                                             {size} Selling Price
                                           </label>
                                           <input
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            value={
-                                              newProduct.sizePrices?.[size] ||
-                                              ""
-                                            }
-                                            onChange={(e) =>
-                                              handleSizePriceChange(
-                                                size,
-                                                e.target.value,
-                                              )
-                                            }
-                                            placeholder="Enter selling price"
-                                            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
-                                              theme === "dark"
-                                                ? "bg-[#2A2724] border-gray-600 text-white"
-                                                : "bg-white border-gray-300"
-                                            }`}
-                                          />
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={
+                                    newProduct.sizePrices?.[size] ||
+                                    ""
+                                    }
+                                    onChange={(e) =>
+                                    handleSizePriceChange(
+                                      size,
+                                      e.target.value
+                                    )
+                                    }
+                                    placeholder="Enter selling price"
+                                    className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
+                                    theme === "dark" ?
+                                    "bg-[#2A2724] border-gray-600 text-white" :
+                                    "bg-white border-gray-300"}`
+                                    } />
+                                  
                                         </div>
                                       </div>
-                                    ))}
+                              )}
                                   </div>
                                 </div>
-                              )}
+                          }
                             </>
-                          )}
+                        }
                         </div>
 
                         {(!newProduct.selectedSizes ||
-                          newProduct.selectedSizes.length === 0) && (
-                          <div>
+                      newProduct.selectedSizes.length === 0) &&
+                      <div>
                             <label
-                              className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
-                            >
+                          className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                          
                               Stock
                             </label>
                             <input
-                              type="number"
-                              name="currentStock"
-                              value={newProduct.currentStock}
-                              onChange={handleInputChange}
-                              placeholder="Add Stock"
-                              className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
-                                theme === "dark"
-                                  ? "bg-[#1E1B18] border-gray-600 text-white"
-                                  : "bg-gray-50 border-gray-300"
-                              }`}
-                            />
+                          type="number"
+                          name="currentStock"
+                          value={newProduct.currentStock}
+                          onChange={handleInputChange}
+                          placeholder="Add Stock"
+                          className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
+                          theme === "dark" ?
+                          "bg-[#1E1B18] border-gray-600 text-white" :
+                          "bg-gray-50 border-gray-300"}`
+                          } />
+                        
                           </div>
-                        )}
+                      }
                       </>
-                    )}
+                    }
                   </div>
                 </div>
 
-                {/* Only show Pricing section when differentPricesPerSize is NOT checked AND no variant pricing is enabled */}
-                {!newProduct.differentPricesPerSize && 
-                 !Object.values(differentPricesPerVariant).some(v => v) && (
-                  <div>
+                {}
+                {!newProduct.differentPricesPerSize &&
+                !Object.values(differentPricesPerVariant).some((v) => v) &&
+                <div>
                     <h3 className="text-base font-semibold mb-3">Pricing</h3>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label
-                          className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
-                        >
+                        className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                        
                           Cost Price
                         </label>
                         <input
-                          type="number"
-                          step="0.01"
-                          name="costPrice"
-                          value={newProduct.costPrice}
-                          onChange={handleInputChange}
-                          placeholder="Enter cost price"
-                          className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
-                            theme === "dark"
-                              ? "bg-[#1E1B18] border-gray-600 text-white"
-                              : "bg-gray-50 border-gray-300"
-                          }`}
-                        />
+                        type="number"
+                        step="0.01"
+                        name="costPrice"
+                        value={newProduct.costPrice}
+                        onChange={handleInputChange}
+                        placeholder="Enter cost price"
+                        className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
+                        theme === "dark" ?
+                        "bg-[#1E1B18] border-gray-600 text-white" :
+                        "bg-gray-50 border-gray-300"}`
+                        } />
+                      
                       </div>
                       <div>
                         <label
-                          className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
-                        >
+                        className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                        
                           Selling Price
                         </label>
                         <input
-                          type="number"
-                          step="0.01"
-                          name="itemPrice"
-                          value={newProduct.itemPrice}
-                          onChange={handleInputChange}
-                          required={!newProduct.differentPricesPerSize}
-                          placeholder="Enter selling price"
-                          className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
-                            theme === "dark"
-                              ? "bg-[#1E1B18] border-gray-600 text-white"
-                              : "bg-gray-50 border-gray-300"
-                          }`}
-                        />
+                        type="number"
+                        step="0.01"
+                        name="itemPrice"
+                        value={newProduct.itemPrice}
+                        onChange={handleInputChange}
+                        required={!newProduct.differentPricesPerSize}
+                        placeholder="Enter selling price"
+                        className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${
+                        theme === "dark" ?
+                        "bg-[#1E1B18] border-gray-600 text-white" :
+                        "bg-gray-50 border-gray-300"}`
+                        } />
+                      
                       </div>
                     </div>
                   </div>
-                )}
+                }
 
                 <div>
                   <h3 className="text-base font-semibold mb-3">
@@ -1800,55 +1800,55 @@ const AddProductModal = ({
                   </h3>
                   <div className="space-y-3">
                     {(() => {
-                      // Check if product has zero stock
-                      // When editing, use the actual product's current stock and sizes
+
+
                       const hasZeroStock = () => {
                         if (editingProduct) {
-                          // When editing, check the actual product's stock
+
                           if (
-                            editingProduct.sizes &&
-                            typeof editingProduct.sizes === "object" &&
-                            Object.keys(editingProduct.sizes).length > 0
-                          ) {
-                            // For products with sizes, check if all sizes have 0 stock
+                          editingProduct.sizes &&
+                          typeof editingProduct.sizes === "object" &&
+                          Object.keys(editingProduct.sizes).length > 0)
+                          {
+
                             const allSizesZero = Object.values(
-                              editingProduct.sizes,
+                              editingProduct.sizes
                             ).every((sizeData) => {
                               if (
-                                typeof sizeData === "object" &&
-                                sizeData !== null &&
-                                sizeData.quantity !== undefined
-                              ) {
+                              typeof sizeData === "object" &&
+                              sizeData !== null &&
+                              sizeData.quantity !== undefined)
+                              {
                                 return (sizeData.quantity || 0) === 0;
                               }
                               return (
-                                (typeof sizeData === "number"
-                                  ? sizeData
-                                  : 0) === 0
-                              );
+                                (typeof sizeData === "number" ?
+                                sizeData :
+                                0) === 0);
+
                             });
                             return allSizesZero;
                           }
-                          // For products without sizes, check currentStock
+
                           return (editingProduct.currentStock || 0) === 0;
                         } else {
-                          // When adding new product, check newProduct
+
                           if (
-                            newProduct.selectedSizes &&
-                            newProduct.selectedSizes.length > 0 &&
-                            newProduct.sizeQuantities
-                          ) {
-                            // For products with sizes, check if all sizes have 0 stock
+                          newProduct.selectedSizes &&
+                          newProduct.selectedSizes.length > 0 &&
+                          newProduct.sizeQuantities)
+                          {
+
                             const allSizesZero = newProduct.selectedSizes.every(
                               (size) => {
                                 const qty =
-                                  newProduct.sizeQuantities[size] || 0;
+                                newProduct.sizeQuantities[size] || 0;
                                 return parseInt(qty) === 0;
-                              },
+                              }
                             );
                             return allSizesZero;
                           }
-                          // For products without sizes, check currentStock
+
                           return parseInt(newProduct.currentStock || 0) === 0;
                         }
                       };
@@ -1858,8 +1858,8 @@ const AddProductModal = ({
 
                       return (
                         <label
-                          className={`flex items-center gap-3 ${isDisabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
-                        >
+                          className={`flex items-center gap-3 ${isDisabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}>
+                          
                           <div className="relative">
                             <input
                               type="checkbox"
@@ -1867,40 +1867,40 @@ const AddProductModal = ({
                               checked={newProduct.displayInTerminal !== false}
                               onChange={handleInputChange}
                               disabled={isDisabled}
-                              className="sr-only"
-                            />
+                              className="sr-only" />
+                            
                             <div
                               className={`w-14 h-7 rounded-full transition-colors duration-200 ${
-                                newProduct.displayInTerminal !== false
-                                  ? "bg-[#AD7F65]"
-                                  : "bg-gray-300"
-                              } ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
-                            >
+                              newProduct.displayInTerminal !== false ?
+                              "bg-[#AD7F65]" :
+                              "bg-gray-300"} ${
+                              isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}>
+                              
                               <div
                                 className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                                  newProduct.displayInTerminal !== false
-                                    ? "translate-x-7"
-                                    : "translate-x-1"
-                                } mt-0.5`}
-                              ></div>
+                                newProduct.displayInTerminal !== false ?
+                                "translate-x-7" :
+                                "translate-x-1"} mt-0.5`
+                                }>
+                              </div>
                             </div>
                           </div>
                           <div>
                             <span
-                              className={`text-sm font-medium ${isDisabled ? "text-gray-400 opacity-60" : theme === "dark" ? "text-gray-300" : "text-gray-700"}`}
-                            >
+                              className={`text-sm font-medium ${isDisabled ? "text-gray-400 opacity-60" : theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                              
                               Display in Terminal
                             </span>
                             <p
-                              className={`text-xs ${isDisabled ? "text-gray-500 opacity-60" : theme === "dark" ? "text-gray-500" : "text-gray-500"}`}
-                            >
-                              {isDisabled
-                                ? "Add stock to enable this option"
-                                : "Show this product in POS/terminal"}
+                              className={`text-xs ${isDisabled ? "text-gray-500 opacity-60" : theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
+                              
+                              {isDisabled ?
+                              "Add stock to enable this option" :
+                              "Show this product in POS/terminal"}
                             </p>
                           </div>
-                        </label>
-                      );
+                        </label>);
+
                     })()}
                   </div>
                 </div>
@@ -1911,12 +1911,12 @@ const AddProductModal = ({
                   <div
                     onClick={() => document.getElementById("fileInput").click()}
                     className={`w-3/4 mx-auto border-2 border-dashed rounded-2xl flex flex-col items-center justify-center p-6 cursor-pointer transition-all ${
-                      theme === "dark"
-                        ? "bg-[#1E1B18] border-gray-600 hover:bg-[#2A2724] hover:border-[#AD7F65]"
-                        : "bg-gray-50 border-gray-300 hover:bg-gray-100 hover:border-[#AD7F65]"
-                    }`}
-                    style={{ height: "350px" }}
-                  >
+                    theme === "dark" ?
+                    "bg-[#1E1B18] border-gray-600 hover:bg-[#2A2724] hover:border-[#AD7F65]" :
+                    "bg-gray-50 border-gray-300 hover:bg-gray-100 hover:border-[#AD7F65]"}`
+                    }
+                    style={{ height: "350px" }}>
+                    
                     <input
                       id="fileInput"
                       type="file"
@@ -1928,72 +1928,72 @@ const AddProductModal = ({
                           reader.onloadend = () => {
                             setNewProduct((prev) => ({
                               ...prev,
-                              itemImage: reader.result,
+                              itemImage: reader.result
                             }));
                           };
                           reader.readAsDataURL(file);
                         }
                       }}
-                      className="hidden"
-                    />
+                      className="hidden" />
+                    
                     {newProduct.itemImage &&
-                    newProduct.itemImage.trim() !== "" ? (
-                      <div className="w-full h-full flex items-center justify-center p-4">
+                    newProduct.itemImage.trim() !== "" ?
+                    <div className="w-full h-full flex items-center justify-center p-4">
                         <img
-                          src={newProduct.itemImage}
-                          alt="Product Preview"
-                          className="max-w-full max-h-full object-contain rounded-lg"
-                          style={{ display: "block" }}
-                        />
-                      </div>
-                    ) : (
-                      <>
+                        src={newProduct.itemImage}
+                        alt="Product Preview"
+                        className="max-w-full max-h-full object-contain rounded-lg"
+                        style={{ display: "block" }} />
+                      
+                      </div> :
+
+                    <>
                         <div
-                          className={`w-20 h-20 rounded-lg flex items-center justify-center mb-3 ${theme === "dark" ? "bg-[#2A2724]" : "bg-gray-300"}`}
-                        >
+                        className={`w-20 h-20 rounded-lg flex items-center justify-center mb-3 ${theme === "dark" ? "bg-[#2A2724]" : "bg-gray-300"}`}>
+                        
                           <svg
-                            className={`w-10 h-10 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
+                          className={`w-10 h-10 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24">
+                          
                             <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          
                           </svg>
                         </div>
                         <p
-                          className={`text-sm mb-3 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}
-                        >
+                        className={`text-sm mb-3 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                        
                           Upload an Image
                         </p>
                         <p
-                          className={`text-xs ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}
-                        >
+                        className={`text-xs ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>
+                        
                           Click to browse or paste URL below
                         </p>
                       </>
-                    )}
+                    }
                   </div>
-                  {!newProduct.itemImage && (
-                    <div className="mt-3">
+                  {!newProduct.itemImage &&
+                  <div className="mt-3">
                       <input
-                        type="text"
-                        name="itemImage"
-                        value={newProduct.itemImage}
-                        onChange={handleInputChange}
-                        placeholder="Or paste image URL"
-                        className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] ${
-                          theme === "dark"
-                            ? "bg-[#1E1B18] border-gray-600 text-white placeholder-gray-300"
-                            : "bg-white border-gray-300 placeholder-gray-400"
-                        }`}
-                      />
+                      type="text"
+                      name="itemImage"
+                      value={newProduct.itemImage}
+                      onChange={handleInputChange}
+                      placeholder="Or paste image URL"
+                      className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] ${
+                      theme === "dark" ?
+                      "bg-[#1E1B18] border-gray-600 text-white placeholder-gray-300" :
+                      "bg-white border-gray-300 placeholder-gray-400"}`
+                      } />
+                    
                     </div>
-                  )}
+                  }
                 </div>
 
                 <div className="mt-8 flex justify-center">
@@ -2003,16 +2003,16 @@ const AddProductModal = ({
                     className="px-12 py-3 text-white rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-all shadow-lg"
                     style={{
                       background:
-                        "linear-gradient(135deg, #10B981 0%, #059669 100%)",
-                    }}
-                  >
-                    {loading
-                      ? editingProduct
-                        ? "Updating..."
-                        : "Adding..."
-                      : editingProduct
-                        ? "Update Product"
-                        : "Add New Item"}
+                      "linear-gradient(135deg, #10B981 0%, #059669 100%)"
+                    }}>
+                    
+                    {loading ?
+                    editingProduct ?
+                    "Updating..." :
+                    "Adding..." :
+                    editingProduct ?
+                    "Update Product" :
+                    "Add New Item"}
                   </button>
                 </div>
               </div>
@@ -2028,10 +2028,10 @@ const AddProductModal = ({
           if (onCategoryAdd) {
             onCategoryAdd();
           }
-          // Set the new category in the form
+
           setNewProduct((prev) => ({ ...prev, category: newCategoryName }));
-        }}
-      />
+        }} />
+      
 
       <AddBrandModal
         show={showBrandModal}
@@ -2041,10 +2041,10 @@ const AddProductModal = ({
             onBrandAdd();
           }
           setNewProduct((prev) => ({ ...prev, brandName: newBrandName }));
-        }}
-      />
-    </div>
-  );
+        }} />
+      
+    </div>);
+
 };
 
 export default AddProductModal;

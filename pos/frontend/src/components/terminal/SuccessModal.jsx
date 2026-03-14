@@ -9,13 +9,13 @@ const SuccessModal = ({ isOpen, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 font-poppins p-4"
-    >
+      className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 font-poppins p-4">
+      
       <div className={`rounded-2xl w-full max-w-sm relative shadow-2xl ${theme === 'dark' ? 'bg-[#1E1B18]' : 'bg-white'}`}>
         <button
           onClick={onClose}
-          className={`absolute top-4 right-4 transition-colors z-10 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}
-        >
+          className={`absolute top-4 right-4 transition-colors z-10 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}>
+          
           <FaTimes className="w-5 h-5" />
         </button>
 
@@ -25,8 +25,8 @@ const SuccessModal = ({ isOpen, onClose }) => {
               className="w-24 h-24 rounded-full flex items-center justify-center"
               style={{
                 backgroundColor: '#B8E7D3'
-              }}
-            >
+              }}>
+              
               <svg
                 className="w-12 h-12 text-green-600"
                 fill="none"
@@ -35,8 +35,8 @@ const SuccessModal = ({ isOpen, onClose }) => {
                 viewBox="0 0 24 24"
                 style={{
                   animation: 'checkmark 0.6s ease-out'
-                }}
-              >
+                }}>
+                
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -45,8 +45,8 @@ const SuccessModal = ({ isOpen, onClose }) => {
                     strokeDasharray: '22',
                     strokeDashoffset: '22',
                     animation: 'checkmark-draw 0.4s ease-out 0.2s forwards'
-                  }}
-                />
+                  }} />
+                
               </svg>
               <style>{`
                 @keyframes checkmark {
@@ -87,14 +87,14 @@ const SuccessModal = ({ isOpen, onClose }) => {
               backgroundColor: '#8B7355'
             }}
             onMouseEnter={(e) => e.target.style.backgroundColor = '#6d5a43'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = '#8B7355'}
-          >
+            onMouseLeave={(e) => e.target.style.backgroundColor = '#8B7355'}>
+            
             OK
           </button>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default SuccessModal;

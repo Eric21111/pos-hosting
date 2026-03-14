@@ -8,8 +8,8 @@ const DeleteEmployeeModal = ({ isOpen, onClose, onConfirm, employee }) => {
       <div className="bg-white rounded-2xl w-full max-w-md relative shadow-2xl">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10"
-        >
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10">
+          
           <FaTimes className="w-5 h-5" />
         </button>
 
@@ -32,22 +32,21 @@ const DeleteEmployeeModal = ({ isOpen, onClose, onConfirm, employee }) => {
             <button
               onClick={onConfirm}
               className="flex-1 px-6 py-3 rounded-lg text-white font-medium hover:opacity-90 transition-all shadow-md"
-              style={{ background: 'linear-gradient(135deg, #AD7F65 0%, #76462B 100%)' }}
-            >
+              style={{ background: 'linear-gradient(135deg, #AD7F65 0%, #76462B 100%)' }}>
+              
               Confirm
             </button>
             <button
               onClick={onClose}
-              className="flex-1 px-6 py-3 rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 transition-all font-medium shadow-md"
-            >
+              className="flex-1 px-6 py-3 rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 transition-all font-medium shadow-md">
+              
               Cancel
             </button>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default DeleteEmployeeModal;
-

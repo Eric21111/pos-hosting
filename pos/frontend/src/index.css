@@ -8,7 +8,7 @@ body {
   font-family: 'Poppins', sans-serif;
 }
 
-/* Remove arrows from number inputs */
+
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -20,7 +20,7 @@ input[type="number"] {
   appearance: textfield;
 }
 
-/* Disable mouse wheel on number inputs */
+
 input[type="number"] {
   -moz-appearance: textfield;
 }

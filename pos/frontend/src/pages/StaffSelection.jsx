@@ -22,13 +22,13 @@ const StaffSelection = () => {
     setLoading(true);
 
     try {
-      // Search for employee by first name
+
       const response = await fetch(`${API_BASE_URL}/api/employees/search/${encodeURIComponent(firstName)}`);
       const data = await response.json();
 
       if (data.success && data.data.length > 0) {
         const firstNameLower = firstName.toLowerCase().trim();
-        // Find employee by matching firstName or first word of name
+
         const employee = data.data.find((emp) => {
           const empFirstName = emp.firstName?.toLowerCase().trim();
           const nameFirstWord = emp.name?.toLowerCase().trim().split(/\s+/)[0];
@@ -41,7 +41,7 @@ const StaffSelection = () => {
           return;
         }
 
-        // Check if employee is active
+
         if (employee.status !== 'Active') {
           setError('Your account is inactive. Please contact administrator.');
           setLoading(false);
@@ -64,7 +64,7 @@ const StaffSelection = () => {
         }
         navigate('/pin', { state: { staff: staffInfo } });
       } else {
-        // Fallback for owner login (if not in database)
+
         const firstNameLower = firstName.toLowerCase().trim();
         if (firstNameLower === 'owner' || firstNameLower.includes('owner')) {
           const ownerInfo = {
@@ -117,15 +117,15 @@ const StaffSelection = () => {
           className="absolute inset-8 lg:inset-8 rounded-[20px] bg-cover bg-center"
           style={{
             backgroundImage: `linear-gradient(rgba(139, 115, 85, 0.7), rgba(139, 115, 85, 0.7)), url(${bgImage})`
-          }}
-        />
+          }} />
+        
 
         <div className="relative z-10 text-center p-12 flex items-center justify-center">
           <img
             src={logo}
             alt="Create Your Style"
-            className="max-w-[80%] lg:max-w-[70%] h-auto object-contain drop-shadow-[2px_2px_8px_rgba(0,0,0,0.3)]"
-          />
+            className="max-w-[80%] lg:max-w-[70%] h-auto object-contain drop-shadow-[2px_2px_8px_rgba(0,0,0,0.3)]" />
+          
         </div>
       </div>
 
@@ -161,14 +161,14 @@ const StaffSelection = () => {
                 onKeyPress={handleKeyPress}
                 placeholder="Username"
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#8B7355] text-gray-700"
-                autoFocus
-              />
+                autoFocus />
+              
             </div>
-            {error && (
-              <div className="mt-2 text-xs text-red-600">
+            {error &&
+            <div className="mt-2 text-xs text-red-600">
                 {error}
               </div>
-            )}
+            }
             <div className="mt-2 text-xs text-gray-500">
               Enter your registered first name
             </div>
@@ -178,16 +178,15 @@ const StaffSelection = () => {
             <button
               className="w-full bg-[#8B7355] text-white border-none rounded-lg py-3 text-lg font-semibold cursor-pointer transition-all duration-300 hover:bg-[#6d5a43] hover:shadow-[0_4px_12px_rgba(139,115,85,0.3)] active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleProceed}
-              disabled={loading}
-            >
+              disabled={loading}>
+              
               {loading ? 'Searching...' : 'Proceed'}
             </button>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default memo(StaffSelection);
-

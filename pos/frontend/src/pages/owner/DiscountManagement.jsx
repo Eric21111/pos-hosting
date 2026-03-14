@@ -25,7 +25,7 @@ const DiscountManagement = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [discountToDelete, setDiscountToDelete] = useState(null);
 
-  // Helper function to determine icon and colors based on discount data
+
   const getDiscountIcon = (discount) => {
     const title = discount.title?.toLowerCase() || '';
     const discountValue = discount.discountValue || '';
@@ -38,7 +38,7 @@ const DiscountManagement = () => {
       };
     }
 
-    // Extract numeric value from discountValue
+
     const match = discountValue.match(/(\d+)/);
     if (match) {
       const value = parseInt(match[1]);
@@ -58,7 +58,7 @@ const DiscountManagement = () => {
     };
   };
 
-  // Fetch discounts from API
+
   useEffect(() => {
     fetchDiscounts();
   }, []);
@@ -75,8 +75,8 @@ const DiscountManagement = () => {
       const data = await response.json();
 
       if (data.success && Array.isArray(data.data)) {
-        // Format discounts with icons and colors
-        const formattedDiscounts = data.data.map(discount => {
+
+        const formattedDiscounts = data.data.map((discount) => {
           const iconData = getDiscountIcon(discount);
           return {
             ...discount,
@@ -90,7 +90,7 @@ const DiscountManagement = () => {
       }
     } catch (error) {
       console.error('Error fetching discounts:', error);
-      setDiscounts([]); // Set empty array on error
+      setDiscounts([]);
     } finally {
       setLoading(false);
     }
@@ -98,7 +98,7 @@ const DiscountManagement = () => {
 
   const handleToggleStatus = async (id) => {
     try {
-      const discount = discounts.find(d => d._id === id);
+      const discount = discounts.find((d) => d._id === id);
       if (!discount) return;
 
       const newStatus = discount.status === 'active' ? 'inactive' : 'active';
@@ -114,7 +114,7 @@ const DiscountManagement = () => {
       const data = await response.json();
 
       if (data.success) {
-        // Refresh discounts from API
+
         fetchDiscounts();
       } else {
         alert('Failed to update discount status');
@@ -143,7 +143,7 @@ const DiscountManagement = () => {
       if (data.success) {
         setShowDeleteModal(false);
         setDiscountToDelete(null);
-        // Refresh discounts from API
+
         fetchDiscounts();
       } else {
         alert('Failed to delete discount');
@@ -156,15 +156,15 @@ const DiscountManagement = () => {
 
 
   const handleEditClick = async (discount) => {
-    // If discount has productIds, fetch product details for the picker
+
     if (discount.appliesTo === 'products' && discount.productIds && discount.productIds.length > 0) {
       try {
         const response = await fetch(API_ENDPOINTS.products);
         const data = await response.json();
         if (data.success && Array.isArray(data.data)) {
-          const selectedProducts = data.data.filter(p =>
-            discount.productIds.includes(p._id)
-          ).map(p => ({
+          const selectedProducts = data.data.filter((p) =>
+          discount.productIds.includes(p._id)
+          ).map((p) => ({
             _id: p._id,
             itemName: p.itemName,
             sku: p.sku,
@@ -195,7 +195,7 @@ const DiscountManagement = () => {
         discountValue: parseFloat(formData.discountValue),
         appliesTo: formData.appliesTo,
         category: formData.appliesTo === 'category' ? formData.category : null,
-        productIds: formData.appliesTo === 'products' ? formData.selectedProducts.map(p => p._id) : [],
+        productIds: formData.appliesTo === 'products' ? formData.selectedProducts.map((p) => p._id) : [],
         validFrom: formData.noExpiration ? null : formData.validFrom,
         validTo: formData.noExpiration ? null : formData.validUntil,
         noExpiration: formData.noExpiration,
@@ -216,7 +216,7 @@ const DiscountManagement = () => {
       const data = await response.json();
 
       if (data.success) {
-        // Refresh discounts from API
+
         fetchDiscounts();
       } else {
         alert('Failed to update discount: ' + (data.message || 'Unknown error'));
@@ -235,7 +235,7 @@ const DiscountManagement = () => {
         discountValue: parseFloat(formData.discountValue),
         appliesTo: formData.appliesTo,
         category: formData.appliesTo === 'category' ? formData.category : null,
-        productIds: formData.appliesTo === 'products' ? formData.selectedProducts.map(p => p._id) : [],
+        productIds: formData.appliesTo === 'products' ? formData.selectedProducts.map((p) => p._id) : [],
         validFrom: formData.noExpiration ? null : formData.validFrom,
         validTo: formData.noExpiration ? null : formData.validUntil,
         noExpiration: formData.noExpiration,
@@ -257,7 +257,7 @@ const DiscountManagement = () => {
       const data = await response.json();
 
       if (data.success) {
-        // Refresh discounts from API
+
         fetchDiscounts();
       } else {
         alert('Failed to create discount: ' + (data.message || 'Unknown error'));
@@ -268,14 +268,14 @@ const DiscountManagement = () => {
     }
   };
 
-  const filteredDiscounts = discounts.filter(discount => {
-    // Search filter
+  const filteredDiscounts = discounts.filter((discount) => {
+
     const matchesSearch = discount.title.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // Type filter
+
     const matchesType = filterType === 'all' || discount.discountType === filterType;
 
-    // Category filter
+
     let matchesCategory = true;
     if (filterCategory !== 'all') {
       if (filterCategory === 'no-category') {
@@ -295,8 +295,8 @@ const DiscountManagement = () => {
         profileBackground={theme === 'dark' ? 'bg-[#2A2724]' : 'bg-gray-100'}
         showBorder={false}
         userName={currentUser?.name || 'Owner'}
-        userRole="Owner"
-      />
+        userRole="Owner" />
+      
 
 
       <div className="flex items-center gap-4 mb-6 justify-between mt-8">
@@ -310,21 +310,21 @@ const DiscountManagement = () => {
               placeholder="Search For..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full h-11 pl-14 pr-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === 'dark'
-                ? 'bg-[#2A2724] border-gray-600 text-white placeholder-gray-400'
-                : 'bg-white border-gray-300 text-gray-900'
-                }`}
-            />
+              className={`w-full h-11 pl-14 pr-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === 'dark' ?
+              'bg-[#2A2724] border-gray-600 text-white placeholder-gray-400' :
+              'bg-white border-gray-300 text-gray-900'}`
+              } />
+            
           </div>
 
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className={`px-4 py-2.5 rounded-lg border font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent flex-shrink-0 ${theme === 'dark'
-              ? 'bg-[#2A2724] border-gray-600 text-white'
-              : 'bg-white border-gray-300 text-gray-700'
-              }`}
-          >
+            className={`px-4 py-2.5 rounded-lg border font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent flex-shrink-0 ${theme === 'dark' ?
+            'bg-[#2A2724] border-gray-600 text-white' :
+            'bg-white border-gray-300 text-gray-700'}`
+            }>
+            
             <option value="all">All Types</option>
             <option value="percentage">Percentage</option>
             <option value="fixed">Fixed Amount</option>
@@ -333,11 +333,11 @@ const DiscountManagement = () => {
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className={`px-4 py-2.5 rounded-lg border font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent flex-shrink-0 ${theme === 'dark'
-              ? 'bg-[#2A2724] border-gray-600 text-white'
-              : 'bg-white border-gray-300 text-gray-700'
-              }`}
-          >
+            className={`px-4 py-2.5 rounded-lg border font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent flex-shrink-0 ${theme === 'dark' ?
+            'bg-[#2A2724] border-gray-600 text-white' :
+            'bg-white border-gray-300 text-gray-700'}`
+            }>
+            
             <option value="all">All Categories</option>
             <option value="no-category">All Products</option>
             <option value="Tops">Tops</option>
@@ -356,8 +356,8 @@ const DiscountManagement = () => {
             setShowAddModal(true);
           }}
           className="flex items-center gap-2 px-6 py-3 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all"
-          style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)' }}
-        >
+          style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)' }}>
+          
           <FaPlus className="w-4 h-4" />
           Add New Discount
         </button>
@@ -365,76 +365,76 @@ const DiscountManagement = () => {
 
 
 
-      {loading ? (
-        <div className="flex justify-center items-center py-12">
+      {loading ?
+      <div className="flex justify-center items-center py-12">
           <div className="text-gray-500">Loading discounts...</div>
-        </div>
-      ) : filteredDiscounts.length === 0 ? (
-        <div className="flex justify-center items-center py-12">
+        </div> :
+      filteredDiscounts.length === 0 ?
+      <div className="flex justify-center items-center py-12">
           <div className="text-gray-500">No discounts found. Create your first discount!</div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-6">
-          {filteredDiscounts.map((discount) => (
-            <div
-              key={discount._id}
-              className={`rounded-xl overflow-hidden border shadow-lg flex ${theme === 'dark'
-                ? 'bg-[#2A2724] border-[#4A4037]'
-                : 'bg-white border-blue-200'
-                }`}
-            >
+        </div> :
+
+      <div className="grid grid-cols-2 gap-6">
+          {filteredDiscounts.map((discount) =>
+        <div
+          key={discount._id}
+          className={`rounded-xl overflow-hidden border shadow-lg flex ${theme === 'dark' ?
+          'bg-[#2A2724] border-[#4A4037]' :
+          'bg-white border-blue-200'}`
+          }>
+          
               <div
-                className="w-15 flex items-center justify-center shrink-0"
-                style={{ background: discount.iconColor }}
-              >
+            className="w-15 flex items-center justify-center shrink-0"
+            style={{ background: discount.iconColor }}>
+            
                 <img
-                  src={discount.icon}
-                  alt={discount.title}
-                  className="w-full h-full object-contain p-2"
-                />
+              src={discount.icon}
+              alt={discount.title}
+              className="w-full h-full object-contain p-2" />
+            
               </div>
 
               <div className={`flex-1 p-4 relative ${theme === 'dark' ? 'bg-[#2A2724]' : 'bg-white'}`}>
                 <div className="absolute top-3 right-3 flex items-center gap-2">
                   <button
-                    className="w-7 h-7 flex items-center justify-center bg-amber-100 hover:bg-amber-200 text-amber-700 rounded transition-colors"
-                    onClick={() => handleEditClick(discount)}
-                  >
+                className="w-7 h-7 flex items-center justify-center bg-amber-100 hover:bg-amber-200 text-amber-700 rounded transition-colors"
+                onClick={() => handleEditClick(discount)}>
+                
                     <FaEdit className="w-3 h-3" />
                   </button>
                   <button
-                    className="w-7 h-7 flex items-center justify-center bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors"
-                    onClick={() => handleDeleteClick(discount)}
-                  >
+                className="w-7 h-7 flex items-center justify-center bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors"
+                onClick={() => handleDeleteClick(discount)}>
+                
                     <FaTrash className="w-3 h-3" />
                   </button>
                   <label className="relative inline-flex items-center cursor-pointer ml-1">
                     <input
-                      type="checkbox"
-                      checked={discount.status === 'active'}
-                      onChange={() => handleToggleStatus(discount._id)}
-                      className="sr-only peer"
-                    />
-                    <div className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${discount.status === 'active'
-                      ? 'bg-[#AD7F65] after:border-[#AD7F65]'
-                      : 'bg-gray-200 after:border-gray-300'
-                      }`}></div>
+                  type="checkbox"
+                  checked={discount.status === 'active'}
+                  onChange={() => handleToggleStatus(discount._id)}
+                  className="sr-only peer" />
+                
+                    <div className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${discount.status === 'active' ?
+                'bg-[#AD7F65] after:border-[#AD7F65]' :
+                'bg-gray-200 after:border-gray-300'}`
+                }></div>
                   </label>
                 </div>
 
                 <div className="flex items-center gap-2 mb-2 pr-32">
                   <h3
-                    className="text-xl font-bold"
-                    style={{ color: discount.status === 'inactive' ? '#6B7280' : (theme === 'dark' ? '#C2A68C' : '#AD7F65') }}
-                  >
+                className="text-xl font-bold"
+                style={{ color: discount.status === 'inactive' ? '#6B7280' : theme === 'dark' ? '#C2A68C' : '#AD7F65' }}>
+                
                     {discount.title}
                   </h3>
                   <span
-                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${discount.status === 'active'
-                      ? 'bg-green-500 text-white'
-                      : 'bg-gray-300 text-gray-600'
-                      }`}
-                  >
+                className={`px-2 py-0.5 rounded-full text-xs font-medium ${discount.status === 'active' ?
+                'bg-green-500 text-white' :
+                'bg-gray-300 text-gray-600'}`
+                }>
+                
                     {discount.status === 'active' ? 'Active' : 'Inactive'}
                   </span>
                 </div>
@@ -451,17 +451,17 @@ const DiscountManagement = () => {
                     <div className={`flex items-center gap-1.5 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                       <FaCalendar className="text-purple-500 text-sm" />
                       <span>
-                        Valid only from: {discount.validFrom === 'Permanent'
-                          ? 'Permanent'
-                          : `${discount.validFrom} to ${discount.validTo}`}
+                        Valid only from: {discount.validFrom === 'Permanent' ?
+                    'Permanent' :
+                    `${discount.validFrom} to ${discount.validTo}`}
                       </span>
                     </div>
 
-                    {discount.description && (
-                      <div className={`text-xs italic ${theme === 'dark' ? 'text-gray-500' : 'text-gray-600'}`}>
+                    {discount.description &&
+                <div className={`text-xs italic ${theme === 'dark' ? 'text-gray-500' : 'text-gray-600'}`}>
                         {discount.description}
                       </div>
-                    )}
+                }
                   </div>
 
                   <div className="flex-1 space-y-1 text-right">
@@ -472,21 +472,21 @@ const DiscountManagement = () => {
                       <FaBox className="text-blue-400 text-sm" />
                     </div>
 
-                    {discount.usage && (
-                      <div className={`flex items-center justify-end gap-1.5 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {discount.usage &&
+                <div className={`flex items-center justify-end gap-1.5 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                         <span>
                           Used: <span className="font-bold">{discount.usage.used}/{discount.usage.total}</span> times
                         </span>
                         <FaUsers className="text-green-500 text-sm" />
                       </div>
-                    )}
+                }
                   </div>
                 </div>
               </div>
             </div>
-          ))}
+        )}
         </div>
-      )}
+      }
 
       <AddDiscountModal
         isOpen={showAddModal}
@@ -496,12 +496,12 @@ const DiscountManagement = () => {
         }}
         onAdd={handleAddDiscount}
         onEdit={handleUpdateDiscount}
-        discountToEdit={editingDiscount}
-      />
+        discountToEdit={editingDiscount} />
+      
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && discountToDelete && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      {}
+      {showDeleteModal && discountToDelete &&
+      <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className={`rounded-2xl w-full max-w-md relative shadow-2xl overflow-hidden ${theme === 'dark' ? 'bg-[#1E1B18]' : 'bg-white'}`}>
             <div className="p-6">
               <div className="flex items-center gap-3 mb-4">
@@ -521,40 +521,39 @@ const DiscountManagement = () => {
                 <div className={`mt-3 p-3 rounded-lg border ${theme === 'dark' ? 'bg-[#1E1B18] border-gray-700' : 'bg-white border-gray-200'}`}>
                   <p className="font-semibold text-[#AD7F65]">{discountToDelete.title}</p>
                   <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {discountToDelete.discountType === 'percentage'
-                      ? `${discountToDelete.discountValue}% off`
-                      : `₱${discountToDelete.discountValue} off`}
+                    {discountToDelete.discountType === 'percentage' ?
+                  `${discountToDelete.discountValue}% off` :
+                  `₱${discountToDelete.discountValue} off`}
                   </p>
                 </div>
               </div>
 
               <div className="flex gap-3 justify-end">
                 <button
-                  onClick={() => {
-                    setShowDeleteModal(false);
-                    setDiscountToDelete(null);
-                  }}
-                  className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${theme === 'dark'
-                    ? 'bg-[#2A2724] text-gray-300 hover:bg-[#3A3734]'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                >
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDiscountToDelete(null);
+                }}
+                className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${theme === 'dark' ?
+                'bg-[#2A2724] text-gray-300 hover:bg-[#3A3734]' :
+                'bg-gray-100 text-gray-700 hover:bg-gray-200'}`
+                }>
+                
                   Cancel
                 </button>
                 <button
-                  onClick={confirmDelete}
-                  className="px-6 py-2.5 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition-colors shadow-lg"
-                >
+                onClick={confirmDelete}
+                className="px-6 py-2.5 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition-colors shadow-lg">
+                
                   Delete Discount
                 </button>
               </div>
             </div>
           </div>
         </div>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 };
 
 export default DiscountManagement;
-

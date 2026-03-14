@@ -19,7 +19,7 @@ export const DataCacheProvider = ({ children }) => {
     stats: null
   });
 
-  // Cache duration in milliseconds (5 minutes)
+
   const CACHE_DURATION = 5 * 60 * 1000;
 
   const isCacheValid = useCallback((key) => {
@@ -36,22 +36,22 @@ export const DataCacheProvider = ({ children }) => {
   }, [cache, isCacheValid]);
 
   const setCachedData = useCallback((key, data) => {
-    setCache(prev => ({
+    setCache((prev) => ({
       ...prev,
       [key]: data
     }));
-    setCacheTimestamps(prev => ({
+    setCacheTimestamps((prev) => ({
       ...prev,
       [key]: Date.now()
     }));
   }, []);
 
   const invalidateCache = useCallback((key) => {
-    setCache(prev => ({
+    setCache((prev) => ({
       ...prev,
       [key]: null
     }));
-    setCacheTimestamps(prev => ({
+    setCacheTimestamps((prev) => ({
       ...prev,
       [key]: null
     }));
@@ -83,11 +83,11 @@ export const DataCacheProvider = ({ children }) => {
         invalidateCache,
         clearAllCache,
         isCacheValid
-      }}
-    >
+      }}>
+      
       {children}
-    </DataCacheContext.Provider>
-  );
+    </DataCacheContext.Provider>);
+
 };
 
 export const useDataCache = () => {
@@ -97,4 +97,3 @@ export const useDataCache = () => {
   }
   return context;
 };
-

@@ -65,12 +65,12 @@ const ReceiptModal = ({
 
     setPrintError(initialPrintError);
 
-    // Auto-print only when explicitly allowed. When this modal is
-    // opened from payment flows that already attempted to print,
-    // we skip the extra automatic print and let the user decide.
+
+
+
     if (disableAutoPrint) return;
 
-    // Start printing immediately with minimal delay for UI rendering
+
     const autoPrintTimer = setTimeout(() => {
       handlePrint();
     }, 100);
@@ -118,22 +118,22 @@ const ReceiptModal = ({
           background: 'white',
           padding: '10px',
           fontFamily: 'Arial, sans-serif'
-        }}
-      >
-        {/* Header */}
+        }}>
+        
+        {}
         <div style={{ textAlign: 'center', marginBottom: '10px' }}>
           <h2 style={{ margin: '5px 0', fontSize: '18px', fontWeight: 'bold', color: '#1a365d' }}>Create Your Style</h2>
           <p style={{ fontSize: '10px', margin: '2px 0', color: '#4a5568' }}>Pasonanca, Zamboanga City</p>
         </div>
         <div style={{ borderBottom: '1px dashed #000', marginBottom: '10px' }}></div>
 
-        {/* Receipt Number */}
+        {}
         <div style={{ textAlign: 'center', marginBottom: '10px' }}>
           <p style={{ fontSize: '10px', margin: '2px 0', color: '#718096', textTransform: 'uppercase', letterSpacing: '1px' }}>Receipt</p>
           <p style={{ fontSize: '18px', fontWeight: 'bold', margin: '2px 0', color: '#2d3748' }}>#{receipt.receiptNo}</p>
         </div>
 
-        {/* Date, Cashier, Payment Info */}
+        {}
         <div style={{ fontSize: '11px', marginBottom: '10px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0' }}>
             <span style={{ color: '#4a5568' }}>Date:</span>
@@ -150,18 +150,18 @@ const ReceiptModal = ({
         </div>
         <div style={{ borderBottom: '1px dashed #000', marginBottom: '10px' }}></div>
 
-        {/* Items */}
+        {}
         <div style={{ marginBottom: '10px' }}>
-          {receipt.items && receipt.items.map((item, index) => (
-            <div key={index} style={{ marginBottom: '8px' }}>
+          {receipt.items && receipt.items.map((item, index) =>
+          <div key={index} style={{ marginBottom: '8px' }}>
               <p style={{ fontSize: '11px', fontWeight: '600', margin: '0', color: '#1a202c' }}>{item.name}</p>
               <p style={{ fontSize: '10px', margin: '2px 0', color: '#718096' }}>{item.qty} x PHP {item.price.toFixed(2)}</p>
             </div>
-          ))}
+          )}
         </div>
         <div style={{ borderBottom: '1px dashed #000', marginBottom: '10px' }}></div>
 
-        {/* Summary */}
+        {}
         <div style={{ fontSize: '11px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0' }}>
             <span style={{ color: '#4a5568' }}>Subtotal:</span>
@@ -186,32 +186,32 @@ const ReceiptModal = ({
         </div>
         <div style={{ borderBottom: '1px dashed #000', marginBottom: '10px', marginTop: '10px' }}></div>
 
-        {/* Footer */}
+        {}
         <div style={{ textAlign: 'center', paddingTop: '5px' }}>
           <p style={{ fontSize: '11px', color: '#4a5568', margin: '2px 0' }}>Thank you for your purchase!</p>
           <p style={{ fontSize: '10px', color: '#a0aec0', margin: '2px 0' }}>This is not an official receipt</p>
         </div>
       </div>
 
-      {/* Regular modal view */}
+      {}
       <div
-        className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 font-poppins p-4 no-print"
-      >
+        className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 font-poppins p-4 no-print">
+        
         <div className={`rounded-2xl w-full max-w-md relative shadow-2xl max-h-[90vh] overflow-y-auto ${theme === 'dark' ? 'bg-[#1E1B18]' : 'bg-white'}`}>
           <div className="p-6">
-            {/* Header */}
+            {}
             <div className="text-center mb-4">
               <h2 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-[#1a365d]'}`}>Create Your Style</h2>
               <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Pasonanca, Zamboanga City</p>
             </div>
 
-            {/* Receipt Number */}
+            {}
             <div className={`border-t border-b border-dashed py-4 mb-4 text-center ${theme === 'dark' ? 'border-gray-600' : 'border-gray-300'}`}>
               <p className={`text-xs uppercase tracking-wider mb-1 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>Receipt</p>
               <p className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-[#2d3748]'}`}>#{receipt.receiptNo}</p>
             </div>
 
-            {/* Date, Cashier, Payment Info */}
+            {}
             <div className="mb-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>Date:</span>
@@ -227,21 +227,21 @@ const ReceiptModal = ({
               </div>
             </div>
 
-            {/* Items */}
+            {}
             <div className={`border-t pt-4 mb-4 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
-              {receipt.items && receipt.items.length > 0 ? (
-                receipt.items.map((item, index) => (
-                  <div key={index} className="mb-3">
+              {receipt.items && receipt.items.length > 0 ?
+              receipt.items.map((item, index) =>
+              <div key={index} className="mb-3">
                     <p className={`text-sm font-semibold ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{item.name}</p>
                     <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>{item.qty} x PHP {item.price.toFixed(2)}</p>
                   </div>
-                ))
-              ) : (
-                <p className="text-center text-gray-500 py-4">No items in this transaction</p>
-              )}
+              ) :
+
+              <p className="text-center text-gray-500 py-4">No items in this transaction</p>
+              }
             </div>
 
-            {/* Summary */}
+            {}
             <div className={`border-t pt-4 space-y-2 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
               <div className="flex justify-between text-sm">
                 <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>Subtotal:</span>
@@ -265,25 +265,25 @@ const ReceiptModal = ({
               </div>
             </div>
 
-            {/* Footer Message */}
+            {}
             <div className={`text-center py-6 mt-4 border-t border-dashed ${theme === 'dark' ? 'border-gray-600' : 'border-gray-300'}`}>
               <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Thank you for your purchase!</p>
               <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>This is not an official receipt</p>
             </div>
 
-            {/* Action Buttons */}
+            {}
             <div className="space-y-3">
               <button
                 onClick={handlePrint}
-                className="w-full py-3 px-6 rounded-lg font-semibold text-white bg-blue-500 hover:bg-blue-600 transition-all flex items-center justify-center gap-2"
-              >
+                className="w-full py-3 px-6 rounded-lg font-semibold text-white bg-blue-500 hover:bg-blue-600 transition-all flex items-center justify-center gap-2">
+                
                 <FaPrint />
                 {printError ? 'Print Again' : 'Print Receipt'}
               </button>
               <button
                 onClick={onNewTransaction}
-                className="w-full py-3 px-6 rounded-lg font-semibold text-white bg-green-500 hover:bg-green-600 transition-all flex items-center justify-center gap-2"
-              >
+                className="w-full py-3 px-6 rounded-lg font-semibold text-white bg-green-500 hover:bg-green-600 transition-all flex items-center justify-center gap-2">
+                
                 <MdRefresh />
                 New Transaction
               </button>
@@ -291,19 +291,19 @@ const ReceiptModal = ({
           </div>
         </div>
 
-        {/* Printing Animation Modal */}
+        {}
         <PrintingModal isOpen={isPrinting} />
 
-        {/* Print Completion Confirmation */}
+        {}
         <PrintCompleteModal
           isOpen={showPrintComplete}
           onConfirm={handlePrintSuccess}
           onRetry={handlePrintRetry}
-          error={printError}
-        />
+          error={printError} />
+        
       </div>
-    </>
-  );
+    </>);
+
 };
 
 export default ReceiptModal;

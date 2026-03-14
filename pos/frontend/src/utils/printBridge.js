@@ -23,7 +23,7 @@ const chunkText = (text) => {
   return chunks.length ? chunks : [''];
 };
 
-export const buildReceiptLines = receipt => {
+export const buildReceiptLines = (receipt) => {
   const lines = [];
   const storeName = receipt.storeName || 'Create Your Style';
   const location = receipt.location || 'Pasonanca, Zamboanga City';
@@ -31,7 +31,7 @@ export const buildReceiptLines = receipt => {
   const paymentMethod = receipt.paymentMethod || 'Cash';
   const cashier = receipt.cashier || receipt.cashierName || receipt.performedByName || 'Staff';
 
-  // Format date/time
+
   const receiptDate = receipt.date || new Date().toLocaleDateString('en-US', {
     month: 'numeric',
     day: 'numeric',
@@ -43,25 +43,25 @@ export const buildReceiptLines = receipt => {
     hour12: true
   });
 
-  // Header (centered)
+
   lines.push(centerText(storeName));
   lines.push(centerText(location));
   lines.push('--------------------------------');
 
-  // Receipt number section
+
   lines.push(centerText('RECEIPT'));
   lines.push(centerText(`#${receiptNo}`));
   lines.push('');
 
-  // Date, Cashier, Payment info
+
   lines.push(padLine('Date:', `${receiptDate}, ${receiptTime}`));
   lines.push(padLine('Cashier:', cashier));
   lines.push(padLine('Payment:', paymentMethod));
   lines.push('--------------------------------');
 
-  // Items
-  (receipt.items || []).forEach(item => {
-    // Remove colors/variants in parentheses from item name
+
+  (receipt.items || []).forEach((item) => {
+
     let itemName = (item.name || item.itemName || 'Item').toString();
     itemName = itemName.replace(/\s*\([^)]*\)\s*$/, '').trim();
 
@@ -71,7 +71,7 @@ export const buildReceiptLines = receipt => {
     const color = item.selectedVariation || item.variant || '';
 
     lines.push(itemName);
-    // Add size/color info if available
+
     if (size || color) {
       const parts = [];
       if (size) parts.push(size);
@@ -82,7 +82,7 @@ export const buildReceiptLines = receipt => {
   });
   lines.push('--------------------------------');
 
-  // Summary
+
   lines.push(padLine('Subtotal:', `PHP ${Number(receipt.subtotal || 0).toFixed(2)}`));
   lines.push(padLine('Discount:', `PHP ${Number(receipt.discount || 0).toFixed(2)}`));
   lines.push('');
@@ -103,9 +103,9 @@ export const buildReceiptLines = receipt => {
   return lines;
 };
 
-/**
- * Build HTML content for printing a receipt using window.print()
- */
+
+
+
 const buildReceiptHTML = (receipt) => {
   const storeName = receipt.storeName || 'Create Your Style';
   const location = receipt.location || 'Pasonanca, Zamboanga City';
@@ -118,7 +118,7 @@ const buildReceiptHTML = (receipt) => {
   const change = receipt.change !== undefined ? Number(receipt.change) : null;
   const cashier = receipt.cashier || receipt.cashierName || receipt.performedByName || 'Staff';
 
-  // Format date
+
   const receiptDate = receipt.date || new Date().toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -130,8 +130,8 @@ const buildReceiptHTML = (receipt) => {
     hour12: true
   });
 
-  const itemsHTML = (receipt.items || []).map(item => {
-    // Remove colors/variants in parentheses from item name
+  const itemsHTML = (receipt.items || []).map((item) => {
+
     let itemName = (item.name || item.itemName || 'Item').toString();
     itemName = itemName.replace(/\s*\([^)]*\)\s*$/, '').trim();
 
@@ -140,7 +140,7 @@ const buildReceiptHTML = (receipt) => {
     const size = item.size || item.selectedSize || '';
     const color = item.selectedVariation || item.variant || '';
 
-    // Build size/color info line
+
     let sizeColorInfo = '';
     if (size || color) {
       const parts = [];
@@ -158,7 +158,7 @@ const buildReceiptHTML = (receipt) => {
     `;
   }).join('');
 
-  // Dashed line separator for print
+
   const dashedLine = '<div class="dashed-line">--------------------------------</div>';
 
   return `
@@ -311,59 +311,59 @@ const buildReceiptHTML = (receipt) => {
   `;
 };
 
-/**
- * Print receipt by sending to the local print server at localhost:9100
- * Falls back to window.print() if the print server is not available
- */
+
+
+
+
 export async function sendReceiptToPrinter(receipt) {
   if (!receipt) throw new Error('No receipt payload provided');
 
-  // Send the receipt data in your original format
+
   const printData = {
-    // Store info
+
     storeName: receipt.storeName || 'Create Your Style',
     contactNumber: receipt.contactNumber || '+631112224444',
     location: receipt.location || 'Pasonanca, Zamboanga City',
 
-    // Receipt info
+
     receiptNo: receipt.receiptNo || '000000',
     referenceNo: receipt.referenceNo || receipt.reference || '-',
     date: receipt.date || new Date().toLocaleDateString(),
     time: receipt.time || new Date().toLocaleTimeString(),
 
-    // Cashier
+
     cashier: receipt.cashier || receipt.performedByName || 'N/A',
 
-    // Items
-    items: (receipt.items || []).map(item => ({
+
+    items: (receipt.items || []).map((item) => ({
       name: item.name || item.itemName || 'Item',
       qty: item.qty || item.quantity || 1,
       price: item.price || item.itemPrice || 0,
       total: (item.price || item.itemPrice || 0) * (item.qty || item.quantity || 1),
       size: item.size || item.selectedSize || '',
-      variant: item.variant || '',
+      variant: item.variant || ''
     })),
 
-    // Payment
+
     paymentMethod: receipt.paymentMethod || 'CASH',
     subtotal: receipt.subtotal || 0,
     discount: receipt.discount || 0,
     discounts: receipt.discounts || [],
     total: receipt.total || 0,
     cash: receipt.cash,
-    change: receipt.change,
+    change: receipt.change
   };
 
   try {
-    // Try to send to the local print server first, with a short timeout
-    // so we don't wait 30 seconds before falling back to window.print
+
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 500);
 
     const response = await fetch('http://localhost:9100/print', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(printData),
       signal: controller.signal
@@ -381,12 +381,12 @@ export async function sendReceiptToPrinter(receipt) {
   } catch (error) {
     console.warn('Print server not available, falling back to window.print()', error);
 
-    // Fallback: use a hidden iframe for fast printing (no popup overhead)
+
     return new Promise((resolve, reject) => {
       try {
         const receiptHTML = buildReceiptHTML(receipt);
 
-        // Reuse a single hidden iframe for all prints
+
         let iframe = document.getElementById('receipt-print-iframe');
         if (!iframe) {
           iframe = document.createElement('iframe');
@@ -400,7 +400,7 @@ export async function sendReceiptToPrinter(receipt) {
         doc.write(receiptHTML);
         doc.close();
 
-        // Print as soon as the iframe content has loaded
+
         iframe.onload = () => {
           try {
             iframe.contentWindow.focus();
@@ -416,6 +416,3 @@ export async function sendReceiptToPrinter(receipt) {
     });
   }
 }
-
-
-

@@ -9,16 +9,16 @@ const CheckoutConfirmationModal = ({ isOpen, onClose, onConfirm }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 font-poppins p-4"
-    >
+      className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 font-poppins p-4">
+      
       <div
         className={`rounded-2xl w-full max-w-md relative shadow-2xl ${theme === 'dark' ? 'bg-[#1E1B18]' : 'bg-white'}`}
-        style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}
-      >
+        style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+        
         <button
           onClick={onClose}
-          className={`absolute top-4 right-4 transition-colors z-10 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}
-        >
+          className={`absolute top-4 right-4 transition-colors z-10 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}>
+          
           <FaTimes className="w-5 h-5" />
         </button>
 
@@ -29,14 +29,14 @@ const CheckoutConfirmationModal = ({ isOpen, onClose, onConfirm }) => {
               style={{
                 backgroundColor: '#E8D5C4',
                 boxShadow: '0 4px 12px rgba(118, 70, 43, 0.2)'
-              }}
-            >
+              }}>
+              
               <span
                 className="text-4xl font-bold text-[#76462B]"
                 style={{
                   animation: 'questionPulse 0.6s ease-out'
-                }}
-              >
+                }}>
+                
                 ?
               </span>
               <style>{`
@@ -72,25 +72,24 @@ const CheckoutConfirmationModal = ({ isOpen, onClose, onConfirm }) => {
               className="flex-1 py-3 px-6 rounded-lg font-bold text-white transition-all shadow-md hover:shadow-lg"
               style={{
                 background: 'linear-gradient(135deg, #D4A59A 0%, #AD7F65 50%, #76462B 100%)'
-              }}
-            >
+              }}>
+              
               Confirm
             </button>
             <button
               onClick={onClose}
-              className={`flex-1 py-3 px-6 rounded-lg font-bold transition-all shadow-sm ${theme === 'dark'
-                  ? 'bg-[#2A2724] text-gray-300 hover:bg-[#322f2c]'
-                  : 'text-gray-700 bg-gray-200 hover:bg-gray-300'
-                }`}
-            >
+              className={`flex-1 py-3 px-6 rounded-lg font-bold transition-all shadow-sm ${theme === 'dark' ?
+              'bg-[#2A2724] text-gray-300 hover:bg-[#322f2c]' :
+              'text-gray-700 bg-gray-200 hover:bg-gray-300'}`
+              }>
+              
               Cancel
             </button>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default CheckoutConfirmationModal;
-

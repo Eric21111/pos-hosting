@@ -22,8 +22,8 @@ const ViewCategoryProductsModal = ({ isOpen, onClose, categoryName }) => {
       const data = await response.json();
 
       if (data.success) {
-        const categoryProducts = data.data.filter(product =>
-          product.category === categoryName
+        const categoryProducts = data.data.filter((product) =>
+        product.category === categoryName
         );
         setProducts(categoryProducts);
       }
@@ -48,28 +48,28 @@ const ViewCategoryProductsModal = ({ isOpen, onClose, categoryName }) => {
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
+            className="text-gray-400 hover:text-gray-600 transition-colors">
+            
             <FaTimes className="w-5 h-5" />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 py-6">
-          {loading ? (
-            <div className="flex justify-center items-center py-12">
+          {loading ?
+          <div className="flex justify-center items-center py-12">
               <div className="text-gray-500">Loading products...</div>
-            </div>
-          ) : products.length === 0 ? (
-            <div className="flex justify-center items-center py-12">
+            </div> :
+          products.length === 0 ?
+          <div className="flex justify-center items-center py-12">
               <div className="text-gray-500">No products found in this category.</div>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
+            </div> :
+
+          <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
                   <tr
-                    className={`text-sm font-bold uppercase tracking-wider ${theme === 'dark' ? 'bg-[#3A3734] text-gray-200' : 'bg-[#EAE0D5] text-[#4A403A]'}`}
-                  >
+                  className={`text-sm font-bold uppercase tracking-wider ${theme === 'dark' ? 'bg-[#3A3734] text-gray-200' : 'bg-[#EAE0D5] text-[#4A403A]'}`}>
+                  
                     <th className="px-6 py-4 text-center font-bold">Image</th>
                     <th className="px-6 py-4 text-center font-bold">SKU</th>
                     <th className="px-6 py-4 text-left font-bold">Item Name</th>
@@ -80,21 +80,21 @@ const ViewCategoryProductsModal = ({ isOpen, onClose, categoryName }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {products.map((product) => (
-                    <tr key={product._id} className={`border-b transition-colors ${theme === 'dark' ? 'border-gray-800 hover:bg-[#2A2724]' : 'border-gray-100 hover:bg-gray-50'}`}>
+                  {products.map((product) =>
+                <tr key={product._id} className={`border-b transition-colors ${theme === 'dark' ? 'border-gray-800 hover:bg-[#2A2724]' : 'border-gray-100 hover:bg-gray-50'}`}>
                       <td className="px-6 py-4 text-center">
                         <div className="flex justify-center">
-                          {product.itemImage ? (
-                            <img
-                              src={product.itemImage}
-                              alt={product.itemName}
-                              className="w-12 h-12 object-cover rounded-lg shadow-sm"
-                            />
-                          ) : (
-                            <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-xs font-medium">
+                          {product.itemImage ?
+                      <img
+                        src={product.itemImage}
+                        alt={product.itemName}
+                        className="w-12 h-12 object-cover rounded-lg shadow-sm" /> :
+
+
+                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-xs font-medium">
                               No img
                             </div>
-                          )}
+                      }
                         </div>
                       </td>
                       <td className={`px-6 py-4 text-center font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{product.sku}</td>
@@ -105,27 +105,27 @@ const ViewCategoryProductsModal = ({ isOpen, onClose, categoryName }) => {
                       <td className="px-6 py-4 text-center">
                         <div className="flex justify-center">
                           <span
-                            className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold shadow-sm ${product.currentStock === 0
-                              ? 'bg-[#FCA5A5] text-red-900'
-                              : product.currentStock <= (product.reorderNumber || 10)
-                                ? 'bg-[#FED7AA] text-orange-900'
-                                : 'bg-[#86EFAC] text-green-900'
-                              }`}
-                          >
+                        className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold shadow-sm ${product.currentStock === 0 ?
+                        'bg-[#FCA5A5] text-red-900' :
+                        product.currentStock <= (product.reorderNumber || 10) ?
+                        'bg-[#FED7AA] text-orange-900' :
+                        'bg-[#86EFAC] text-green-900'}`
+                        }>
+                        
                             {product.currentStock || 0}
                           </span>
                         </div>
                       </td>
                     </tr>
-                  ))}
+                )}
                 </tbody>
               </table>
             </div>
-          )}
+          }
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default ViewCategoryProductsModal;

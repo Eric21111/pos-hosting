@@ -9,18 +9,18 @@ const PrintCompleteModal = ({ isOpen, onConfirm, onRetry, error }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 font-poppins p-4"
-    >
+      className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 font-poppins p-4">
+      
       <div className={`rounded-2xl p-6 shadow-2xl max-w-sm w-full ${theme === 'dark' ? 'bg-[#1E1B18]' : 'bg-white'}`}>
         <div className="flex flex-col items-center">
-          {error ? (
-            <>
+          {error ?
+          <>
               <FaExclamationTriangle
-                className="text-6xl text-red-500 mb-4"
-                style={{
-                  animation: 'pulseWarning 1s ease-in-out infinite'
-                }}
-              />
+              className="text-6xl text-red-500 mb-4"
+              style={{
+                animation: 'pulseWarning 1s ease-in-out infinite'
+              }} />
+            
               <h3 className={`text-xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>
                 Print Failed
               </h3>
@@ -37,9 +37,9 @@ const PrintCompleteModal = ({ isOpen, onConfirm, onRetry, error }) => {
                   100% { transform: scale(1); opacity: 1; }
                 }
               `}</style>
-            </>
-          ) : (
-            <>
+            </> :
+
+          <>
               <FaQuestionCircle className="text-6xl text-amber-500 mb-4" />
               <h3 className={`text-xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>
                 Print Complete?
@@ -49,25 +49,25 @@ const PrintCompleteModal = ({ isOpen, onConfirm, onRetry, error }) => {
               </p>
               <div className="flex gap-3 w-full">
                 <button
-                  onClick={onConfirm}
-                  className="flex-1 py-2 px-4 rounded-lg font-semibold text-white bg-green-500 hover:bg-green-600 transition-all flex items-center justify-center gap-2"
-                >
+                onClick={onConfirm}
+                className="flex-1 py-2 px-4 rounded-lg font-semibold text-white bg-green-500 hover:bg-green-600 transition-all flex items-center justify-center gap-2">
+                
                   <FaCheckCircle />
                   Yes
                 </button>
                 <button
-                  onClick={onRetry}
-                  className="flex-1 py-2 px-4 rounded-lg font-semibold text-white bg-blue-500 hover:bg-blue-600 transition-all"
-                >
+                onClick={onRetry}
+                className="flex-1 py-2 px-4 rounded-lg font-semibold text-white bg-blue-500 hover:bg-blue-600 transition-all">
+                
                   Print Again
                 </button>
               </div>
             </>
-          )}
+          }
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default PrintCompleteModal;

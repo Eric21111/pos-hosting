@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import DateTimePicker from "@react-native-community/datetimepicker";
+
 import { Picker } from "@react-native-picker/picker";
 import * as ExpoFileSystem from "expo-file-system/legacy";
 import * as ImageManipulator from "expo-image-manipulator";
@@ -148,20 +148,6 @@ function AddItem({ onBack, item, isEditing = false }) {
   const [differentPricesPerSize, setDifferentPricesPerSize] = useState(false);
   const [sizePrices, setSizePrices] = useState({});
   const [sizeCostPrices, setSizeCostPrices] = useState({});
-  const [reorderNumber, setReorderNumber] = useState(
-    item?.reorderNumber !== undefined ? item.reorderNumber.toString() : "",
-  );
-  const [supplierName, setSupplierName] = useState(item?.supplierName || "");
-  const [supplierContact, setSupplierContact] = useState(item?.supplierContact || "");
-  const [waistSize, setWaistSize] = useState(item?.waistSize || "");
-  const [accessoryType, setAccessoryType] = useState(item?.accessoryType || "");
-  const [makeupBrand, setMakeupBrand] = useState(item?.makeupBrand || "");
-  const [makeupShade, setMakeupShade] = useState(item?.makeupShade || "");
-  const [shoeSize, setShoeSize] = useState(item?.shoeSize || "");
-  const [essentialType, setEssentialType] = useState(item?.essentialType || "");
-  const [customEssentialType, setCustomEssentialType] = useState(
-    item?.customEssentialType || "",
-  );
   const [variant, setVariant] = useState(item?.variant || "");
   const [customVariant, setCustomVariant] = useState(""); // For custom color input
   const [selectedVariants, setSelectedVariants] = useState([]); // Multi-select variants (like web)
@@ -205,14 +191,6 @@ function AddItem({ onBack, item, isEditing = false }) {
   const [brandsList, setBrandsList] = useState([]);
   // Editable size/variant prices for edit mode (similar to web)
   const [editableSizePrices, setEditableSizePrices] = useState({});
-  const [expirationDate, setExpirationDate] = useState(
-    item?.expirationDate || "",
-  );
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [essentialExpirationDate, setEssentialExpirationDate] = useState(
-    item?.essentialExpirationDate || "",
-  );
-  const [showEssentialDatePicker, setShowEssentialDatePicker] = useState(false);
   const [foodType, setFoodType] = useState(item?.foodType || "");
   const [customFoodType, setCustomFoodType] = useState(
     item?.customFoodType || "",
@@ -290,21 +268,9 @@ function AddItem({ onBack, item, isEditing = false }) {
       !!itemSize,
       selectedSizes.length > 0,
       Object.keys(sizeQuantities).length > 0,
-      !!reorderNumber,
-      !!supplierName,
-      !!supplierContact,
-      !!waistSize,
-      !!accessoryType,
-      !!makeupBrand,
-      !!makeupShade,
-      !!shoeSize,
-      !!essentialType,
-      !!customEssentialType,
       !!itemPrice,
       !!itemStock,
       brand !== "Default",
-      !!expirationDate,
-      !!essentialExpirationDate,
       !!foodType,
       !!customFoodType,
       !!variant,
@@ -360,23 +326,11 @@ function AddItem({ onBack, item, isEditing = false }) {
     setItemSize("");
     setSelectedSizes([]);
     setSizeQuantities({});
-    setReorderNumber("");
-    setSupplierName("");
-    setSupplierContact("");
-    setWaistSize("");
-    setAccessoryType("");
-    setMakeupBrand("");
-    setMakeupShade("");
-    setShoeSize("");
-    setEssentialType("");
-    setCustomEssentialType("");
     setCostPrice("");
     setSellingPrice("");
     setItemPrice("");
     setItemStock("");
     setBrand("Default");
-    setExpirationDate("");
-    setEssentialExpirationDate("");
     setFoodType("");
     setCustomFoodType("");
     setVariant("");
@@ -415,18 +369,6 @@ function AddItem({ onBack, item, isEditing = false }) {
       setItemName(item.itemName || item.name || "");
       setItemCategory(item.category || "Tops");
       setItemSize(item.size || "");
-      setReorderNumber(
-        item.reorderNumber !== undefined ? item.reorderNumber.toString() : "",
-      );
-      setSupplierName(item.supplierName || "");
-      setSupplierContact(item.supplierContact || "");
-      setWaistSize(item.waistSize || "");
-      setAccessoryType(item.accessoryType || "");
-      setMakeupBrand(item.makeupBrand || "");
-      setMakeupShade(item.makeupShade || "");
-      setShoeSize(item.shoeSize || "");
-      setEssentialType(item.essentialType || "");
-      setCustomEssentialType(item.customEssentialType || "");
       setCostPrice(
         item.costPrice !== undefined ? item.costPrice.toString() : "",
       );
@@ -452,8 +394,6 @@ function AddItem({ onBack, item, isEditing = false }) {
             : "",
       );
       setBrand(item.brandName || item.brand || "Default");
-      setExpirationDate(item.expirationDate || "");
-      setEssentialExpirationDate(item.essentialExpirationDate || "");
       setFoodType(item.foodType || "");
       setCustomFoodType(item.customFoodType || "");
       setVariant(item.variant || "");
@@ -734,7 +674,7 @@ function AddItem({ onBack, item, isEditing = false }) {
       const normalizedCategory = itemCategory || "Tops";
 
       // Use variant from new field if available, or fallback
-      const skuVariant = variant || customEssentialType || itemSize || "";
+      const skuVariant = variant || itemSize || "";
       const skuValue =
         item?.sku || generateMobileSKU(normalizedCategory, skuVariant);
 
@@ -835,12 +775,9 @@ function AddItem({ onBack, item, isEditing = false }) {
           ? totalSizeStock
           : parseInt(itemStock) || 0,
         costPrice: parseFloat(costPrice) || 0,
-        reorderNumber: parseInt(reorderNumber) || 0,
-        supplierName: supplierName.trim(),
-        supplierContact: supplierContact.trim(),
         variant: selectedVariants.length > 0
           ? selectedVariants.join(", ")
-          : (variant === "Custom" ? customVariant : variant || customEssentialType || itemSize || ""),
+          : (variant === "Custom" ? customVariant : variant || itemSize || ""),
         size: itemSize,
         sizes: hasSizesSelected ? sizesObject : {},
         // Include variant data for backend processing
@@ -855,17 +792,8 @@ function AddItem({ onBack, item, isEditing = false }) {
         sizeCostPrices: sizeCostPrices,
         // Include editable size prices for edit mode
         editableSizePrices: isEditing ? editableSizePrices : undefined,
-        waistSize,
-        accessoryType,
-        makeupBrand,
-        makeupShade,
-        shoeSize,
-        essentialType,
-        customEssentialType,
         foodSubtype: foodType,
         customFoodType,
-        expirationDate: expirationDate || null,
-        essentialExpirationDate: essentialExpirationDate || null,
         displayInTerminal: isForPOS,
         itemImage: imageBase64,
         dateAdded: item?.dateAdded || new Date().toISOString(),
@@ -2063,248 +1991,40 @@ function AddItem({ onBack, item, isEditing = false }) {
             );
           })()}
 
-        {/* Makeup Fields - For makeup */}
-        {itemCategory === "Makeup" && (
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Variant *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g., Nude, Ruby, etc."
-              value={makeupShade}
-              onChangeText={setMakeupShade}
-            />
-            <Text style={[styles.label, { marginTop: 10 }]}>
-              Expiration Date *
-            </Text>
-            <TouchableOpacity
-              style={styles.input}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text style={{ color: expirationDate ? "#000" : "#6b7280" }}>
-                {expirationDate
-                  ? new Date(expirationDate).toLocaleDateString()
-                  : "Select expiration date"}
-              </Text>
-            </TouchableOpacity>
-            {showDatePicker && (
-              <DateTimePicker
-                value={expirationDate ? new Date(expirationDate) : new Date()}
-                mode="date"
-                display="default"
-                minimumDate={new Date()}
-                onChange={(event, selectedDate) => {
-                  setShowDatePicker(false);
-                  if (selectedDate) {
-                    setExpirationDate(selectedDate.toISOString().split("T")[0]);
-                  }
-                }}
-              />
-            )}
-          </View>
-        )}
-
-        {/* Food expiration date */}
-        {itemCategory === "Foods" && (
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Expiration Date *</Text>
-            <TouchableOpacity
-              style={styles.input}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text style={{ color: expirationDate ? "#000" : "#6b7280" }}>
-                {expirationDate
-                  ? new Date(expirationDate).toLocaleDateString()
-                  : "Select expiration date"}
-              </Text>
-            </TouchableOpacity>
-            {showDatePicker && (
-              <DateTimePicker
-                value={expirationDate ? new Date(expirationDate) : new Date()}
-                mode="date"
-                display="default"
-                minimumDate={new Date()}
-                onChange={(event, selectedDate) => {
-                  setShowDatePicker(false);
-                  if (selectedDate) {
-                    setExpirationDate(selectedDate.toISOString().split("T")[0]);
-                  }
-                }}
-              />
-            )}
-            {expirationDate && (
-              <Text style={styles.helperText}>
-                {new Date(expirationDate) > new Date()
-                  ? `Expires in ${Math.ceil((new Date(expirationDate) - new Date()) / (1000 * 60 * 60 * 24))} days`
-                  : "Expired"}
-              </Text>
-            )}
-          </View>
-        )}
-
-        {/* Essential Type - For essentials */}
-        {itemCategory === "Essentials" && (
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Essential Type *</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={essentialType}
-                onValueChange={(itemValue) => setEssentialType(itemValue)}
-                style={styles.picker}
-                dropdownIconColor="#6b7280"
-                mode="dropdown"
-              >
-                <Picker.Item label="Select essential type" value="" />
-                <Picker.Item label="Acne Cleaner" value="Acne Cleaner" />
-                <Picker.Item label="Face Wash" value="Face Wash" />
-                <Picker.Item label="Moisturizer" value="Moisturizer" />
-                <Picker.Item label="Sunscreen" value="Sunscreen" />
-                <Picker.Item label="Toner" value="Toner" />
-                <Picker.Item label="Serum" value="Serum" />
-                <Picker.Item label="Face Mask" value="Face Mask" />
-                <Picker.Item label="Body Lotion" value="Body Lotion" />
-                <Picker.Item label="Food" value="Food" />
-                <Picker.Item label="Other" value="Other" />
-              </Picker>
-            </View>
-            {essentialType === "Other" && (
-              <View style={[styles.inputContainer, { marginTop: 10 }]}>
-                <Text style={styles.label}>Please specify *</Text>
+        {/* Global Prices - Hide when per-size or per-variant pricing is enabled */}
+        {!differentPricesPerSize && !Object.values(differentPricesPerVariant || {}).some(Boolean) && (
+          <>
+            {/* Cost Price */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Cost Price (₱)</Text>
+              <View style={styles.priceInputContainer}>
+                <Text style={styles.currencySymbol}>₱</Text>
                 <TextInput
-                  style={styles.input}
-                  placeholder="Enter essential type"
-                  value={customEssentialType}
-                  onChangeText={setCustomEssentialType}
+                  style={[styles.input, { flex: 1 }]}
+                  placeholder="0.00"
+                  keyboardType="numeric"
+                  value={costPrice}
+                  onChangeText={setCostPrice}
                 />
               </View>
-            )}
-            <View style={[styles.inputContainer, { marginTop: 10 }]}>
-              <Text style={styles.label}>Expiration Date (optional)</Text>
-              <TouchableOpacity
-                style={styles.input}
-                onPress={() => setShowEssentialDatePicker(true)}
-              >
-                <Text
-                  style={{
-                    color: essentialExpirationDate ? "#000" : "#6b7280",
-                  }}
-                >
-                  {essentialExpirationDate
-                    ? new Date(essentialExpirationDate).toLocaleDateString()
-                    : "Select expiration date (optional)"}
-                </Text>
-              </TouchableOpacity>
-              {showEssentialDatePicker && (
-                <DateTimePicker
-                  value={
-                    essentialExpirationDate
-                      ? new Date(essentialExpirationDate)
-                      : new Date()
-                  }
-                  mode="date"
-                  display="default"
-                  minimumDate={new Date()}
-                  onChange={(event, selectedDate) => {
-                    setShowEssentialDatePicker(false);
-                    if (selectedDate) {
-                      setEssentialExpirationDate(
-                        selectedDate.toISOString().split("T")[0],
-                      );
-                    }
-                  }}
-                />
-              )}
             </View>
-          </View>
-        )}
 
-        {/* Accessory Type - For accessories */}
-        {itemCategory === "Accessories" && (
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Accessory Type *</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={accessoryType}
-                onValueChange={(itemValue) => setAccessoryType(itemValue)}
-                style={styles.picker}
-                dropdownIconColor="#6b7280"
-                mode="dropdown"
-              >
-                <Picker.Item label="Select accessory type" value="" />
-                <Picker.Item
-                  label="Keychains / Anik-anik"
-                  value="Keychains / Anik-anik"
+            {/* Selling Price */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Selling Price (₱) *</Text>
+              <View style={styles.priceInputContainer}>
+                <Text style={styles.currencySymbol}>₱</Text>
+                <TextInput
+                  style={[styles.input, { flex: 1 }]}
+                  placeholder="0.00"
+                  keyboardType="numeric"
+                  value={sellingPrice}
+                  onChangeText={setSellingPrice}
                 />
-                <Picker.Item label="Rings" value="Rings" />
-                <Picker.Item label="Necklace" value="Necklace" />
-                <Picker.Item label="Bracelet" value="Bracelet" />
-              </Picker>
+              </View>
             </View>
-          </View>
+          </>
         )}
-
-        {/* Cost Price */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Cost Price (₱)</Text>
-          <View style={styles.priceInputContainer}>
-            <Text style={styles.currencySymbol}>₱</Text>
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              placeholder="0.00"
-              keyboardType="numeric"
-              value={costPrice}
-              onChangeText={setCostPrice}
-            />
-          </View>
-        </View>
-
-        {/* Selling Price */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Selling Price (₱) *</Text>
-          <View style={styles.priceInputContainer}>
-            <Text style={styles.currencySymbol}>₱</Text>
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              placeholder="0.00"
-              keyboardType="numeric"
-              value={sellingPrice}
-              onChangeText={setSellingPrice}
-            />
-          </View>
-        </View>
-
-        {/* Reorder Number */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Reorder Point (Optional)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g., 10"
-            keyboardType="numeric"
-            value={reorderNumber}
-            onChangeText={setReorderNumber}
-          />
-        </View>
-
-        {/* Supplier Name */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Supplier Name (Optional)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Supplier name"
-            value={supplierName}
-            onChangeText={setSupplierName}
-          />
-        </View>
-
-        {/* Supplier Contact */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Supplier Contact (Optional)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Supplier contact"
-            value={supplierContact}
-            onChangeText={setSupplierContact}
-          />
-        </View>
 
         {/* Item Stock - Only show when no sizes are selected */}
         {selectedSizes.length === 0 && (

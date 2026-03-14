@@ -48,11 +48,11 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className={`transition-colors ${currentPage === 1
-            ? (theme === 'dark' ? 'text-gray-600 cursor-not-allowed' : 'text-gray-300 cursor-not-allowed')
-            : (theme === 'dark' ? 'text-gray-400 hover:text-white cursor-pointer' : 'text-gray-700 hover:text-gray-900 cursor-pointer')
-            }`}
-        >
+          className={`transition-colors ${currentPage === 1 ?
+          theme === 'dark' ? 'text-gray-600 cursor-not-allowed' : 'text-gray-300 cursor-not-allowed' :
+          theme === 'dark' ? 'text-gray-400 hover:text-white cursor-pointer' : 'text-gray-700 hover:text-gray-900 cursor-pointer'}`
+          }>
+          
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
@@ -65,22 +65,22 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
               return (
                 <span key={`ellipsis-${index}`} className={theme === 'dark' ? 'text-gray-400' : 'text-gray-900'}>
                   ...
-                </span>
-              );
+                </span>);
+
             }
 
             return (
               <button
                 key={page}
                 onClick={() => onPageChange(page)}
-                className={`${currentPage === page
-                  ? (theme === 'dark' ? 'bg-[#AD7F65] text-white shadow-md' : 'bg-[#DDC9BC] text-gray-900 rounded shadow-sm')
-                  : (theme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-900 hover:text-gray-700')
-                  } w-8 h-8 flex items-center justify-center font-medium rounded transition-colors`}
-              >
+                className={`${currentPage === page ?
+                theme === 'dark' ? 'bg-[#AD7F65] text-white shadow-md' : 'bg-[#DDC9BC] text-gray-900 rounded shadow-sm' :
+                theme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-900 hover:text-gray-700'} w-8 h-8 flex items-center justify-center font-medium rounded transition-colors`
+                }>
+                
                 {page}
-              </button>
-            );
+              </button>);
+
           })}
         </div>
 
@@ -88,18 +88,18 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className={`transition-colors ${currentPage === totalPages
-            ? (theme === 'dark' ? 'text-gray-600 cursor-not-allowed' : 'text-gray-300 cursor-not-allowed')
-            : (theme === 'dark' ? 'text-gray-400 hover:text-white cursor-pointer' : 'text-gray-700 hover:text-gray-900 cursor-pointer')
-            }`}
-        >
+          className={`transition-colors ${currentPage === totalPages ?
+          theme === 'dark' ? 'text-gray-600 cursor-not-allowed' : 'text-gray-300 cursor-not-allowed' :
+          theme === 'dark' ? 'text-gray-400 hover:text-white cursor-pointer' : 'text-gray-700 hover:text-gray-900 cursor-pointer'}`
+          }>
+          
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default Pagination;

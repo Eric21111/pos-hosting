@@ -3,34 +3,34 @@ import { FaTimes, FaArchive } from 'react-icons/fa';
 import { useTheme } from '../../context/ThemeContext';
 
 const ArchiveConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }) => {
-    const { theme } = useTheme();
+  const { theme } = useTheme();
 
-    if (!isOpen) return null;
+  if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 flex items-center justify-center z-[10002] p-4 backdrop-blur-sm">
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-[10002] p-4 backdrop-blur-sm">
             <div
-                className={`rounded-2xl w-full max-w-md relative shadow-2xl ${theme === 'dark' ? 'bg-[#1E1B18]' : 'bg-white'}`}
-                style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}
-            >
+        className={`rounded-2xl w-full max-w-md relative shadow-2xl ${theme === 'dark' ? 'bg-[#1E1B18]' : 'bg-white'}`}
+        style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+        
                 <button
-                    onClick={onClose}
-                    className={`absolute top-4 right-4 transition-colors z-10 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}
-                >
+          onClick={onClose}
+          className={`absolute top-4 right-4 transition-colors z-10 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}>
+          
                     <FaTimes className="w-5 h-5" />
                 </button>
 
                 <div className="p-8">
                     <div className="flex justify-center mb-6">
                         <div
-                            className="w-20 h-20 rounded-full flex items-center justify-center relative"
-                            style={{
-                                backgroundColor: theme === 'dark' ? '#352F2A' : '#F3F4F6',
-                            }}
-                        >
+              className="w-20 h-20 rounded-full flex items-center justify-center relative"
+              style={{
+                backgroundColor: theme === 'dark' ? '#352F2A' : '#F3F4F6'
+              }}>
+              
                             <FaArchive
-                                className={`text-3xl ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}
-                            />
+                className={`text-3xl ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`} />
+              
                         </div>
                     </div>
 
@@ -46,28 +46,28 @@ const ArchiveConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }) => {
 
                     <div className="flex gap-4">
                         <button
-                            onClick={onConfirm}
-                            className="flex-1 py-3 px-6 rounded-lg font-bold text-white transition-all shadow-md hover:shadow-lg"
-                            style={{
-                                background: 'linear-gradient(135deg, #D4A59A 0%, #AD7F65 50%, #76462B 100%)'
-                            }}
-                        >
+              onClick={onConfirm}
+              className="flex-1 py-3 px-6 rounded-lg font-bold text-white transition-all shadow-md hover:shadow-lg"
+              style={{
+                background: 'linear-gradient(135deg, #D4A59A 0%, #AD7F65 50%, #76462B 100%)'
+              }}>
+              
                             Confirm
                         </button>
                         <button
-                            onClick={onClose}
-                            className={`flex-1 py-3 px-6 rounded-lg font-bold transition-all shadow-sm ${theme === 'dark'
-                                ? 'bg-[#2A2724] text-gray-300 hover:bg-[#322f2c]'
-                                : 'text-gray-700 bg-gray-200 hover:bg-gray-300'
-                                }`}
-                        >
+              onClick={onClose}
+              className={`flex-1 py-3 px-6 rounded-lg font-bold transition-all shadow-sm ${theme === 'dark' ?
+              'bg-[#2A2724] text-gray-300 hover:bg-[#322f2c]' :
+              'text-gray-700 bg-gray-200 hover:bg-gray-300'}`
+              }>
+              
                             Cancel
                         </button>
                     </div>
                 </div>
             </div>
-        </div>
-    );
+        </div>);
+
 };
 
 export default ArchiveConfirmationModal;

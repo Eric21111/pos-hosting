@@ -36,12 +36,12 @@ const ResetPinConfirmModal = ({ isOpen, onClose, onConfirm, employeeName }) => {
       const response = await fetch('http://localhost:5000/api/employees/verify-pin', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           email: currentUser.email,
-          pin: trimmedPin,
-        }),
+          pin: trimmedPin
+        })
       });
 
       const data = await response.json();
@@ -63,20 +63,20 @@ const ResetPinConfirmModal = ({ isOpen, onClose, onConfirm, employeeName }) => {
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 flex items-center backdrop-blur-sm  justify-center z-[10000]  bg-opacity-50"
-      onClick={onClose}
-    >
-      <div 
+      onClick={onClose}>
+      
+      <div
         className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div 
+        onClick={(e) => e.stopPropagation()}>
+        
+        <div
           className="h-2"
           style={{
             background: 'linear-gradient(to right, #3B82F6, #2563EB)'
-          }}
-        />
+          }} />
+        
         
         <div className="p-8">
           <div className="flex items-center justify-center mb-6">
@@ -122,35 +122,35 @@ const ResetPinConfirmModal = ({ isOpen, onClose, onConfirm, employeeName }) => {
               onChange={handlePinChange}
               maxLength={6}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent tracking-[0.5em] text-center text-lg"
-              placeholder="••••••"
-            />
-            {error && (
-              <p className="mt-1 text-sm text-red-600">
+              placeholder="••••••" />
+            
+            {error &&
+            <p className="mt-1 text-sm text-red-600">
                 {error}
               </p>
-            )}
+            }
           </div>
 
           <div className="flex gap-3">
             <button
               onClick={onClose}
               className="flex-1 px-4 py-2.5 rounded-lg bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition-all"
-              disabled={loading}
-            >
+              disabled={loading}>
+              
               Cancel
             </button>
             <button
               onClick={handleReset}
               className="flex-1 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all disabled:opacity-60"
-              disabled={loading}
-            >
+              disabled={loading}>
+              
               {loading ? 'Verifying...' : 'Reset PIN'}
             </button>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default ResetPinConfirmModal;

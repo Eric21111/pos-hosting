@@ -11,19 +11,19 @@ const TemporaryPinModal = ({ isOpen, onClose, employeeName, temporaryPin }) => {
 
   return (
     <div
-      className="fixed inset-0 flex items-center backdrop-blur-sm justify-center z-[10003] bg-opacity-50"
+      className="fixed inset-0 flex items-center backdrop-blur-sm justify-center z-[10003] bg-opacity-50">
 
-    >
+      
       <div
         className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
+        onClick={(e) => e.stopPropagation()}>
+        
         <div
           className="h-2"
           style={{
             background: 'linear-gradient(to right, #C2A68C, #AD7F65, #76462B)'
-          }}
-        />
+          }} />
+        
 
         <div className="p-8">
           <div className="flex justify-between items-start mb-6">
@@ -44,8 +44,8 @@ const TemporaryPinModal = ({ isOpen, onClose, employeeName, temporaryPin }) => {
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition"
-            >
+              className="text-gray-400 hover:text-gray-600 transition">
+              
               <FaTimes className="w-5 h-5" />
             </button>
           </div>
@@ -61,20 +61,20 @@ const TemporaryPinModal = ({ isOpen, onClose, employeeName, temporaryPin }) => {
             </div>
 
             <div className="flex items-center justify-center gap-3 mb-4">
-              {temporaryPin.split('').map((digit, index) => (
-                <div
-                  key={index}
-                  className="w-14 h-16 bg-white border-2 border-amber-300 rounded-lg flex items-center justify-center text-3xl font-bold text-amber-900 shadow-md"
-                >
+              {temporaryPin.split('').map((digit, index) =>
+              <div
+                key={index}
+                className="w-14 h-16 bg-white border-2 border-amber-300 rounded-lg flex items-center justify-center text-3xl font-bold text-amber-900 shadow-md">
+                
                   {digit}
                 </div>
-              ))}
+              )}
             </div>
 
             <button
               onClick={handleCopyPin}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-all font-medium"
-            >
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-all font-medium">
+              
               <FaCopy className="w-4 h-4" />
               Copy PIN to Clipboard
             </button>
@@ -102,14 +102,14 @@ const TemporaryPinModal = ({ isOpen, onClose, employeeName, temporaryPin }) => {
             className="w-full px-6 py-3 rounded-lg text-white font-medium transition-all"
             style={{
               background: 'linear-gradient(to right, #C2A68C, #AD7F65, #76462B)'
-            }}
-          >
+            }}>
+            
             I've Saved the PIN
           </button>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default TemporaryPinModal;

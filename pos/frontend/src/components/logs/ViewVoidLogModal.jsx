@@ -24,31 +24,31 @@ const ViewVoidLogModal = ({ isOpen, onClose, voidLog }) => {
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center z-[9999] backdrop-blur-sm bg-black/30"
-      onClick={onClose}
-    >
+      className="fixed inset-0 flex items-center justify-center z-9999 backdrop-blur-sm bg-black/30"
+      onClick={onClose}>
+      
       <div
         className={`rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden ${theme === 'dark' ? 'bg-[#2A2724]' : 'bg-white'}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Red Header */}
+        onClick={(e) => e.stopPropagation()}>
+        
+        {}
         <div
           className="px-6 py-5 relative"
-          style={{ background: 'linear-gradient(135deg, #DC2626 0%, #991B1B 100%)' }}
-        >
+          style={{ background: 'linear-gradient(135deg, #DC2626 0%, #991B1B 100%)' }}>
+          
           <h2 className="text-xl font-bold text-white">This Transaction is Voided</h2>
           <p className="text-red-200 text-sm mt-1">This entire transaction has been cancelled</p>
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-white/80 hover:text-white transition"
-          >
+            className="absolute top-4 right-4 text-white/80 hover:text-white transition">
+            
             <FaTimes className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Content */}
+        {}
         <div className="p-6">
-          {/* Transaction ID and Date */}
+          {}
           <div className="mb-4">
             <h3 className="text-2xl font-bold text-[#8B4513]">
               Transaction Id: {voidLog.voidId || 'N/A'}
@@ -61,7 +61,7 @@ const ViewVoidLogModal = ({ isOpen, onClose, voidLog }) => {
             </p>
           </div>
 
-          {/* Items Table */}
+          {}
           <div className={`rounded-lg overflow-hidden mb-4 ${theme === 'dark' ? 'bg-[#1E1B18]' : 'bg-gray-50'}`}>
             <table className="w-full">
               <thead>
@@ -73,9 +73,9 @@ const ViewVoidLogModal = ({ isOpen, onClose, voidLog }) => {
                 </tr>
               </thead>
               <tbody>
-                {voidLog.items && voidLog.items.length > 0 ? (
-                  voidLog.items.map((item, index) => (
-                    <tr key={index} className={`border-b last:border-0 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-100'}`}>
+                {voidLog.items && voidLog.items.length > 0 ?
+                voidLog.items.map((item, index) =>
+                <tr key={index} className={`border-b last:border-0 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-100'}`}>
                       <td className={`px-4 py-3 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                         {item.itemName || 'Unknown Item'}
                         {item.selectedSize && <span className={`ml-1 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>({item.selectedSize})</span>}
@@ -86,19 +86,19 @@ const ViewVoidLogModal = ({ isOpen, onClose, voidLog }) => {
                         {formatCurrency((item.price || 0) * (item.quantity || 1))}
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
+                ) :
+
+                <tr>
                     <td colSpan="4" className="px-4 py-3 text-sm text-gray-500 text-center">
                       No items found
                     </td>
                   </tr>
-                )}
+                }
               </tbody>
             </table>
           </div>
 
-          {/* Totals */}
+          {}
           <div className="space-y-2 mb-4">
             <div className="flex justify-between text-sm">
               <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Subtotal:</span>
@@ -116,7 +116,7 @@ const ViewVoidLogModal = ({ isOpen, onClose, voidLog }) => {
             </div>
           </div>
 
-          {/* Reason for Void */}
+          {}
           <div className="mb-4">
             <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Reason for Void:</p>
             <div className={`rounded-lg px-4 py-3 ${theme === 'dark' ? 'bg-[#1E1B18]' : 'bg-gray-100'}`}>
@@ -124,18 +124,18 @@ const ViewVoidLogModal = ({ isOpen, onClose, voidLog }) => {
             </div>
           </div>
 
-          {/* Approved By and Status */}
+          {}
           <div className="space-y-2 mb-6">
             <p className="text-sm text-gray-600">
-              Approved By: <span className={`font-medium ${voidLog.approvedByRole === 'Owner'
-                ? 'text-purple-700'
-                : voidLog.approvedByRole === 'Manager'
-                  ? 'text-blue-700'
-                  : `${theme === 'dark' ? 'text-gray-300' : 'text-gray-800'}`
-                }`}>
-                {voidLog.approvedBy
-                  ? `${voidLog.approvedBy}${voidLog.approvedByRole ? ` (${voidLog.approvedByRole})` : ''}`
-                  : 'N/A'}
+              Approved By: <span className={`font-medium ${voidLog.approvedByRole === 'Owner' ?
+              'text-purple-700' :
+              voidLog.approvedByRole === 'Manager' ?
+              'text-blue-700' :
+              `${theme === 'dark' ? 'text-gray-300' : 'text-gray-800'}`}`
+              }>
+                {voidLog.approvedBy ?
+                `${voidLog.approvedBy}${voidLog.approvedByRole ? ` (${voidLog.approvedByRole})` : ''}` :
+                'N/A'}
               </span>
             </p>
             <div className="flex items-center gap-2">
@@ -147,19 +147,19 @@ const ViewVoidLogModal = ({ isOpen, onClose, voidLog }) => {
             </div>
           </div>
 
-          {/* Cancel Button */}
+          {}
           <div className="flex justify-end">
             <button
               onClick={onClose}
-              className={`px-6 py-2 rounded-lg font-medium transition-all ${theme === 'dark' ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-            >
+              className={`px-6 py-2 rounded-lg font-medium transition-all ${theme === 'dark' ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>
+              
               Cancel
             </button>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default ViewVoidLogModal;

@@ -4,7 +4,7 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(() => {
-    // Try to get from localStorage on mount
+
     const savedUser = localStorage.getItem('currentUser');
     return savedUser ? JSON.parse(savedUser) : null;
   });
@@ -23,26 +23,26 @@ export const AuthProvider = ({ children }) => {
     return currentUser?.role === 'Owner' || currentUser?.name === 'owner' || currentUser?.id === 3;
   };
 
-  // Check if user has a specific permission
+
   const hasPermission = (permission) => {
     if (!currentUser) return false;
-    
-    // Owner has all permissions
+
+
     if (isOwner()) return true;
-    
-    // Check user permissions
+
+
     if (currentUser.permissions && currentUser.permissions[permission] !== undefined) {
       return currentUser.permissions[permission];
     }
-    
+
     return false;
   };
 
   return (
     <AuthContext.Provider value={{ currentUser, login, logout, isOwner, hasPermission }}>
       {children}
-    </AuthContext.Provider>
-  );
+    </AuthContext.Provider>);
+
 };
 
 export const useAuth = () => {
@@ -54,4 +54,3 @@ export const useAuth = () => {
 };
 
 export default AuthContext;
-

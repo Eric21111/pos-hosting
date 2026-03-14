@@ -11,7 +11,7 @@ import { SidebarContext } from "./context/SidebarContext";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { API_ENDPOINTS } from "./config/api";
 
-// Retry function for lazy loading chunks
+
 const lazyWithRetry = (componentImport) => {
   return lazy(async () => {
     const pageHasAlreadyBeenForceRefreshed = JSON.parse(
@@ -24,18 +24,18 @@ const lazyWithRetry = (componentImport) => {
       return component;
     } catch (error) {
       if (!pageHasAlreadyBeenForceRefreshed) {
-        // The page failed to load and hasn't been refreshed yet
+
         window.sessionStorage.setItem('page-has-been-force-refreshed', 'true');
         window.location.reload();
         return { default: () => null };
       }
-      // The page has already been refreshed, throw the error
+
       throw error;
     }
   });
 };
 
-// Error Boundary Component
+
 class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
@@ -65,20 +65,20 @@ class ErrorBoundary extends Component {
             <p className="text-gray-600 mb-6">The page failed to load. This usually happens after an update.</p>
             <button
               onClick={this.handleRetry}
-              className="px-6 py-3 bg-[#AD7F65] text-white rounded-lg hover:bg-[#8B6B4F] transition-colors font-semibold"
-            >
+              className="px-6 py-3 bg-[#AD7F65] text-white rounded-lg hover:bg-[#8B6B4F] transition-colors font-semibold">
+              
               Refresh Page
             </button>
           </div>
-        </div>
-      );
+        </div>);
+
     }
 
     return this.props.children;
   }
 }
 
-// Lazy load all pages with retry for better performance
+
 const StaffSelection = lazyWithRetry(() => import("./pages/StaffSelection"));
 const PinEntry = lazyWithRetry(() => import("./pages/PinEntry"));
 const Inventory = lazyWithRetry(() => import("./pages/Inventory"));
@@ -90,7 +90,7 @@ const Dashboard = lazyWithRetry(() => import("./pages/owner/Dashboard"));
 const Reports = lazyWithRetry(() => import("./pages/owner/Reports"));
 const ManageEmployees = lazyWithRetry(() => import("./pages/owner/ManageEmployees"));
 const DiscountManagement = lazyWithRetry(
-  () => import("./pages/owner/DiscountManagement"),
+  () => import("./pages/owner/DiscountManagement")
 );
 const BrandPartners = lazyWithRetry(() => import("./pages/owner/BrandPartners"));
 const Categories = lazyWithRetry(() => import("./pages/owner/Categories"));
@@ -98,15 +98,15 @@ const SetNewPin = lazyWithRetry(() => import("./pages/SetNewPin"));
 const OwnerOnboarding = lazyWithRetry(() => import("./pages/OwnerOnboarding"));
 const ManageData = lazyWithRetry(() => import("./pages/ManageData"));
 
-// Loading fallback component
-const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-[#FFFFFF]">
+
+const PageLoader = () =>
+<div className="min-h-screen flex items-center justify-center bg-[#FFFFFF]">
     <div className="text-center">
       <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B7355] mb-4"></div>
       <p className="text-gray-600">Loading...</p>
     </div>
-  </div>
-);
+  </div>;
+
 
 const MainLayout = memo(({ children }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -115,18 +115,18 @@ const MainLayout = memo(({ children }) => {
   return (
     <div
       className="min-h-screen transition-colors duration-300"
-      style={{ backgroundColor: theme === "dark" ? "#1E1B18" : "#FFFFFF" }}
-    >
+      style={{ backgroundColor: theme === "dark" ? "#1E1B18" : "#FFFFFF" }}>
+      
       <SidebarContext.Provider value={{ isExpanded }}>
         <Sidebar isExpanded={isExpanded} setIsExpanded={setIsExpanded} />
         <main
-          className={`transition-all duration-300 px-6 py-4 ${isExpanded ? "ml-80" : "ml-20"}`}
-        >
+          className={`transition-all duration-300 px-6 py-4 ${isExpanded ? "ml-80" : "ml-20"}`}>
+          
           {children}
         </main>
       </SidebarContext.Provider>
-    </div>
-  );
+    </div>);
+
 });
 
 const LandingGate = () => {
@@ -134,14 +134,14 @@ const LandingGate = () => {
   const [status, setStatus] = useState({
     loading: true,
     error: "",
-    hasAccounts: false,
+    hasAccounts: false
   });
 
   const checkEmployees = useCallback(async () => {
     setStatus((prev) => ({
       ...prev,
       loading: true,
-      error: "",
+      error: ""
     }));
 
     try {
@@ -155,15 +155,15 @@ const LandingGate = () => {
       setStatus({
         loading: false,
         error: "",
-        hasAccounts: data.count > 0,
+        hasAccounts: data.count > 0
       });
     } catch (error) {
       setStatus({
         loading: false,
         error:
-          error.message ||
-          "Unable to reach the server. Please ensure the backend is running.",
-        hasAccounts: false,
+        error.message ||
+        "Unable to reach the server. Please ensure the backend is running.",
+        hasAccounts: false
       });
     }
   }, []);
@@ -175,57 +175,57 @@ const LandingGate = () => {
   if (status.loading) {
     return (
       <div
-        className={`min-h-screen flex items-center justify-center ${theme === "dark" ? "bg-[#1F1F1F]" : "bg-[#FFFFFF]"}`}
-      >
+        className={`min-h-screen flex items-center justify-center ${theme === "dark" ? "bg-[#1F1F1F]" : "bg-[#FFFFFF]"}`}>
+        
         <p
-          className={`${theme === "dark" ? "text-white" : "text-[#8B7355]"} tracking-[0.3em] uppercase text-sm`}
-        >
+          className={`${theme === "dark" ? "text-white" : "text-[#8B7355]"} tracking-[0.3em] uppercase text-sm`}>
+          
           Preparing CYSPOS...
         </p>
-      </div>
-    );
+      </div>);
+
   }
 
   if (status.error) {
     return (
       <div
-        className={`min-h-screen flex flex-col items-center justify-center ${theme === "dark" ? "bg-[#1F1F1F]" : "bg-[#FFFFFF]"} px-4 text-center gap-6`}
-      >
+        className={`min-h-screen flex flex-col items-center justify-center ${theme === "dark" ? "bg-[#1F1F1F]" : "bg-[#FFFFFF]"} px-4 text-center gap-6`}>
+        
         <div className="max-w-md">
           <p
-            className={`${theme === "dark" ? "text-white" : "text-[#2D2D2D]"} text-lg font-semibold mb-2`}
-          >
+            className={`${theme === "dark" ? "text-white" : "text-[#2D2D2D]"} text-lg font-semibold mb-2`}>
+            
             Something went wrong
           </p>
           <p className="text-gray-400 text-sm">{status.error}</p>
         </div>
         <button
           onClick={checkEmployees}
-          className="px-6 py-3 rounded-2xl bg-white text-[#1F1F1F] font-semibold shadow-lg"
-        >
+          className="px-6 py-3 rounded-2xl bg-white text-[#1F1F1F] font-semibold shadow-lg">
+          
           Retry
         </button>
-      </div>
-    );
+      </div>);
+
   }
 
   if (!status.hasAccounts) {
     return (
       <Suspense fallback={<PageLoader />}>
         <OwnerOnboarding onSetupComplete={checkEmployees} />
-      </Suspense>
-    );
+      </Suspense>);
+
   }
 
   return (
     <Suspense fallback={<PageLoader />}>
       <PinEntry />
-    </Suspense>
-  );
+    </Suspense>);
+
 };
 
 function App() {
-  // Disable mouse wheel on number inputs globally
+
   useEffect(() => {
     const handleWheel = (e) => {
       if (e.target.type === "number") {
@@ -233,10 +233,10 @@ function App() {
       }
     };
 
-    // Add event listener to prevent wheel events on number inputs
+
     document.addEventListener("wheel", handleWheel, { passive: false });
 
-    // Also blur number inputs when they receive wheel events
+
     const handleNumberInputWheel = (e) => {
       if (document.activeElement.type === "number") {
         document.activeElement.blur();
@@ -263,36 +263,36 @@ function App() {
               <Routes>
                 <Route path="/" element={<LandingGate />} />
                 <Route
-                  path="/pin"
-                  element={
+                    path="/pin"
+                    element={
                     <Suspense fallback={<PageLoader />}>
                       <PinEntry />
                     </Suspense>
-                  }
-                />
+                    } />
+                  
                 <Route
-                  path="/staff"
-                  element={
+                    path="/staff"
+                    element={
                     <Suspense fallback={<PageLoader />}>
                       <StaffSelection />
                     </Suspense>
-                  }
-                />
+                    } />
+                  
                 <Route
-                  path="/set-pin"
-                  element={
+                    path="/set-pin"
+                    element={
                     <ProtectedRoute>
                       <Suspense fallback={<PageLoader />}>
                         <SetNewPin />
                       </Suspense>
                     </ProtectedRoute>
-                  }
-                />
+                    } />
+                  
 
-                {/* Owner-only routes */}
+                {}
                 <Route
-                  path="/dashboard"
-                  element={
+                    path="/dashboard"
+                    element={
                     <ProtectedRoute ownerOnly={true}>
                       <MainLayout>
                         <Suspense fallback={<PageLoader />}>
@@ -300,11 +300,11 @@ function App() {
                         </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
-                  }
-                />
+                    } />
+                  
                 <Route
-                  path="/reports"
-                  element={
+                    path="/reports"
+                    element={
                     <ProtectedRoute requiredPermission="generateReports">
                       <MainLayout>
                         <Suspense fallback={<PageLoader />}>
@@ -312,11 +312,11 @@ function App() {
                         </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
-                  }
-                />
+                    } />
+                  
                 <Route
-                  path="/manage-employees"
-                  element={
+                    path="/manage-employees"
+                    element={
                     <ProtectedRoute ownerOnly={true}>
                       <MainLayout>
                         <Suspense fallback={<PageLoader />}>
@@ -324,13 +324,13 @@ function App() {
                         </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
-                  }
-                />
+                    } />
+                  
 
-                {/* Permission-based routes */}
+                {}
                 <Route
-                  path="/inventory"
-                  element={
+                    path="/inventory"
+                    element={
                     <ProtectedRoute requiredPermission="inventory">
                       <MainLayout>
                         <Suspense fallback={<PageLoader />}>
@@ -338,11 +338,11 @@ function App() {
                         </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
-                  }
-                />
+                    } />
+                  
                 <Route
-                  path="/stock-movement"
-                  element={
+                    path="/stock-movement"
+                    element={
                     <ProtectedRoute requiredPermission="inventory">
                       <MainLayout>
                         <Suspense fallback={<PageLoader />}>
@@ -350,11 +350,11 @@ function App() {
                         </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
-                  }
-                />
+                    } />
+                  
                 <Route
-                  path="/terminal"
-                  element={
+                    path="/terminal"
+                    element={
                     <ProtectedRoute requiredPermission="posTerminal">
                       <MainLayout>
                         <Suspense fallback={<PageLoader />}>
@@ -362,11 +362,11 @@ function App() {
                         </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
-                  }
-                />
+                    } />
+                  
                 <Route
-                  path="/transactions"
-                  element={
+                    path="/transactions"
+                    element={
                     <ProtectedRoute requiredPermission="viewTransactions">
                       <MainLayout>
                         <Suspense fallback={<PageLoader />}>
@@ -374,11 +374,11 @@ function App() {
                         </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
-                  }
-                />
+                    } />
+                  
                 <Route
-                  path="/settings"
-                  element={
+                    path="/settings"
+                    element={
                     <ProtectedRoute requiredPermission={null}>
                       <MainLayout>
                         <Suspense fallback={<PageLoader />}>
@@ -386,11 +386,11 @@ function App() {
                         </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
-                  }
-                />
+                    } />
+                  
                 <Route
-                  path="/manage-data"
-                  element={
+                    path="/manage-data"
+                    element={
                     <ProtectedRoute requiredPermission={null}>
                       <MainLayout>
                         <Suspense fallback={<PageLoader />}>
@@ -398,11 +398,11 @@ function App() {
                         </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
-                  }
-                />
+                    } />
+                  
                 <Route
-                  path="/discount-management"
-                  element={
+                    path="/discount-management"
+                    element={
                     <ProtectedRoute requiredPermission={null}>
                       <MainLayout>
                         <Suspense fallback={<PageLoader />}>
@@ -410,11 +410,11 @@ function App() {
                         </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
-                  }
-                />
+                    } />
+                  
                 <Route
-                  path="/brand-partners"
-                  element={
+                    path="/brand-partners"
+                    element={
                     <ProtectedRoute requiredPermission={null}>
                       <MainLayout>
                         <Suspense fallback={<PageLoader />}>
@@ -422,11 +422,11 @@ function App() {
                         </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
-                  }
-                />
+                    } />
+                  
                 <Route
-                  path="/categories"
-                  element={
+                    path="/categories"
+                    element={
                     <ProtectedRoute requiredPermission={null}>
                       <MainLayout>
                         <Suspense fallback={<PageLoader />}>
@@ -434,16 +434,16 @@ function App() {
                         </Suspense>
                       </MainLayout>
                     </ProtectedRoute>
-                  }
-                />
+                    } />
+                  
               </Routes>
             </Suspense>
           </Router>
         </DataCacheProvider>
       </AuthProvider>
     </ThemeProvider>
-    </ErrorBoundary>
-  );
+    </ErrorBoundary>);
+
 }
 
 export default App;

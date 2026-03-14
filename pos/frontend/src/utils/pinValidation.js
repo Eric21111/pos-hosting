@@ -1,14 +1,14 @@
-/**
- * Validates PIN security rules
- * @param {string} pin - The PIN to validate
- * @returns {{ isValid: boolean, error: string }} - Validation result
- */
+
+
+
+
+
 export const validatePinSecurity = (pin) => {
   if (!pin || pin.length !== 6) {
     return { isValid: false, error: 'PIN must be exactly 6 digits' };
   }
 
-  // Rule 1: No digit may appear 3 times
+
   const digitCounts = {};
   for (const digit of pin) {
     digitCounts[digit] = (digitCounts[digit] || 0) + 1;
@@ -20,11 +20,11 @@ export const validatePinSecurity = (pin) => {
     }
   }
 
-  // Rule 2: No sequences (ascending or descending)
+
   const isSequence = (str) => {
     const digits = str.split('').map(Number);
-    
-    // Check ascending sequence (e.g., 123456, 234567)
+
+
     let isAscending = true;
     for (let i = 1; i < digits.length; i++) {
       if (digits[i] !== digits[i - 1] + 1) {
@@ -32,8 +32,8 @@ export const validatePinSecurity = (pin) => {
         break;
       }
     }
-    
-    // Check descending sequence (e.g., 987654, 654321)
+
+
     let isDescending = true;
     for (let i = 1; i < digits.length; i++) {
       if (digits[i] !== digits[i - 1] - 1) {
@@ -41,7 +41,7 @@ export const validatePinSecurity = (pin) => {
         break;
       }
     }
-    
+
     return isAscending || isDescending;
   };
 
@@ -52,9 +52,9 @@ export const validatePinSecurity = (pin) => {
     };
   }
 
-  // Rule 3: No all-same PINs (e.g., 000000, 111111)
+
   const firstDigit = pin[0];
-  const allSame = pin.split('').every(digit => digit === firstDigit);
+  const allSame = pin.split('').every((digit) => digit === firstDigit);
   if (allSame) {
     return {
       isValid: false,
@@ -64,4 +64,3 @@ export const validatePinSecurity = (pin) => {
 
   return { isValid: true, error: '' };
 };
-

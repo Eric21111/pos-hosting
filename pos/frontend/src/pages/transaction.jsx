@@ -5,8 +5,8 @@ import React, {
   useEffect,
   useMemo,
   useRef,
-  useState,
-} from "react";
+  useState } from
+"react";
 import {
   FaCheckCircle,
   FaChevronDown,
@@ -16,8 +16,8 @@ import {
   FaEye,
   FaPrint,
   FaSearch,
-  FaUndoAlt
-} from "react-icons/fa";
+  FaUndoAlt } from
+"react-icons/fa";
 import CompletedIcon from "../assets/completed.svg";
 import TotalTransactionIcon from "../assets/total-transaction.svg";
 import Header from "../components/shared/header";
@@ -32,7 +32,7 @@ const STATUS_STYLES = {
   Completed: "bg-green-100 text-green-700 border border-green-200",
   Returned: "bg-orange-100 text-orange-700 border border-orange-200",
   "Partially Returned": "bg-amber-100 text-amber-700 border border-amber-200",
-  Voided: "bg-red-100 text-red-600 border border-red-200",
+  Voided: "bg-red-100 text-red-600 border border-red-200"
 };
 
 const paymentOptions = ["All", "cash", "gcash"];
@@ -41,25 +41,25 @@ const userOptions = ["All"];
 const dateOptions = ["All", "Today", "Last 7 days", "Last 30 days"];
 
 const getInitials = (name = "") =>
-  name
-    .split(" ")
-    .filter(Boolean)
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+name.
+split(" ").
+filter(Boolean).
+map((n) => n[0]).
+slice(0, 2).
+join("").
+toUpperCase();
 
 const formatCurrency = (value = 0) =>
-  new Intl.NumberFormat("en-PH", {
-    style: "currency",
-    currency: "PHP",
-  }).format(value);
+new Intl.NumberFormat("en-PH", {
+  style: "currency",
+  currency: "PHP"
+}).format(value);
 
-// Transaction numbers are now stored in the database and immutable
-// This function is no longer needed but kept for backward compatibility
+
+
 const generateTransactionNumber = (transaction) => {
   if (!transaction) return "---";
-  // Use stored transactionNumber if available
+
   if (transaction.transactionNumber) {
     return transaction.transactionNumber.toString();
   }
@@ -70,7 +70,7 @@ const statusIcon = {
   Completed: <FaCheckCircle className="text-green-500" />,
   Returned: <FaUndoAlt className="text-orange-500" />,
   "Partially Returned": <FaUndoAlt className="text-amber-500" />,
-  Voided: <FaExclamationTriangle className="text-red-500" />,
+  Voided: <FaExclamationTriangle className="text-red-500" />
 };
 
 const Dropdown = ({
@@ -79,7 +79,7 @@ const Dropdown = ({
   selected,
   onSelect,
   isOpen,
-  setIsOpen,
+  setIsOpen
 }) => {
   const dropdownRef = React.useRef(null);
   const { theme } = useTheme();
@@ -108,64 +108,64 @@ const Dropdown = ({
           e.stopPropagation();
           setIsOpen((prev) => !prev);
         }}
-        className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${isOpen
-          ? "border-[#AD7F65] shadow-lg " +
-          (theme === "dark"
-            ? "bg-[#2A2724] text-white"
-            : "bg-white text-gray-700")
-          : theme === "dark"
-            ? "border-gray-600 bg-[#2A2724] text-gray-300 hover:border-[#AD7F65]"
-            : "border-gray-200 bg-white hover:border-[#AD7F65] text-gray-700"
-          }`}
-      >
+        className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${isOpen ?
+        "border-[#AD7F65] shadow-lg " + (
+        theme === "dark" ?
+        "bg-[#2A2724] text-white" :
+        "bg-white text-gray-700") :
+        theme === "dark" ?
+        "border-gray-600 bg-[#2A2724] text-gray-300 hover:border-[#AD7F65]" :
+        "border-gray-200 bg-white hover:border-[#AD7F65] text-gray-700"}`
+        }>
+        
         <span className="text-sm font-medium">
           {selected === "All" ? label : selected}
         </span>
         <FaChevronDown
-          className={`text-xs text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`}
-        />
+          className={`text-xs text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        
       </button>
       <AnimatePresence>
-        {isOpen && (
-          <motion.ul
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className={`absolute z-20 mt-2 w-44 rounded-xl border border-gray-100 shadow-2xl overflow-hidden ${theme === "dark"
-              ? "bg-[#2A2724] border-gray-600"
-              : "bg-white border-gray-100"
-              }`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {options.map((option) => (
-              <li
-                key={option}
-                onClick={() => {
-                  onSelect(option);
-                  setIsOpen(false);
-                }}
-                className={`px-4 py-2 text-sm cursor-pointer transition-colors ${option === selected
-                  ? "bg-[#F6EEE7] text-[#76462B] font-semibold"
-                  : theme === "dark"
-                    ? "text-gray-300 hover:bg-[#352F2A]"
-                    : "text-gray-700 hover:bg-gray-50"
-                  }`}
-              >
+        {isOpen &&
+        <motion.ul
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          className={`absolute z-20 mt-2 w-44 rounded-xl border border-gray-100 shadow-2xl overflow-hidden ${theme === "dark" ?
+          "bg-[#2A2724] border-gray-600" :
+          "bg-white border-gray-100"}`
+          }
+          onClick={(e) => e.stopPropagation()}>
+          
+            {options.map((option) =>
+          <li
+            key={option}
+            onClick={() => {
+              onSelect(option);
+              setIsOpen(false);
+            }}
+            className={`px-4 py-2 text-sm cursor-pointer transition-colors ${option === selected ?
+            "bg-[#F6EEE7] text-[#76462B] font-semibold" :
+            theme === "dark" ?
+            "text-gray-300 hover:bg-[#352F2A]" :
+            "text-gray-700 hover:bg-gray-50"}`
+            }>
+            
                 {option}
               </li>
-            ))}
+          )}
           </motion.ul>
-        )}
+        }
       </AnimatePresence>
-    </div>
-  );
+    </div>);
+
 };
 
 const Transaction = () => {
   const { theme } = useTheme();
   const { getCachedData, setCachedData, isCacheValid, invalidateCache } =
-    useDataCache();
-  // Initialize transactions state - use empty array initially to avoid hook issues
+  useDataCache();
+
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
@@ -175,13 +175,13 @@ const Transaction = () => {
     date: false,
     method: false,
     status: false,
-    user: false,
+    user: false
   });
   const [filters, setFilters] = useState({
     date: "All",
     method: "All",
     status: "All",
-    user: "All",
+    user: "All"
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -206,7 +206,7 @@ const Transaction = () => {
   const setCachedDataRef = useRef(setCachedData);
   const selectAllTransactionsRef = useRef(null);
 
-  // Keep ref updated
+
   useEffect(() => {
     setCachedDataRef.current = setCachedData;
   }, [setCachedData]);
@@ -217,34 +217,34 @@ const Transaction = () => {
       const params = new URLSearchParams();
       if (debouncedSearch) params.append("search", debouncedSearch);
       if (filters.method !== "All")
-        params.append("paymentMethod", filters.method);
+      params.append("paymentMethod", filters.method);
       if (filters.status !== "All") params.append("status", filters.status);
       if (filters.user !== "All") params.append("userId", filters.user);
 
-      // Add limit to prevent loading too much data
+
       params.append("limit", "500");
       const qs = params.toString() ? `?${params.toString()}` : "";
 
       const response = await fetch(
-        `${API_BASE_URL}/api/transactions${qs}`,
+        `${API_BASE_URL}/api/transactions${qs}`
       );
       const data = await response.json();
 
       if (data.success && Array.isArray(data.data)) {
         const allTransactions = data.data;
 
-        // Separate return transactions and voided transactions from regular transactions
+
         const returnTransactions = allTransactions.filter(
-          (t) => t.paymentMethod === "return" && t.originalTransactionId,
-        );
-        // Filter out voided transactions - they should only appear in void logs
-        const regularTransactions = allTransactions.filter(
-          (t) =>
-            (t.paymentMethod !== "return" || !t.originalTransactionId) &&
-            t.status !== "Voided",
+          (t) => t.paymentMethod === "return" && t.originalTransactionId
         );
 
-        // Group return transactions by original transaction ID
+        const regularTransactions = allTransactions.filter(
+          (t) =>
+          (t.paymentMethod !== "return" || !t.originalTransactionId) &&
+          t.status !== "Voided"
+        );
+
+
         const returnTransactionsMap = new Map();
         returnTransactions.forEach((returnTrx) => {
           const originalId = returnTrx.originalTransactionId?.toString();
@@ -256,28 +256,28 @@ const Transaction = () => {
           }
         });
 
-        // Attach return transactions to their original transactions
+
         const transactionsWithReturns = regularTransactions.map((trx) => ({
           ...trx,
           returnTransactions:
-            returnTransactionsMap.get(trx._id?.toString()) || [],
+          returnTransactionsMap.get(trx._id?.toString()) || []
         }));
 
-        // Sort by date and time (most recent first)
-        // Use checkedOutAt if available, otherwise use createdAt or updatedAt
+
+
         transactionsWithReturns.sort((a, b) => {
           const dateA = new Date(
-            a.checkedOutAt || a.createdAt || a.updatedAt || 0,
+            a.checkedOutAt || a.createdAt || a.updatedAt || 0
           );
           const dateB = new Date(
-            b.checkedOutAt || b.createdAt || b.updatedAt || 0,
+            b.checkedOutAt || b.createdAt || b.updatedAt || 0
           );
-          return dateB - dateA; // Descending order (newest first)
+          return dateB - dateA;
         });
 
-        const payload = transactionsWithReturns.length
-          ? transactionsWithReturns
-          : [];
+        const payload = transactionsWithReturns.length ?
+        transactionsWithReturns :
+        [];
         setTransactions(payload);
         setCachedDataRef.current("transactions", payload);
         if (payload.length > 0) {
@@ -296,7 +296,7 @@ const Transaction = () => {
     }
   }, [debouncedSearch, filters.method, filters.status, filters.user]);
 
-  // Initial load - check cache first (only once)
+
   useEffect(() => {
     if (hasLoaded.current) return;
 
@@ -306,19 +306,19 @@ const Transaction = () => {
       try {
         const cachedTransactions = getCachedData("transactions");
         if (
-          cachedTransactions &&
-          isCacheValid("transactions") &&
-          cachedTransactions.length > 0
-        ) {
-          // Ensure cached transactions are sorted by date/time (most recent first)
+        cachedTransactions &&
+        isCacheValid("transactions") &&
+        cachedTransactions.length > 0)
+        {
+
           const sortedCached = [...cachedTransactions].sort((a, b) => {
             const dateA = new Date(
-              a.checkedOutAt || a.createdAt || a.updatedAt || 0,
+              a.checkedOutAt || a.createdAt || a.updatedAt || 0
             );
             const dateB = new Date(
-              b.checkedOutAt || b.createdAt || b.updatedAt || 0,
+              b.checkedOutAt || b.createdAt || b.updatedAt || 0
             );
-            return dateB - dateA; // Descending order (newest first)
+            return dateB - dateA;
           });
           setTransactions(sortedCached);
           if (sortedCached.length > 0) {
@@ -333,12 +333,12 @@ const Transaction = () => {
         }
       } catch (error) {
         console.error("Error loading transactions:", error);
-        // Fallback: try to fetch anyway
+
         try {
           await fetchTransactions();
         } catch (fetchError) {
           console.error("Failed to fetch transactions:", fetchError);
-          // Set empty state to prevent white screen
+
           setTransactions([]);
           setLoading(false);
         }
@@ -348,66 +348,66 @@ const Transaction = () => {
     };
 
     loadInitialData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
 
-  // Refetch only when filters change (not on initial mount)
+
   useEffect(() => {
     if (isInitialMount.current) {
       return;
     }
     fetchTransactions();
   }, [
-    debouncedSearch,
-    filters.method,
-    filters.status,
-    filters.user,
-    fetchTransactions,
-  ]);
+  debouncedSearch,
+  filters.method,
+  filters.status,
+  filters.user,
+  fetchTransactions]
+  );
 
   const generateSampleTransactions = () => [];
 
-  // Get all regular transactions (excluding returns) for numbering reference
+
   const allRegularTransactions = useMemo(() => {
     return transactions.filter(
-      (trx) => !(trx.paymentMethod === "return" && trx.originalTransactionId),
+      (trx) => !(trx.paymentMethod === "return" && trx.originalTransactionId)
     );
   }, [transactions]);
 
   const filteredTransactions = useMemo(() => {
-    // Filter out return transactions, voided transactions, and pending/failed GCash transactions from the main list
-    // Voided transactions should only appear in void logs, not in transactions page
+
+
     const filtered = transactions.filter((trx) => {
-      // Skip return transactions in the main list
+
       if (trx.paymentMethod === "return" && trx.originalTransactionId) {
         return false;
       }
 
-      // Skip voided transactions - they should only appear in void logs
+
       if (trx.status === "Voided") {
         return false;
       }
 
-      // Skip pending or failed GCash transactions - they are not completed sales
+
       if (trx.status === "Pending" || trx.status === "Failed") {
         return false;
       }
 
       const matchesSearch =
-        !search ||
-        trx.receiptNo?.toLowerCase().includes(search.toLowerCase());
+      !search ||
+      trx.receiptNo?.toLowerCase().includes(search.toLowerCase());
 
       const matchesMethod =
-        filters.method === "All" ||
-        trx.paymentMethod?.toLowerCase() === filters.method.toLowerCase();
+      filters.method === "All" ||
+      trx.paymentMethod?.toLowerCase() === filters.method.toLowerCase();
 
       const matchesStatus =
-        filters.status === "All" || trx.status === filters.status;
+      filters.status === "All" || trx.status === filters.status;
 
       const matchesUser =
-        filters.user === "All" || trx.performedByName === filters.user;
+      filters.user === "All" || trx.performedByName === filters.user;
 
-      // Date filter
+
       let matchesDate = true;
       if (filters.date !== "All") {
         const trxDate = new Date(trx.checkedOutAt || trx.createdAt);
@@ -415,14 +415,14 @@ const Transaction = () => {
         const today = new Date(
           now.getFullYear(),
           now.getMonth(),
-          now.getDate(),
+          now.getDate()
         );
 
         if (filters.date === "Today") {
           const trxDay = new Date(
             trxDate.getFullYear(),
             trxDate.getMonth(),
-            trxDate.getDate(),
+            trxDate.getDate()
           );
           matchesDate = trxDay.getTime() === today.getTime();
         } else if (filters.date === "Last 7 days") {
@@ -441,16 +441,16 @@ const Transaction = () => {
         matchesMethod &&
         matchesStatus &&
         matchesUser &&
-        matchesDate
-      );
+        matchesDate);
+
     });
 
-    // Sort by date and time (most recent first) after filtering
-    // Use checkedOutAt if available, otherwise use createdAt or updatedAt
+
+
     return filtered.sort((a, b) => {
       const dateA = new Date(a.checkedOutAt || a.createdAt || a.updatedAt || 0);
       const dateB = new Date(b.checkedOutAt || b.createdAt || b.updatedAt || 0);
-      return dateB - dateA; // Descending order (newest first)
+      return dateB - dateA;
     });
   }, [transactions, search, filters]);
 
@@ -460,26 +460,26 @@ const Transaction = () => {
   }, [filteredTransactions, currentPage]);
   const paginatedTransactionIds = useMemo(
     () => paginatedTransactions.map((trx) => trx._id).filter(Boolean),
-    [paginatedTransactions],
+    [paginatedTransactions]
   );
   const allVisibleTransactionsSelected =
-    paginatedTransactionIds.length > 0 &&
-    paginatedTransactionIds.every((id) => selectedTransactionIds.includes(id));
+  paginatedTransactionIds.length > 0 &&
+  paginatedTransactionIds.every((id) => selectedTransactionIds.includes(id));
   const someVisibleTransactionsSelected = paginatedTransactionIds.some((id) =>
-    selectedTransactionIds.includes(id),
+  selectedTransactionIds.includes(id)
   );
 
   const stats = useMemo(() => {
-    // Exclude voided transactions from stats - they're shown in void logs
+
     const nonVoidedTransactions = transactions.filter(
-      (trx) => trx.status !== "Voided",
+      (trx) => trx.status !== "Voided"
     );
     const totals = {
       total: nonVoidedTransactions.length,
       Completed: 0,
       Returned: 0,
       "Partially Returned": 0,
-      Voided: 0, // Voided count is 0 since we don't show them here
+      Voided: 0
     };
 
     nonVoidedTransactions.forEach((trx) => {
@@ -491,24 +491,24 @@ const Transaction = () => {
 
   useEffect(() => {
     setSelectedTransactionIds((prev) =>
-      prev.filter((id) => filteredTransactions.some((trx) => trx._id === id)),
+    prev.filter((id) => filteredTransactions.some((trx) => trx._id === id))
     );
   }, [filteredTransactions]);
 
   useEffect(() => {
     if (selectAllTransactionsRef.current) {
       selectAllTransactionsRef.current.indeterminate =
-        isExportSelectionMode &&
-        !allVisibleTransactionsSelected &&
-        someVisibleTransactionsSelected;
+      isExportSelectionMode &&
+      !allVisibleTransactionsSelected &&
+      someVisibleTransactionsSelected;
     }
   }, [
-    isExportSelectionMode,
-    allVisibleTransactionsSelected,
-    someVisibleTransactionsSelected,
-  ]);
+  isExportSelectionMode,
+  allVisibleTransactionsSelected,
+  someVisibleTransactionsSelected]
+  );
 
-  // Memoize user options to avoid conditional hook usage
+
   const userDropdownOptions = useMemo(() => {
     const uniqueUsers = new Set();
     transactions.forEach((t) => {
@@ -526,9 +526,9 @@ const Transaction = () => {
   const handleToggleTransactionSelection = (transactionId) => {
     if (!transactionId) return;
     setSelectedTransactionIds((prev) =>
-      prev.includes(transactionId)
-        ? prev.filter((id) => id !== transactionId)
-        : [...prev, transactionId],
+    prev.includes(transactionId) ?
+    prev.filter((id) => id !== transactionId) :
+    [...prev, transactionId]
     );
   };
 
@@ -557,14 +557,14 @@ const Transaction = () => {
     setSelectedTransactionIds([]);
   };
 
-  const renderStatusPill = (status = "Completed") => (
-    <span
-      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-transform ${STATUS_STYLES[status]}`}
-    >
+  const renderStatusPill = (status = "Completed") =>
+  <span
+    className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-transform ${STATUS_STYLES[status]}`}>
+    
       {statusIcon[status]}
       {status}
-    </span>
-  );
+    </span>;
+
 
   const isTransactionReturnable = (transaction) => {
     if (!transaction || !transaction.checkedOutAt) return false;
@@ -572,7 +572,7 @@ const Transaction = () => {
     const now = new Date();
     const diffTime = Math.abs(now - transactionDate);
     const diffHours = diffTime / (1000 * 60 * 60);
-    return diffHours <= 48; // Within 2 days (48 hours)
+    return diffHours <= 48;
   };
 
   const handleViewClick = (transaction) => {
@@ -588,11 +588,11 @@ const Transaction = () => {
   const handleExportToCSV = () => {
     try {
       const transactionsToExport =
-        selectedTransactionIds.length > 0
-          ? filteredTransactions.filter((trx) =>
-            selectedTransactionIds.includes(trx._id),
-          )
-          : [];
+      selectedTransactionIds.length > 0 ?
+      filteredTransactions.filter((trx) =>
+      selectedTransactionIds.includes(trx._id)
+      ) :
+      [];
 
       if (transactionsToExport.length === 0) {
         alert("Please select at least one transaction to export.");
@@ -600,35 +600,35 @@ const Transaction = () => {
       }
 
       const headers = [
-        "Receipt No.",
-        "Transaction ID",
-        "Date",
-        "Time",
-        "User ID",
-        "Performed By ID",
-        "Performed By Name",
-        "Payment Method",
-        "Reference No.",
-        "Total Amount",
-        "Amount Received",
-        "Change Given",
-        "Status",
-        "Item Count",
-        "Items (Name)",
-        "Items (SKU)",
-        "Items (Variant)",
-        "Items (Size)",
-        "Items (Qty)",
-        "Items (Price)",
-        "Items (Subtotal)",
-        "Voided By",
-        "Voided By Name",
-        "Voided At",
-        "Void Reason",
-        "Original Transaction ID",
-        "Created At",
-        "Updated At",
-      ];
+      "Receipt No.",
+      "Transaction ID",
+      "Date",
+      "Time",
+      "User ID",
+      "Performed By ID",
+      "Performed By Name",
+      "Payment Method",
+      "Reference No.",
+      "Total Amount",
+      "Amount Received",
+      "Change Given",
+      "Status",
+      "Item Count",
+      "Items (Name)",
+      "Items (SKU)",
+      "Items (Variant)",
+      "Items (Size)",
+      "Items (Qty)",
+      "Items (Price)",
+      "Items (Subtotal)",
+      "Voided By",
+      "Voided By Name",
+      "Voided At",
+      "Void Reason",
+      "Original Transaction ID",
+      "Created At",
+      "Updated At"];
+
 
       const escapeCSV = (value) => {
         if (value === null || value === undefined) return "";
@@ -640,61 +640,61 @@ const Transaction = () => {
       };
 
       const csvRows = transactionsToExport.map((trx) => {
-        const checkoutDate = trx.checkedOutAt
-          ? new Date(trx.checkedOutAt)
-          : new Date(trx.createdAt);
+        const checkoutDate = trx.checkedOutAt ?
+        new Date(trx.checkedOutAt) :
+        new Date(trx.createdAt);
         const createdDate = trx.createdAt ? new Date(trx.createdAt) : null;
         const updatedDate = trx.updatedAt ? new Date(trx.updatedAt) : null;
         const voidedDate = trx.voidedAt ? new Date(trx.voidedAt) : null;
 
-        // Extract item details
+
         const itemNames =
-          trx.items?.map((item) => item.itemName || "").join("; ") || "";
+        trx.items?.map((item) => item.itemName || "").join("; ") || "";
         const itemSkus =
-          trx.items?.map((item) => item.sku || "").join("; ") || "";
+        trx.items?.map((item) => item.sku || "").join("; ") || "";
         const itemVariants =
-          trx.items?.map((item) => item.variant || "").join("; ") || "";
+        trx.items?.map((item) => item.variant || "").join("; ") || "";
         const itemSizes =
-          trx.items?.map((item) => item.selectedSize || "").join("; ") || "";
+        trx.items?.map((item) => item.selectedSize || "").join("; ") || "";
         const itemQtys =
-          trx.items?.map((item) => item.quantity || 0).join("; ") || "";
+        trx.items?.map((item) => item.quantity || 0).join("; ") || "";
         const itemPrices =
-          trx.items?.map((item) => item.price || 0).join("; ") || "";
+        trx.items?.map((item) => item.price || 0).join("; ") || "";
         const itemSubtotals =
-          trx.items
-            ?.map((item) => (item.quantity || 0) * (item.price || 0))
-            .join("; ") || "";
+        trx.items?.
+        map((item) => (item.quantity || 0) * (item.price || 0)).
+        join("; ") || "";
 
         return [
-          escapeCSV(trx.receiptNo || ""),
-          escapeCSV(trx._id || ""),
-          escapeCSV(checkoutDate.toLocaleDateString()),
-          escapeCSV(checkoutDate.toLocaleTimeString()),
-          escapeCSV(trx.userId || ""),
-          escapeCSV(trx.performedById || ""),
-          escapeCSV(trx.performedByName || ""),
-          escapeCSV(trx.paymentMethod || ""),
-          escapeCSV(trx.referenceNo || ""),
-          escapeCSV(trx.totalAmount || 0),
-          escapeCSV(trx.amountReceived || 0),
-          escapeCSV(trx.changeGiven || 0),
-          escapeCSV(trx.status || ""),
-          escapeCSV(trx.items?.length || 0),
-          escapeCSV(itemNames),
-          escapeCSV(itemSkus),
-          escapeCSV(itemVariants),
-          escapeCSV(itemSizes),
-          escapeCSV(itemQtys),
-          escapeCSV(itemPrices),
-          escapeCSV(itemSubtotals),
-          escapeCSV(trx.voidedBy || ""),
-          escapeCSV(trx.voidedByName || ""),
-          escapeCSV(voidedDate ? voidedDate.toLocaleString() : ""),
-          escapeCSV(trx.voidReason || ""),
-          escapeCSV(trx.originalTransactionId || ""),
-          escapeCSV(createdDate ? createdDate.toLocaleString() : ""),
-          escapeCSV(updatedDate ? updatedDate.toLocaleString() : ""),
-        ].join(",");
+        escapeCSV(trx.receiptNo || ""),
+        escapeCSV(trx._id || ""),
+        escapeCSV(checkoutDate.toLocaleDateString()),
+        escapeCSV(checkoutDate.toLocaleTimeString()),
+        escapeCSV(trx.userId || ""),
+        escapeCSV(trx.performedById || ""),
+        escapeCSV(trx.performedByName || ""),
+        escapeCSV(trx.paymentMethod || ""),
+        escapeCSV(trx.referenceNo || ""),
+        escapeCSV(trx.totalAmount || 0),
+        escapeCSV(trx.amountReceived || 0),
+        escapeCSV(trx.changeGiven || 0),
+        escapeCSV(trx.status || ""),
+        escapeCSV(trx.items?.length || 0),
+        escapeCSV(itemNames),
+        escapeCSV(itemSkus),
+        escapeCSV(itemVariants),
+        escapeCSV(itemSizes),
+        escapeCSV(itemQtys),
+        escapeCSV(itemPrices),
+        escapeCSV(itemSubtotals),
+        escapeCSV(trx.voidedBy || ""),
+        escapeCSV(trx.voidedByName || ""),
+        escapeCSV(voidedDate ? voidedDate.toLocaleString() : ""),
+        escapeCSV(trx.voidReason || ""),
+        escapeCSV(trx.originalTransactionId || ""),
+        escapeCSV(createdDate ? createdDate.toLocaleString() : ""),
+        escapeCSV(updatedDate ? updatedDate.toLocaleString() : "")].
+        join(",");
       });
 
       const csvContent = [headers.join(","), ...csvRows].join("\n");
@@ -704,7 +704,7 @@ const Transaction = () => {
       link.setAttribute("href", url);
       link.setAttribute(
         "download",
-        `transactions_export_${new Date().toISOString().split("T")[0]}.csv`,
+        `transactions_export_${new Date().toISOString().split("T")[0]}.csv`
       );
       link.style.visibility = "hidden";
       document.body.appendChild(link);
@@ -726,7 +726,7 @@ const Transaction = () => {
 
     try {
       alert(
-        "Transaction import is not supported. Transactions are created through the POS terminal.",
+        "Transaction import is not supported. Transactions are created through the POS terminal."
       );
       event.target.value = "";
     } catch (error) {
@@ -753,68 +753,68 @@ const Transaction = () => {
       setLoading(true);
       console.log("Processing return for items:", itemsToReturn);
 
-      // Get indices of returned items in original transaction
+
       const returnedIndices = itemsToReturn.map((item) => item.originalIndex);
 
-      // Separate items by reason - Damaged/Defective go to archive, others go back to stock
+
       const damagedItems = itemsToReturn.filter(
         (item) =>
-          item.reason === "Damaged" ||
-          item.reason === "Defective" ||
-          item.reason === "Expired",
+        item.reason === "Damaged" ||
+        item.reason === "Defective" ||
+        item.reason === "Expired"
       );
       const returnableItems = itemsToReturn.filter(
         (item) =>
-          item.reason !== "Damaged" &&
-          item.reason !== "Defective" &&
-          item.reason !== "Expired",
+        item.reason !== "Damaged" &&
+        item.reason !== "Defective" &&
+        item.reason !== "Expired"
       );
 
       console.log("Damaged items (to archive):", damagedItems.length);
       console.log("Returnable items (to stock):", returnableItems.length);
 
-      // STEP 1: Update original transaction FIRST (most likely to fail)
-      // This ensures we don't modify stock/archive if transaction update fails
+
+
       const updatedItems = transaction.items.map((item, idx) => {
         if (returnedIndices.includes(idx)) {
           const returnedItem = itemsToReturn.find(
-            (ri) => ri.originalIndex === idx,
+            (ri) => ri.originalIndex === idx
           );
           const returnedQty = returnedItem?.quantity || item.quantity;
           const originalQty = item.quantity;
 
-          // If returning all quantity, mark as fully returned
+
           if (returnedQty >= originalQty) {
             return {
               ...item,
               returnStatus: "Returned",
               returnReason: returnedItem?.reason || "Returned",
-              returnedQuantity: originalQty,
+              returnedQuantity: originalQty
             };
           } else {
-            // Partial return - reduce quantity and track returned amount
+
             return {
               ...item,
               quantity: originalQty - returnedQty,
               returnStatus: "Partially Returned",
               returnReason: returnedItem?.reason || "Returned",
-              returnedQuantity: returnedQty,
+              returnedQuantity: returnedQty
             };
           }
         }
         return item;
       });
 
-      // Count items - check if all items are fully returned
+
       const fullyReturnedCount = updatedItems.filter(
-        (item) => item.returnStatus === "Returned",
+        (item) => item.returnStatus === "Returned"
       ).length;
       const partiallyReturnedCount = updatedItems.filter(
-        (item) => item.returnStatus === "Partially Returned",
+        (item) => item.returnStatus === "Partially Returned"
       ).length;
       const allItemsFullyReturned = fullyReturnedCount === updatedItems.length;
       const hasAnyReturns =
-        fullyReturnedCount > 0 || partiallyReturnedCount > 0;
+      fullyReturnedCount > 0 || partiallyReturnedCount > 0;
 
       let newStatus = "Completed";
       if (allItemsFullyReturned) {
@@ -823,20 +823,20 @@ const Transaction = () => {
         newStatus = "Partially Returned";
       }
 
-      // Calculate total amount from remaining quantities (excluding fully returned items)
-      const newTotalAmount = updatedItems
-        .filter((item) => item.returnStatus !== "Returned")
-        .reduce(
-          (sum, item) =>
-            sum + item.quantity * (item.price || item.itemPrice || 0),
-          0,
-        );
 
-      // Update original transaction - keep all items but mark returned ones
+      const newTotalAmount = updatedItems.
+      filter((item) => item.returnStatus !== "Returned").
+      reduce(
+        (sum, item) =>
+        sum + item.quantity * (item.price || item.itemPrice || 0),
+        0
+      );
+
+
       const updatePayload = {
         status: newStatus,
         items: updatedItems,
-        totalAmount: newTotalAmount,
+        totalAmount: newTotalAmount
       };
       console.log("Updating original transaction FIRST:", updatePayload);
 
@@ -845,24 +845,24 @@ const Transaction = () => {
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updatePayload),
-        },
+          body: JSON.stringify(updatePayload)
+        }
       );
       const updateData = await updateResponse.json();
       console.log("Transaction update response:", updateData);
 
-      // If transaction update fails, stop here - don't modify stock or archive
+
       if (!updateResponse.ok || !updateData.success) {
         throw new Error(updateData.message || "Failed to update transaction");
       }
 
-      // STEP 2: Only after transaction update succeeds, process archive for damaged items
+
       for (const item of damagedItems) {
-        // Get product details for archiving
+
         let productDetails = null;
         try {
           const productResponse = await fetch(
-            `${API_BASE_URL}/api/products/${item.productId}`,
+            `${API_BASE_URL}/api/products/${item.productId}`
           );
           const productData = await productResponse.json();
           if (productData.success) {
@@ -872,7 +872,7 @@ const Transaction = () => {
           console.warn("Failed to fetch product details for archiving:", error);
         }
 
-        // Archive the damaged item
+
         const archivePayload = {
           productId: item.productId,
           itemName: item.itemName,
@@ -890,7 +890,7 @@ const Transaction = () => {
           originalTransactionId: transaction._id,
           archivedBy: transaction.performedByName || "System",
           archivedById: transaction.performedById || "",
-          notes: `Returned due to: ${item.reason}`,
+          notes: `Returned due to: ${item.reason}`
         };
 
         console.log("Archiving item:", archivePayload);
@@ -899,8 +899,8 @@ const Transaction = () => {
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(archivePayload),
-          },
+            body: JSON.stringify(archivePayload)
+          }
         );
         const archiveData = await archiveResponse.json();
         console.log("Archive response:", archiveData);
@@ -910,19 +910,19 @@ const Transaction = () => {
         }
       }
 
-      // STEP 3: Process returnable items - restore stock (Stock-In)
+
       if (returnableItems.length > 0) {
         const stockUpdatePayload = {
           items: returnableItems.map((item) => ({
             _id: item.productId,
             sku: item.sku,
             size: item.selectedSize,
-            quantity: item.quantity,
+            quantity: item.quantity
           })),
           performedByName: transaction.performedByName || "System",
           performedById: transaction.performedById || "",
           reason: "Returned Item",
-          type: "Stock-In",
+          type: "Stock-In"
         };
 
         console.log("Updating stock (Stock-In):", stockUpdatePayload);
@@ -931,8 +931,8 @@ const Transaction = () => {
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(stockUpdatePayload),
-          },
+            body: JSON.stringify(stockUpdatePayload)
+          }
         );
         const stockData = await stockResponse.json();
         console.log("Stock update response:", stockData);
@@ -942,22 +942,22 @@ const Transaction = () => {
         }
       }
 
-      // STEP 4: Create return transactions for record keeping (for all returned items)
+
       for (const item of itemsToReturn) {
         const returnTransaction = {
           userId: transaction.userId,
           items: [
-            {
-              productId: item.productId,
-              itemName: item.itemName,
-              sku: item.sku,
-              variant: item.variant,
-              selectedSize: item.selectedSize,
-              quantity: item.quantity,
-              price: item.price,
-              returnReason: item.reason,
-            },
-          ],
+          {
+            productId: item.productId,
+            itemName: item.itemName,
+            sku: item.sku,
+            variant: item.variant,
+            selectedSize: item.selectedSize,
+            quantity: item.quantity,
+            price: item.price,
+            returnReason: item.reason
+          }],
+
           paymentMethod: "return",
           amountReceived: 0,
           changeGiven: 0,
@@ -968,7 +968,7 @@ const Transaction = () => {
           performedByName: transaction.performedByName,
           status: "Returned",
           originalTransactionId: transaction._id,
-          checkedOutAt: new Date(),
+          checkedOutAt: new Date()
         };
 
         console.log("Creating return transaction:", returnTransaction);
@@ -977,8 +977,8 @@ const Transaction = () => {
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(returnTransaction),
-          },
+            body: JSON.stringify(returnTransaction)
+          }
         );
         const returnTrxData = await returnTrxResponse.json();
         console.log("Return transaction response:", returnTrxData);
@@ -996,155 +996,155 @@ const Transaction = () => {
   const totalPages = Math.ceil(filteredTransactions.length / rowsPerPage) || 1;
   const transactionTableColumnCount = isExportSelectionMode ? 10 : 9;
 
-  // Show loading only on initial load when there's no data yet
+
   if (isInitialLoading.current && transactions.length === 0) {
     return (
       <div
         className="p-6 min-h-screen flex items-center justify-center"
-        style={{ background: "#F5F5F5" }}
-      >
+        style={{ background: "#F5F5F5" }}>
+        
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B7355] mb-4"></div>
           <p className="text-gray-600">Loading transactions...</p>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
     <div
-      className={`p-6 min-h-screen ${theme === "dark" ? "bg-[#1E1B18]" : "bg-[#F5F5F5]"}`}
-    >
+      className={`p-6 min-h-screen ${theme === "dark" ? "bg-[#1E1B18]" : "bg-[#F5F5F5]"}`}>
+      
       <>
         <Header
           pageName="POS Transactions"
           showBorder={false}
-          profileBackground=""
-        />
+          profileBackground="" />
+        
 
         <div className="flex gap-4 flex-wrap mb-6 mt-4 justify-between">
           <div className="flex gap-4 flex-wrap">
             {[
-              {
-                label: "Total Transactions",
-                count: stats.total,
-                borderColor: "#3B82F6",
-                textColor: "#3B82F6",
-                iconBg: "#DBEAFE",
-                icon: (
-                  <img
-                    src={TotalTransactionIcon}
-                    alt="Total Transactions"
-                    className="w-10 h-10"
-                  />
-                ),
-              },
-              {
-                label: "Completed",
-                count: stats.Completed || 0,
-                borderColor: "#22C55E",
-                textColor: "#22C55E",
-                iconBg: "#DCFCE7",
-                icon: (
-                  <img
-                    src={CompletedIcon}
-                    alt="Completed"
-                    className="w-10 h-10"
-                  />
-                ),
-              },
-              {
-                label: "Returned",
-                count: stats.Returned || 0,
-                borderColor: "#F97316",
-                textColor: "#F97316",
-                iconBg: "#FFEDD5",
-                icon: <FaUndoAlt />,
-              },
-            ].map((card) => (
-              <motion.div
-                key={card.label}
-                whileHover={{ y: -4 }}
-                whileTap={{ scale: 0.98 }}
-                className={`rounded-2xl shadow-md flex items-center justify-between px-5 py-4 relative overflow-hidden text-left ${theme === "dark" ? "bg-[#2A2724]" : "bg-white"
-                  }`}
-                style={{ minWidth: "200px" }}
-              >
+            {
+              label: "Total Transactions",
+              count: stats.total,
+              borderColor: "#3B82F6",
+              textColor: "#3B82F6",
+              iconBg: "#DBEAFE",
+              icon:
+              <img
+                src={TotalTransactionIcon}
+                alt="Total Transactions"
+                className="w-10 h-10" />
+
+
+            },
+            {
+              label: "Completed",
+              count: stats.Completed || 0,
+              borderColor: "#22C55E",
+              textColor: "#22C55E",
+              iconBg: "#DCFCE7",
+              icon:
+              <img
+                src={CompletedIcon}
+                alt="Completed"
+                className="w-10 h-10" />
+
+
+            },
+            {
+              label: "Returned",
+              count: stats.Returned || 0,
+              borderColor: "#F97316",
+              textColor: "#F97316",
+              iconBg: "#FFEDD5",
+              icon: <FaUndoAlt />
+            }].
+            map((card) =>
+            <motion.div
+              key={card.label}
+              whileHover={{ y: -4 }}
+              whileTap={{ scale: 0.98 }}
+              className={`rounded-2xl shadow-md flex items-center justify-between px-5 py-4 relative overflow-hidden text-left ${theme === "dark" ? "bg-[#2A2724]" : "bg-white"}`
+              }
+              style={{ minWidth: "200px" }}>
+              
                 <div
-                  className="absolute left-0 top-0 bottom-0 w-2"
-                  style={{ backgroundColor: card.borderColor }}
-                />
+                className="absolute left-0 top-0 bottom-0 w-2"
+                style={{ backgroundColor: card.borderColor }} />
+              
                 <div className="ml-2">
                   <motion.p
-                    key={card.count}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-3xl font-bold"
-                    style={{ color: card.textColor }}
-                  >
+                  key={card.count}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-3xl font-bold"
+                  style={{ color: card.textColor }}>
+                  
                     {card.count}
                   </motion.p>
                   <p
-                    className="text-xs mt-0.5"
-                    style={{ color: card.textColor }}
-                  >
+                  className="text-xs mt-0.5"
+                  style={{ color: card.textColor }}>
+                  
                     {card.label}
                   </p>
                 </div>
                 <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center text-2xl"
-                  style={{
-                    backgroundColor: card.iconBg,
-                    color: card.textColor,
-                  }}
-                >
+                className="w-16 h-16 rounded-full flex items-center justify-center text-2xl"
+                style={{
+                  backgroundColor: card.iconBg,
+                  color: card.textColor
+                }}>
+                
                   {card.icon}
                 </div>
               </motion.div>
-            ))}
+            )}
           </div>
 
           <div className="flex gap-4 items-start">
             <button
               onClick={handleExportButtonClick}
-              className={`rounded-2xl shadow-md flex flex-col items-center justify-center px-5 py-4 transition-colors ${isExportSelectionMode
-                ? "border border-[#AD7F65] bg-[#AD7F65]/5"
-                : theme === "dark"
-                  ? "bg-[#2A2724] hover:bg-[#352F2A]"
-                  : "bg-white hover:bg-gray-50"
-                }`}
-              style={{ minWidth: "100px" }}
-            >
+              className={`rounded-2xl shadow-md flex flex-col items-center justify-center px-5 py-4 transition-colors ${isExportSelectionMode ?
+              "border border-[#AD7F65] bg-[#AD7F65]/5" :
+              theme === "dark" ?
+              "bg-[#2A2724] hover:bg-[#352F2A]" :
+              "bg-white hover:bg-gray-50"}`
+              }
+              style={{ minWidth: "100px" }}>
+              
               <svg
                 className={`w-8 h-8 mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                 fill="none"
                 stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+                viewBox="0 0 24 24">
+                
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                
               </svg>
               <div
-                className={`text-xs font-medium ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
-              >
+                className={`text-xs font-medium ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
+                
                 {isExportSelectionMode ? "Export Selected" : "Export"}
               </div>
             </button>
-            {isExportSelectionMode && (
-              <button
-                onClick={handleCancelExportSelection}
-                className={`rounded-2xl shadow-md px-4 py-2 text-xs font-medium border transition-colors ${theme === "dark"
-                  ? "bg-[#2A2724] border-gray-600 text-gray-400 hover:bg-[#352F2A]"
-                  : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-                  }`}
-              >
+            {isExportSelectionMode &&
+            <button
+              onClick={handleCancelExportSelection}
+              className={`rounded-2xl shadow-md px-4 py-2 text-xs font-medium border transition-colors ${theme === "dark" ?
+              "bg-[#2A2724] border-gray-600 text-gray-400 hover:bg-[#352F2A]" :
+              "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"}`
+              }>
+              
                 Cancel
               </button>
-            )}
+            }
 
 
           </div>
@@ -1152,11 +1152,11 @@ const Transaction = () => {
 
         <div className="flex flex-col lg:flex-row gap-6">
           <div
-            className={`flex-1 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] p-6 border ${theme === "dark"
-              ? "bg-[#2A2724] border-[#4A4037]"
-              : "bg-white border-white/80"
-              }`}
-          >
+            className={`flex-1 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] p-6 border ${theme === "dark" ?
+            "bg-[#2A2724] border-[#4A4037]" :
+            "bg-white border-white/80"}`
+            }>
+            
             <div className="flex flex-col xl:flex-row xl:items-center gap-4 mb-4">
               <div className="relative flex-1">
                 <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-[#AD7F65]" />
@@ -1167,11 +1167,11 @@ const Transaction = () => {
                     setCurrentPage(1);
                   }}
                   placeholder="Search by receipt number..."
-                  className={`w-full border rounded-2xl h-12 pl-12 pr-4 shadow-inner focus:outline-none focus:border-[#AD7F65] focus:ring focus:ring-[#AD7F65]/20 transition-all ${theme === "dark"
-                    ? "bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500"
-                    : "bg-white border-gray-200 text-gray-900"
-                    }`}
-                />
+                  className={`w-full border rounded-2xl h-12 pl-12 pr-4 shadow-inner focus:outline-none focus:border-[#AD7F65] focus:ring focus:ring-[#AD7F65]/20 transition-all ${theme === "dark" ?
+                  "bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500" :
+                  "bg-white border-gray-200 text-gray-900"}`
+                  } />
+                
               </div>
               <div className="flex flex-wrap gap-3">
                 <Dropdown
@@ -1179,49 +1179,49 @@ const Transaction = () => {
                   options={dateOptions}
                   selected={filters.date}
                   onSelect={(value) =>
-                    setFilters((prev) => ({ ...prev, date: value }))
+                  setFilters((prev) => ({ ...prev, date: value }))
                   }
                   isOpen={dropdownOpen.date}
                   setIsOpen={(value) =>
-                    setDropdownOpen((prev) => ({ ...prev, date: value }))
-                  }
-                />
+                  setDropdownOpen((prev) => ({ ...prev, date: value }))
+                  } />
+                
                 <Dropdown
                   label="Payment Method"
                   options={paymentOptions}
                   selected={filters.method}
                   onSelect={(value) =>
-                    setFilters((prev) => ({ ...prev, method: value }))
+                  setFilters((prev) => ({ ...prev, method: value }))
                   }
                   isOpen={dropdownOpen.method}
                   setIsOpen={(value) =>
-                    setDropdownOpen((prev) => ({ ...prev, method: value }))
-                  }
-                />
+                  setDropdownOpen((prev) => ({ ...prev, method: value }))
+                  } />
+                
                 <Dropdown
                   label="User"
                   options={userDropdownOptions}
                   selected={filters.user}
                   onSelect={(value) =>
-                    setFilters((prev) => ({ ...prev, user: value }))
+                  setFilters((prev) => ({ ...prev, user: value }))
                   }
                   isOpen={dropdownOpen.user}
                   setIsOpen={(value) =>
-                    setDropdownOpen((prev) => ({ ...prev, user: value }))
-                  }
-                />
+                  setDropdownOpen((prev) => ({ ...prev, user: value }))
+                  } />
+                
                 <Dropdown
                   label="Status"
                   options={statusOptions}
                   selected={filters.status}
                   onSelect={(value) =>
-                    setFilters((prev) => ({ ...prev, status: value }))
+                  setFilters((prev) => ({ ...prev, status: value }))
                   }
                   isOpen={dropdownOpen.status}
                   setIsOpen={(value) =>
-                    setDropdownOpen((prev) => ({ ...prev, status: value }))
-                  }
-                />
+                  setDropdownOpen((prev) => ({ ...prev, status: value }))
+                  } />
+                
               </div>
             </div>
 
@@ -1229,110 +1229,110 @@ const Transaction = () => {
               <table className="w-full text-sm text-left">
                 <thead className="sticky top-0">
                   <tr
-                    className={`${theme === "dark" ? "bg-[#352F2A] text-[#C2A68C]" : "bg-[#F6EEE7] text-[#4A3B2F]"} text-xs uppercase tracking-wider`}
-                  >
-                    {isExportSelectionMode && (
-                      <th className="px-4 py-3 font-semibold">
+                    className={`${theme === "dark" ? "bg-[#352F2A] text-[#C2A68C]" : "bg-[#F6EEE7] text-[#4A3B2F]"} text-xs uppercase tracking-wider`}>
+                    
+                    {isExportSelectionMode &&
+                    <th className="px-4 py-3 font-semibold">
                         <label
-                          className={`flex items-center gap-2 ${theme === "dark" ? "text-[#C2A68C]" : "text-[#4A3B2F]"}`}
-                        >
+                        className={`flex items-center gap-2 ${theme === "dark" ? "text-[#C2A68C]" : "text-[#4A3B2F]"}`}>
+                        
                           <input
-                            ref={selectAllTransactionsRef}
-                            type="checkbox"
-                            className="w-4 h-4 text-[#AD7F65] border-[#AD7F65] rounded focus:ring-[#AD7F65]"
-                            onChange={handleToggleSelectAllTransactions}
-                            checked={
-                              isExportSelectionMode
-                                ? allVisibleTransactionsSelected
-                                : false
-                            }
-                          />
+                          ref={selectAllTransactionsRef}
+                          type="checkbox"
+                          className="w-4 h-4 text-[#AD7F65] border-[#AD7F65] rounded focus:ring-[#AD7F65]"
+                          onChange={handleToggleSelectAllTransactions}
+                          checked={
+                          isExportSelectionMode ?
+                          allVisibleTransactionsSelected :
+                          false
+                          } />
+                        
                           <span className="text-[11px] tracking-wide">All</span>
                         </label>
                       </th>
-                    )}
+                    }
                     {[
-                      "Receipt No.",
-                      "Transaction ID",
-                      "Date",
-                      "Performed By",
-                      "Payment Method",
-                      "Total",
-                      "Status",
-                      "Quick Action",
-                    ].map((col) => (
-                      <th key={col} className="px-4 py-3 font-semibold">
+                    "Receipt No.",
+                    "Transaction ID",
+                    "Date",
+                    "Performed By",
+                    "Payment Method",
+                    "Total",
+                    "Status",
+                    "Quick Action"].
+                    map((col) =>
+                    <th key={col} className="px-4 py-3 font-semibold">
                         {col}
                       </th>
-                    ))}
+                    )}
                   </tr>
                 </thead>
                 <tbody>
-                  {loading && paginatedTransactions.length === 0 && (
-                    <tr>
+                  {loading && paginatedTransactions.length === 0 &&
+                  <tr>
                       <td
-                        colSpan={transactionTableColumnCount}
-                        className="py-10 text-center text-gray-500"
-                      >
+                      colSpan={transactionTableColumnCount}
+                      className="py-10 text-center text-gray-500">
+                      
                         Loading transactions...
                       </td>
                     </tr>
-                  )}
-                  {!loading && paginatedTransactions.length === 0 && (
-                    <tr>
+                  }
+                  {!loading && paginatedTransactions.length === 0 &&
+                  <tr>
                       <td
-                        colSpan={transactionTableColumnCount}
-                        className="py-10 text-center text-gray-400 italic"
-                      >
+                      colSpan={transactionTableColumnCount}
+                      className="py-10 text-center text-gray-400 italic">
+                      
                         No transactions found
                       </td>
                     </tr>
-                  )}
+                  }
                   {paginatedTransactions.map((trx, index) => {
                     const isActive = selectedTransaction?._id === trx._id;
                     return (
                       <tr
                         key={trx._id}
                         onClick={() => handleRowClick(trx)}
-                        className={`cursor-pointer border-b transition-all ${theme === "dark"
-                          ? "border-gray-700"
-                          : "border-gray-100"
-                          } ${isActive
-                            ? theme === "dark"
-                              ? "bg-[#352F2A]"
-                              : "bg-[#FDF7F1] shadow-inner"
-                            : theme === "dark"
-                              ? "hover:bg-[#2A2521] text-gray-300"
-                              : "hover:bg-[#F9F2EC]"
-                          }`}
-                      >
-                        {isExportSelectionMode && (
-                          <td
-                            className="px-4 py-3"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <input
-                              type="checkbox"
-                              className="w-4 h-4 text-[#AD7F65] border-[#AD7F65] rounded focus:ring-[#AD7F65]"
-                              checked={selectedTransactionIds.includes(trx._id)}
-                              onChange={() =>
-                                handleToggleTransactionSelection(trx._id)
-                              }
-                              disabled={!trx._id}
-                            />
-                          </td>
-                        )}
+                        className={`cursor-pointer border-b transition-all ${theme === "dark" ?
+                        "border-gray-700" :
+                        "border-gray-100"} ${
+                        isActive ?
+                        theme === "dark" ?
+                        "bg-[#352F2A]" :
+                        "bg-[#FDF7F1] shadow-inner" :
+                        theme === "dark" ?
+                        "hover:bg-[#2A2521] text-gray-300" :
+                        "hover:bg-[#F9F2EC]"}`
+                        }>
+                        
+                        {isExportSelectionMode &&
                         <td
-                          className={`px-4 py-3 font-semibold ${theme === "dark" ? "text-white" : "text-gray-800"}`}
-                        >
+                          className="px-4 py-3"
+                          onClick={(e) => e.stopPropagation()}>
+                          
+                            <input
+                            type="checkbox"
+                            className="w-4 h-4 text-[#AD7F65] border-[#AD7F65] rounded focus:ring-[#AD7F65]"
+                            checked={selectedTransactionIds.includes(trx._id)}
+                            onChange={() =>
+                            handleToggleTransactionSelection(trx._id)
+                            }
+                            disabled={!trx._id} />
+                          
+                          </td>
+                        }
+                        <td
+                          className={`px-4 py-3 font-semibold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>
+                          
                           {trx.receiptNo ? `#${trx.receiptNo}` : "---"}
                         </td>
                         <td
-                          className={`px-4 py-3 font-semibold text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
-                        >
+                          className={`px-4 py-3 font-semibold text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
+                          
                           {trx.referenceNo ||
-                            trx._id?.substring(0, 12) ||
-                            "---"}
+                          trx._id?.substring(0, 12) ||
+                          "---"}
                         </td>
                         <td className="px-4 py-3 text-gray-500">
                           {new Date(trx.checkedOutAt).toLocaleDateString(
@@ -1340,13 +1340,13 @@ const Transaction = () => {
                             {
                               month: "short",
                               day: "numeric",
-                              year: "numeric",
-                            },
+                              year: "numeric"
+                            }
                           )}
                         </td>
                         <td
-                          className={`px-4 py-3 flex items-center gap-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}
-                        >
+                          className={`px-4 py-3 flex items-center gap-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                          
                           <span className="w-8 h-8 rounded-full bg-[#F0E5DB] flex items-center justify-center text-xs font-bold text-[#8B6B55]">
                             {getInitials(trx.performedByName || "Staff")}
                           </span>
@@ -1369,11 +1369,11 @@ const Transaction = () => {
                                 e.stopPropagation();
                                 handleViewClick(trx);
                               }}
-                              className={`w-9 h-9 border rounded-xl flex items-center justify-center shadow-sm hover:shadow-md hover:-translate-y-0.5 whitespace-nowrap transition-all ${theme === "dark"
-                                ? "bg-[#2A2724] border-gray-600 text-gray-400 hover:border-green-500 hover:text-green-500"
-                                : "bg-white border-gray-200 text-gray-500 hover:border-green-500 hover:text-green-600"
-                                }`}
-                            >
+                              className={`w-9 h-9 border rounded-xl flex items-center justify-center shadow-sm hover:shadow-md hover:-translate-y-0.5 whitespace-nowrap transition-all ${theme === "dark" ?
+                              "bg-[#2A2724] border-gray-600 text-gray-400 hover:border-green-500 hover:text-green-500" :
+                              "bg-white border-gray-200 text-gray-500 hover:border-green-500 hover:text-green-600"}`
+                              }>
+                              
                               <FaEye />
                             </button>
                             <button
@@ -1382,34 +1382,34 @@ const Transaction = () => {
                                 e.stopPropagation();
                                 handlePrintClick(trx);
                               }}
-                              className={`w-9 h-9 border rounded-xl flex items-center justify-center shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all ${theme === "dark"
-                                ? "bg-[#2A2724] border-gray-600 text-gray-400 hover:border-blue-500 hover:text-blue-500"
-                                : "bg-white border-gray-200 text-gray-500 hover:border-blue-500 hover:text-blue-600"
-                                }`}
-                            >
+                              className={`w-9 h-9 border rounded-xl flex items-center justify-center shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all ${theme === "dark" ?
+                              "bg-[#2A2724] border-gray-600 text-gray-400 hover:border-blue-500 hover:text-blue-500" :
+                              "bg-white border-gray-200 text-gray-500 hover:border-blue-500 hover:text-blue-600"}`
+                              }>
+                              
                               <FaPrint />
                             </button>
                             {isTransactionReturnable(trx) &&
-                              trx.status !== "Returned" &&
-                              trx.status !== "Voided" && (
-                                <button
-                                  title="Return"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleReturnClick(trx);
-                                  }}
-                                  className={`w-9 h-9 border rounded-xl flex items-center justify-center shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all ${theme === "dark"
-                                    ? "bg-[#2A2724] border-gray-600 text-gray-400 hover:border-orange-500 hover:text-orange-500"
-                                    : "bg-white border-gray-200 text-gray-500 hover:border-orange-500 hover:text-orange-600"
-                                    }`}
-                                >
+                            trx.status !== "Returned" &&
+                            trx.status !== "Voided" &&
+                            <button
+                              title="Return"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleReturnClick(trx);
+                              }}
+                              className={`w-9 h-9 border rounded-xl flex items-center justify-center shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all ${theme === "dark" ?
+                              "bg-[#2A2724] border-gray-600 text-gray-400 hover:border-orange-500 hover:text-orange-500" :
+                              "bg-white border-gray-200 text-gray-500 hover:border-orange-500 hover:text-orange-600"}`
+                              }>
+                              
                                   <FaUndoAlt />
                                 </button>
-                              )}
+                            }
                           </div>
                         </td>
-                      </tr>
-                    );
+                      </tr>);
+
                   })}
                 </tbody>
               </table>
@@ -1417,78 +1417,78 @@ const Transaction = () => {
 
             <div className="flex items-center justify-between mt-5">
               <div
-                className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}
-              >
+                className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                
                 Showing {(currentPage - 1) * rowsPerPage + 1}-
                 {Math.min(
                   currentPage * rowsPerPage,
-                  filteredTransactions.length,
+                  filteredTransactions.length
                 )}{" "}
                 of {filteredTransactions.length}
               </div>
               <div
-                className={`flex items-center gap-2 rounded-full border px-3 py-1 shadow-inner ${theme === "dark"
-                  ? "bg-[#1E1B18] border-gray-600"
-                  : "bg-white border-gray-200"
-                  }`}
-              >
+                className={`flex items-center gap-2 rounded-full border px-3 py-1 shadow-inner ${theme === "dark" ?
+                "bg-[#1E1B18] border-gray-600" :
+                "bg-white border-gray-200"}`
+                }>
+                
                 <button
                   onClick={() =>
-                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  setCurrentPage((prev) => Math.max(1, prev - 1))
                   }
                   disabled={currentPage === 1}
-                  className={`p-2 rounded-full ${currentPage === 1
-                    ? theme === "dark"
-                      ? "text-gray-600"
-                      : "text-gray-300"
-                    : theme === "dark"
-                      ? "hover:bg-[#2A2724] text-gray-400"
-                      : "hover:bg-gray-50 text-gray-600"
-                    }`}
-                >
+                  className={`p-2 rounded-full ${currentPage === 1 ?
+                  theme === "dark" ?
+                  "text-gray-600" :
+                  "text-gray-300" :
+                  theme === "dark" ?
+                  "hover:bg-[#2A2724] text-gray-400" :
+                  "hover:bg-gray-50 text-gray-600"}`
+                  }>
+                  
                   <FaChevronLeft />
                 </button>
-                {Array.from({ length: totalPages })
-                  .slice(0, 5)
-                  .map((_, idx) => {
-                    const pageNumber = idx + 1;
-                    return (
-                      <button
-                        key={pageNumber}
-                        onClick={() => setCurrentPage(pageNumber)}
-                        className={`w-8 h-8 rounded-full text-sm font-semibold ${currentPage === pageNumber
-                          ? "bg-[#AD7F65] text-white shadow-md"
-                          : "text-gray-600 hover:bg-gray-50"
-                          }`}
-                      >
+                {Array.from({ length: totalPages }).
+                slice(0, 5).
+                map((_, idx) => {
+                  const pageNumber = idx + 1;
+                  return (
+                    <button
+                      key={pageNumber}
+                      onClick={() => setCurrentPage(pageNumber)}
+                      className={`w-8 h-8 rounded-full text-sm font-semibold ${currentPage === pageNumber ?
+                      "bg-[#AD7F65] text-white shadow-md" :
+                      "text-gray-600 hover:bg-gray-50"}`
+                      }>
+                      
                         {pageNumber}
-                      </button>
-                    );
-                  })}
+                      </button>);
+
+                })}
                 <span className="text-gray-400 px-2">...</span>
                 <button
                   onClick={() => setCurrentPage(totalPages)}
-                  className={`w-8 h-8 rounded-full text-sm font-semibold ${currentPage === totalPages
-                    ? "bg-[#AD7F65] text-white shadow-md"
-                    : "text-gray-600 hover:bg-gray-50"
-                    }`}
-                >
+                  className={`w-8 h-8 rounded-full text-sm font-semibold ${currentPage === totalPages ?
+                  "bg-[#AD7F65] text-white shadow-md" :
+                  "text-gray-600 hover:bg-gray-50"}`
+                  }>
+                  
                   {totalPages}
                 </button>
                 <button
                   onClick={() =>
-                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                   }
                   disabled={currentPage === totalPages}
-                  className={`p-2 rounded-full ${currentPage === totalPages
-                    ? theme === "dark"
-                      ? "text-gray-600"
-                      : "text-gray-300"
-                    : theme === "dark"
-                      ? "hover:bg-[#2A2724] text-gray-400"
-                      : "hover:bg-gray-50 text-gray-600"
-                    }`}
-                >
+                  className={`p-2 rounded-full ${currentPage === totalPages ?
+                  theme === "dark" ?
+                  "text-gray-600" :
+                  "text-gray-300" :
+                  theme === "dark" ?
+                  "hover:bg-[#2A2724] text-gray-400" :
+                  "hover:bg-gray-50 text-gray-600"}`
+                  }>
+                  
                   <FaChevronRight />
                 </button>
               </div>
@@ -1497,11 +1497,11 @@ const Transaction = () => {
 
           <div className="w-full lg:w-[380px] xl:w-[420px]">
             <div
-              className={`rounded-2xl border shadow-[0_20px_45px_rgba(0,0,0,0.08)] p-6 sticky top-8 ${theme === "dark"
-                ? "bg-[#2A2724] border-[#4A4037]"
-                : "bg-white border-white"
-                }`}
-            >
+              className={`rounded-2xl border shadow-[0_20px_45px_rgba(0,0,0,0.08)] p-6 sticky top-8 ${theme === "dark" ?
+              "bg-[#2A2724] border-[#4A4037]" :
+              "bg-white border-white"}`
+              }>
+              
               <div className="mb-4">
                 <p className="text-sm text-gray-400">Create Your Style</p>
                 <p className="text-xs text-gray-400">
@@ -1509,25 +1509,25 @@ const Transaction = () => {
                 </p>
               </div>
               <div
-                className={`font-mono text-xs space-y-2 ${theme === "dark" ? "text-gray-300" : ""}`}
-              >
+                className={`font-mono text-xs space-y-2 ${theme === "dark" ? "text-gray-300" : ""}`}>
+                
                 <div className="flex justify-between text-gray-500">
                   <span>Receipt No:</span>
                   <span className="font-bold text-[#AD7F65]">
                     {selectedTransaction?.status === "Completed" &&
-                      selectedTransaction?.receiptNo
-                      ? `#${selectedTransaction.receiptNo}`
-                      : "---"}
+                    selectedTransaction?.receiptNo ?
+                    `#${selectedTransaction.receiptNo}` :
+                    "---"}
                   </span>
                 </div>
                 <div className="flex justify-between text-gray-500">
                   <span>Date:</span>
                   <span>
-                    {selectedTransaction
-                      ? new Date(
-                        selectedTransaction.checkedOutAt,
-                      ).toLocaleString()
-                      : "-"}
+                    {selectedTransaction ?
+                    new Date(
+                      selectedTransaction.checkedOutAt
+                    ).toLocaleString() :
+                    "-"}
                   </span>
                 </div>
                 <div className="flex justify-between text-gray-500">
@@ -1536,28 +1536,28 @@ const Transaction = () => {
                 </div>
               </div>
               <div
-                className={`border-t border-b my-4 py-3 font-mono text-sm ${theme === "dark" ? "border-gray-700 text-gray-300" : "border-gray-200"}`}
-              >
+                className={`border-t border-b my-4 py-3 font-mono text-sm ${theme === "dark" ? "border-gray-700 text-gray-300" : "border-gray-200"}`}>
+                
                 <div className="flex justify-between font-semibold">
                   <span>Item</span>
                   <span>Qty x Price</span>
                 </div>
                 <div
-                  className={`mt-2 space-y-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
-                >
-                  {selectedTransaction?.items?.map((item, idx) => (
-                    <div key={idx} className="flex justify-between">
+                  className={`mt-2 space-y-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                  
+                  {selectedTransaction?.items?.map((item, idx) =>
+                  <div key={idx} className="flex justify-between">
                       <span>{item.itemName}</span>
                       <span>
                         {item.quantity} x {formatCurrency(item.price)}
                       </span>
                     </div>
-                  )) || <p className="text-center text-gray-400">No items</p>}
+                  ) || <p className="text-center text-gray-400">No items</p>}
                 </div>
               </div>
               <div
-                className={`font-mono text-xs space-y-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
-              >
+                className={`font-mono text-xs space-y-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                
                 <div className="flex justify-between">
                   <span>Payment Method:</span>
                   <span className="uppercase">
@@ -1565,8 +1565,8 @@ const Transaction = () => {
                   </span>
                 </div>
                 <div
-                  className={`flex justify-between font-semibold text-base pt-2 border-t ${theme === "dark" ? "text-white border-gray-700" : "text-gray-800 border-gray-100"}`}
-                >
+                  className={`flex justify-between font-semibold text-base pt-2 border-t ${theme === "dark" ? "text-white border-gray-700" : "text-gray-800 border-gray-100"}`}>
+                  
                   <span>Total</span>
                   <span>
                     {formatCurrency(selectedTransaction?.totalAmount || 0)}
@@ -1577,10 +1577,10 @@ const Transaction = () => {
                 className="w-full mt-6 py-3 rounded-xl text-white font-semibold shadow-lg transition-all hover:shadow-xl hover:brightness-105 active:scale-98"
                 style={{
                   backgroundImage:
-                    "linear-gradient(135deg, #AD7F65 0%, #76462B 100%)",
-                  boxShadow: "0 12px 20px rgba(118,70,43,0.25)",
-                }}
-              >
+                  "linear-gradient(135deg, #AD7F65 0%, #76462B 100%)",
+                  boxShadow: "0 12px 20px rgba(118,70,43,0.25)"
+                }}>
+                
                 Print Receipt
               </button>
               <p className="text-center text-[11px] text-gray-400 mt-4 tracking-wide">
@@ -1606,8 +1606,8 @@ const Transaction = () => {
             setShowViewModal(false);
             setTransactionToView(null);
             handlePrintClick(trx);
-          }}
-        />
+          }} />
+        
 
         <PrintReceiptModal
           isOpen={showPrintModal}
@@ -1615,8 +1615,8 @@ const Transaction = () => {
             setShowPrintModal(false);
             setTransactionToPrint(null);
           }}
-          transaction={transactionToPrint}
-        />
+          transaction={transactionToPrint} />
+        
 
         <ReturnItemsModal
           isOpen={showReturnModal}
@@ -1625,12 +1625,12 @@ const Transaction = () => {
             setTransactionToReturn(null);
           }}
           transaction={transactionToReturn}
-          onConfirm={handleReturnConfirm}
-        />
+          onConfirm={handleReturnConfirm} />
+        
 
-        {/* Return Success Modal */}
-        {showReturnSuccessModal && (
-          <div className="fixed inset-0 flex items-center justify-center z-[10002] bg-black/50 backdrop-blur-sm">
+        {}
+        {showReturnSuccessModal &&
+        <div className="fixed inset-0 flex items-center justify-center z-[10002] bg-black/50 backdrop-blur-sm">
             <div className="bg-white rounded-2xl w-full max-w-md p-8 shadow-2xl text-center">
               <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-100 flex items-center justify-center">
                 <FaCheckCircle className="w-10 h-10 text-green-500" />
@@ -1642,24 +1642,24 @@ const Transaction = () => {
                 The return has been processed successfully.
               </p>
               <button
-                onClick={() => {
-                  setShowReturnSuccessModal(false);
-                  window.location.reload();
-                }}
-                className="px-8 py-3 rounded-lg text-white font-semibold transition-all hover:opacity-90"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #22C55E 0%, #16A34A 100%)",
-                }}
-              >
+              onClick={() => {
+                setShowReturnSuccessModal(false);
+                window.location.reload();
+              }}
+              className="px-8 py-3 rounded-lg text-white font-semibold transition-all hover:opacity-90"
+              style={{
+                background:
+                "linear-gradient(135deg, #22C55E 0%, #16A34A 100%)"
+              }}>
+              
                 OK
               </button>
             </div>
           </div>
-        )}
+        }
       </>
-    </div>
-  );
+    </div>);
+
 };
 
 export default memo(Transaction);

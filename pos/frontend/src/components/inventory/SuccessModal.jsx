@@ -11,12 +11,12 @@ const SuccessModal = ({ isOpen, onClose, message = "The item was added successfu
     <div className="fixed inset-0 flex items-center justify-center z-[10001] p-4 backdrop-blur-sm">
       <div
         className={`rounded-2xl w-full max-w-md relative shadow-2xl ${theme === 'dark' ? 'bg-[#1E1B18]' : 'bg-white'}`}
-        style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}
-      >
+        style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+        
         <button
           onClick={onClose}
-          className={`absolute top-4 right-4 transition-colors z-10 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}
-        >
+          className={`absolute top-4 right-4 transition-colors z-10 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}>
+          
           <FaTimes className="w-5 h-5" />
         </button>
 
@@ -27,14 +27,14 @@ const SuccessModal = ({ isOpen, onClose, message = "The item was added successfu
               style={{
                 backgroundColor: '#D4EDDA',
                 boxShadow: '0 4px 12px rgba(40, 167, 69, 0.3)'
-              }}
-            >
+              }}>
+              
               <FaCheck
                 className="text-4xl text-green-600"
                 style={{
                   animation: 'checkmarkAnimation 0.6s ease-out'
-                }}
-              />
+                }} />
+              
               <style>{`
                 @keyframes checkmarkAnimation {
                   0% {
@@ -67,15 +67,14 @@ const SuccessModal = ({ isOpen, onClose, message = "The item was added successfu
             className="w-full py-3 px-6 rounded-lg font-bold text-white transition-all shadow-md hover:shadow-lg"
             style={{
               background: 'linear-gradient(135deg, #AD7F65 0%, #76462B 100%)'
-            }}
-          >
+            }}>
+            
             OK
           </button>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default SuccessModal;
-

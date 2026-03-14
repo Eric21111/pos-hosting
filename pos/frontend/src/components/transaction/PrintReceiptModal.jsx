@@ -3,10 +3,10 @@ import { FaTimes, FaPrint } from 'react-icons/fa';
 import { sendReceiptToPrinter } from '../../utils/printBridge';
 
 const formatCurrency = (value = 0) =>
-  new Intl.NumberFormat('en-PH', {
-    style: 'currency',
-    currency: 'PHP'
-  }).format(value);
+new Intl.NumberFormat('en-PH', {
+  style: 'currency',
+  currency: 'PHP'
+}).format(value);
 
 const formatDateTime = (dateString) => {
   if (!dateString) return '-';
@@ -36,12 +36,12 @@ const PrintReceiptModal = ({ isOpen, onClose, transaction }) => {
 
   if (!isOpen || !transaction) return null;
 
-  // Calculate subtotal from items
+
   const subtotal = transaction.items?.reduce((sum, item) => {
-    return sum + ((item.price || item.itemPrice || 0) * (item.quantity || 1));
+    return sum + (item.price || item.itemPrice || 0) * (item.quantity || 1);
   }, 0) || transaction.totalAmount || 0;
 
-  // Get discount amount
+
   const discountAmount = transaction.discountAmount || 0;
 
   const handlePrint = async () => {
@@ -49,7 +49,7 @@ const PrintReceiptModal = ({ isOpen, onClose, transaction }) => {
     setPrintError(null);
 
     try {
-      // Build receipt data in the same format as terminal
+
       const receipt = {
         receiptNo: transaction.receiptNo || '000000',
         storeName: 'Create Your Style',
@@ -57,7 +57,7 @@ const PrintReceiptModal = ({ isOpen, onClose, transaction }) => {
         contactNumber: '+631112224444',
         time: formatTime(transaction.checkedOutAt || transaction.createdAt),
         referenceNo: transaction.referenceNo || transaction._id?.substring(0, 12) || '-',
-        items: transaction.items?.map(item => ({
+        items: transaction.items?.map((item) => ({
           name: item.itemName || item.name || 'Item',
           itemName: item.itemName || item.name || 'Item',
           qty: item.quantity || 1,
@@ -86,20 +86,20 @@ const PrintReceiptModal = ({ isOpen, onClose, transaction }) => {
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 flex items-center justify-center z-[10000] backdrop-blur-sm bg-black/50"
-      onClick={onClose}
-    >
-      <div 
+      onClick={onClose}>
+      
+      <div
         className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div 
+        onClick={(e) => e.stopPropagation()}>
+        
+        <div
           className="h-2"
           style={{
             background: 'linear-gradient(135deg, #AD7F65 0%, #76462B 100%)'
-          }}
-        />
+          }} />
+        
         
         <div className="p-8 overflow-y-auto flex-1">
           <div className="flex justify-between items-start mb-6">
@@ -110,21 +110,21 @@ const PrintReceiptModal = ({ isOpen, onClose, transaction }) => {
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition"
-            >
+              className="text-gray-400 hover:text-gray-600 transition">
+              
               <FaTimes className="w-6 h-6" />
             </button>
           </div>
 
-          {printError && (
-            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+          {printError &&
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
               {printError}
               <p className="text-xs mt-1">Please allow pop-ups and try again.</p>
             </div>
-          )}
+          }
 
 
-          {/* Receipt Preview */}
+          {}
           <div ref={printRef} className="bg-white p-6 border-2 border-dashed border-gray-300 rounded-lg font-mono text-sm">
             <div className="text-center mb-4">
               <h3 className="text-lg font-bold text-gray-800">Create Your Style</h3>
@@ -157,21 +157,21 @@ const PrintReceiptModal = ({ isOpen, onClose, transaction }) => {
 
             <div className="border-t border-gray-300 py-3 my-3">
               <div className="space-y-2">
-                {transaction.items && transaction.items.length > 0 ? (
-                  transaction.items.map((item, idx) => (
-                    <div key={idx} className="text-xs">
+                {transaction.items && transaction.items.length > 0 ?
+                transaction.items.map((item, idx) =>
+                <div key={idx} className="text-xs">
                       <p className="font-medium text-gray-800">{item.itemName}</p>
-                      {item.selectedSize && (
-                        <p className="text-gray-500">Size: {item.selectedSize}</p>
-                      )}
+                      {item.selectedSize &&
+                  <p className="text-gray-500">Size: {item.selectedSize}</p>
+                  }
                       <p className="text-gray-500">
                         {item.quantity} x {formatCurrency(item.price || item.itemPrice)}
                       </p>
                     </div>
-                  ))
-                ) : (
-                  <p className="text-center text-gray-500">No items</p>
-                )}
+                ) :
+
+                <p className="text-center text-gray-500">No items</p>
+                }
               </div>
             </div>
 
@@ -188,8 +188,8 @@ const PrintReceiptModal = ({ isOpen, onClose, transaction }) => {
                 <span>Total:</span>
                 <span>{formatCurrency(transaction.totalAmount)}</span>
               </div>
-              {transaction.amountReceived > 0 && (
-                <>
+              {transaction.amountReceived > 0 &&
+              <>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Amount Received:</span>
                     <span className="text-gray-800">{formatCurrency(transaction.amountReceived)}</span>
@@ -199,7 +199,7 @@ const PrintReceiptModal = ({ isOpen, onClose, transaction }) => {
                     <span className="text-gray-800">{formatCurrency(transaction.changeGiven)}</span>
                   </div>
                 </>
-              )}
+              }
             </div>
 
             <div className="border-t border-gray-300 mt-4 pt-4 text-center">
@@ -213,31 +213,31 @@ const PrintReceiptModal = ({ isOpen, onClose, transaction }) => {
           <button
             onClick={onClose}
             disabled={isPrinting}
-            className="flex-1 px-6 py-3 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold transition-all disabled:opacity-50"
-          >
+            className="flex-1 px-6 py-3 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold transition-all disabled:opacity-50">
+            
             Cancel
           </button>
           <button
             onClick={handlePrint}
             disabled={isPrinting}
-            className="flex-1 px-6 py-3 rounded-xl bg-[#AD7F65] hover:bg-[#76462B] text-white font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {isPrinting ? (
-              <>
+            className="flex-1 px-6 py-3 rounded-xl bg-[#AD7F65] hover:bg-[#76462B] text-white font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+            
+            {isPrinting ?
+            <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 Printing...
-              </>
-            ) : (
-              <>
+              </> :
+
+            <>
                 <FaPrint className="w-4 h-4" />
                 Print
               </>
-            )}
+            }
           </button>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default PrintReceiptModal;
