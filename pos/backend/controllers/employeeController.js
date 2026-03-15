@@ -708,7 +708,7 @@ exports.logoutEmployee = async (req, res) => {
 // Get online employees
 exports.getOnlineEmployees = async (req, res) => {
   try {
-    const onlineEmployees = await Employee.find({ isOnline: true })
+    const onlineEmployees = await Employee.find({ isOnline: true, role: { $ne: 'Owner' } })
       .select('-pin -fastPinHash -profileImage')
       .lean();
     res.json({ success: true, data: onlineEmployees });
