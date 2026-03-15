@@ -63,6 +63,9 @@ const AddProductModal = ({
   const [showDraftNotice, setShowDraftNotice] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showBrandModal, setShowBrandModal] = useState(false);
+  const [showCustomSizeInput, setShowCustomSizeInput] = useState(false);
+  const [customSizeValue, setCustomSizeValue] = useState("");
+  const [customSizes, setCustomSizes] = useState([]);
   const [multipleVariantsPerSize, setMultipleVariantsPerSize] = useState({});
   const [sizeMultiVariants, setSizeMultiVariants] = useState({});
   const [selectedVariants, setSelectedVariants] = useState([]);
@@ -283,6 +286,9 @@ const AddProductModal = ({
       setShowVariantDropdown(false);
       setCustomColorInput("");
       setVariantQuantities({});
+      setShowCustomSizeInput(false);
+      setCustomSizeValue("");
+      setCustomSizes([]);
     } else {
       setShowDraftNotice(false);
     }
@@ -1077,7 +1083,7 @@ const AddProductModal = ({
                                         sizes = ["Free Size"];
                                       }
 
-                              return sizes.map((size) =>
+                              return [...sizes, ...customSizes].map((size) =>
                                 <label
                                   key={size}
                                   className="flex items-center gap-2 cursor-pointer">
@@ -1092,12 +1098,80 @@ const AddProductModal = ({
                                     onChange={() => handleSizeToggle(size)}
                                     className="w-4 h-4 text-[#AD7F65] border-gray-300 rounded focus:ring-[#AD7F65]" />
 
-                                  <span className="text-sm text-gray-700">
+                                  <span className="flex-1 text-sm text-gray-700 break-words line-clamp-2" title={size}>
                                     {size}
                                   </span>
+                                  {customSizes.includes(size) &&
+                                    <button
+                                      type="button"
+                                      title="Remove custom size"
+                                      className="text-red-500 hover:text-red-700 text-xs ml-1"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        setCustomSizes(prev => prev.filter(s => s !== size));
+                                        if (newProduct.selectedSizes?.includes(size)) {
+                                          handleSizeToggle(size);
+                                        }
+                                      }}>
+                                      ×
+                                    </button>
+                                  }
                                 </label>
                               );
                             })()}
+                          </div>
+
+                          <div className="mb-4">
+                            <label className="flex items-center gap-2 cursor-pointer mb-2">
+                              <input
+                                type="checkbox"
+                                checked={showCustomSizeInput}
+                                onChange={(e) => {
+                                  setShowCustomSizeInput(e.target.checked);
+                                  if (!e.target.checked) {
+                                    setCustomSizeValue("");
+                                  }
+                                }}
+                                className="w-4 h-4 text-[#AD7F65] border-gray-300 rounded focus:ring-[#AD7F65]" />
+                              <span className="text-sm text-gray-700">
+                                Size not listed? Add custom size
+                              </span>
+                            </label>
+
+                            {showCustomSizeInput &&
+                              <div className="flex gap-2 items-center">
+                                <input
+                                  type="text"
+                                  value={customSizeValue}
+                                  onChange={(e) => setCustomSizeValue(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      const trimmed = customSizeValue.trim();
+                                      if (trimmed && !customSizes.includes(trimmed)) {
+                                        setCustomSizes(prev => [...prev, trimmed]);
+                                        setCustomSizeValue("");
+                                      }
+                                    }
+                                  }}
+                                  placeholder="Type size and press Enter or Add"
+                                  className={`flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500" : "bg-white border-gray-300 text-gray-900"}`} />
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    const trimmed = customSizeValue.trim();
+                                    if (trimmed && !customSizes.includes(trimmed)) {
+                                      setCustomSizes(prev => [...prev, trimmed]);
+                                      setCustomSizeValue("");
+                                    }
+                                  }}
+                                  disabled={!customSizeValue.trim()}
+                                  className={`px-4 py-2 text-sm rounded-lg font-medium transition-colors ${!customSizeValue.trim() ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-[#AD7F65] text-white hover:bg-[#8B6553]"}`}>
+                                  Add
+                                </button>
+                              </div>
+                            }
                           </div>
 
                           {newProduct.selectedSizes?.length > 0 &&
