@@ -15,6 +15,8 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
   const [customNewSizeInput, setCustomNewSizeInput] = useState("");
   const [addedNewSizes, setAddedNewSizes] = useState([]);
   const [newSizePrices, setNewSizePrices] = useState({});
+  const [diffPricesPerVariant, setDiffPricesPerVariant] = useState({});
+  const [stockVariantPrices, setStockVariantPrices] = useState({});
   const { theme } = useTheme();
 
   const reasons = ["Restock", "Returned Item", "Exchange", "Other"];
@@ -107,6 +109,8 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
       setCustomNewSizeInput("");
       setAddedNewSizes([]);
       setNewSizePrices({});
+      setDiffPricesPerVariant({});
+      setStockVariantPrices({});
     }
 
   }, [isOpen, product?._id]);
@@ -127,6 +131,8 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
     setCustomNewSizeInput("");
     setAddedNewSizes([]);
     setNewSizePrices({});
+    setDiffPricesPerVariant({});
+    setStockVariantPrices({});
     onClose();
   };
 
@@ -274,6 +280,26 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
     }));
   };
 
+  const handleDiffPricesToggle = (size) => {
+    setDiffPricesPerVariant(prev => ({
+      ...prev,
+      [size]: !prev[size]
+    }));
+  };
+
+  const handleStockVariantPriceChange = (size, variant, field, value) => {
+    setStockVariantPrices(prev => ({
+      ...prev,
+      [size]: {
+        ...(prev[size] || {}),
+        [variant]: {
+          ...(prev[size]?.[variant] || { price: product.itemPrice || 0, costPrice: product.costPrice || 0 }),
+          [field]: parseFloat(value) || 0
+        }
+      }
+    }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -326,7 +352,9 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
         reason: finalReason,
         hasVariants: true,
         newVariantPrices: addedVariants.length > 0 ? newVariantPrices : null,
-        newSizePrices: addedNewSizes.length > 0 ? newSizePrices : null
+        newSizePrices: addedNewSizes.length > 0 ? newSizePrices : null,
+        diffPricesPerVariant: Object.keys(diffPricesPerVariant).some(k => diffPricesPerVariant[k]) ? diffPricesPerVariant : null,
+        stockVariantPrices: Object.keys(stockVariantPrices).length > 0 ? stockVariantPrices : null
       });
       return;
     }
@@ -668,6 +696,7 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
                                     {allVariants.map((variant) => {
                                       const currentVariantQty = getVariantCurrentQty(size, variant);
                                       const isNewVariant = addedVariants.includes(variant);
+                                      const showDiffPrices = diffPricesPerVariant[size];
                                       return (
                                         <div key={`${size}-${variant}`}>
                                           <label
@@ -693,12 +722,52 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
                                                 e.target.value
                                               )
                                             }
-                                            placeholder="0"
+                                            placeholder="Qty"
                                             className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#2A2724] border-gray-700 text-white placeholder-gray-500" : "bg-gray-50 border-gray-300 text-gray-900"}`} />
 
+                                          {showDiffPrices &&
+                                            <div className="grid grid-cols-2 gap-1 mt-1">
+                                              <input
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={stockVariantPrices[size]?.[variant]?.price ?? (product.itemPrice || "")}
+                                                onChange={(e) => handleStockVariantPriceChange(size, variant, "price", e.target.value)}
+                                                placeholder="Price"
+                                                className={`w-full px-2 py-1.5 text-xs border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${theme === "dark" ? "bg-[#2A2724] border-gray-700 text-white placeholder-gray-500" : "bg-gray-50 border-gray-300 text-gray-900"}`} />
+                                              <input
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={stockVariantPrices[size]?.[variant]?.costPrice ?? (product.costPrice || "")}
+                                                onChange={(e) => handleStockVariantPriceChange(size, variant, "costPrice", e.target.value)}
+                                                placeholder="Cost"
+                                                className={`w-full px-2 py-1.5 text-xs border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${theme === "dark" ? "bg-[#2A2724] border-gray-700 text-white placeholder-gray-500" : "bg-gray-50 border-gray-300 text-gray-900"}`} />
+                                            </div>
+                                          }
                                         </div>);
 
                                     })}
+                                  </div>
+
+                                  {/* Diff prices per variant checkbox */}
+                                  <div className={`mt-3 pt-3 border-t ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={diffPricesPerVariant[size] || false}
+                                        onChange={() => handleDiffPricesToggle(size)}
+                                        className="w-4 h-4 border-gray-300 rounded focus:ring-[#AD7F65] cursor-pointer"
+                                        style={{ accentColor: "#AD7F65" }} />
+                                      <span className={`text-xs ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
+                                        Diff prices each variants
+                                      </span>
+                                    </label>
+                                    {diffPricesPerVariant[size] &&
+                                      <p className={`text-xs mt-1 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>
+                                        Set selling price & cost above each variant
+                                      </p>
+                                    }
                                   </div>
 
                                   { }

@@ -1353,6 +1353,8 @@ const Inventory = () => {
 
             const newVariants = { ...currentVariants };
             const newVariantPrices = { ...currentVariantPrices };
+            const currentVariantCostPrices = typeof currentSizeData === "object" && currentSizeData.variantCostPrices || {};
+            const newVariantCostPrices = { ...currentVariantCostPrices };
 
             Object.entries(addVariantQtys).forEach(([variant, addQty]) => {
               if (addQty > 0) {
@@ -1360,9 +1362,16 @@ const Inventory = () => {
 
                 newVariants[variant] = currentQty + addQty;
 
-
-                if (stockData.newVariantPrices && stockData.newVariantPrices[variant]) {
+                // Apply per-variant prices from "Diff prices each variants"
+                if (stockData.diffPricesPerVariant && stockData.diffPricesPerVariant[size] &&
+                  stockData.stockVariantPrices && stockData.stockVariantPrices[size]?.[variant]) {
+                  newVariantPrices[variant] = stockData.stockVariantPrices[size][variant].price || editingProduct.itemPrice || 0;
+                  newVariantCostPrices[variant] = stockData.stockVariantPrices[size][variant].costPrice || editingProduct.costPrice || 0;
+                }
+                // Apply prices for newly added variants
+                else if (stockData.newVariantPrices && stockData.newVariantPrices[variant]) {
                   newVariantPrices[variant] = stockData.newVariantPrices[variant].price || editingProduct.itemPrice || 0;
+                  newVariantCostPrices[variant] = stockData.newVariantPrices[variant].costPrice || editingProduct.costPrice || 0;
                 }
               }
             });
@@ -1376,8 +1385,14 @@ const Inventory = () => {
               ...currentSizeData,
               quantity: newTotalQty,
               variants: newVariants,
-              variantPrices: Object.keys(newVariantPrices).length > 0 ? newVariantPrices : currentSizeData.variantPrices
+              variantPrices: Object.keys(newVariantPrices).length > 0 ? newVariantPrices : currentSizeData.variantPrices,
+              variantCostPrices: Object.keys(newVariantCostPrices).length > 0 ? newVariantCostPrices : currentSizeData.variantCostPrices
             };
+
+            // Mark that this size has different prices per variant
+            if (stockData.diffPricesPerVariant && stockData.diffPricesPerVariant[size]) {
+              updatedSizes[size].hasDifferentPricesPerVariant = true;
+            }
 
             // Apply price/costPrice for new sizes
             if (stockData.newSizePrices && stockData.newSizePrices[size]) {
