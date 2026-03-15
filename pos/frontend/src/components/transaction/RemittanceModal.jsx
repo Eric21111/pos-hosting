@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaTimes, FaClipboardList, FaCoins, FaFileAlt, FaCheck, FaArrowLeft } from "react-icons/fa";
 import { API_ENDPOINTS } from "../../config/api";
+import CashTurnOverSlipModal from "./CashTurnOverSlipModal";
 
 const DENOMINATIONS = [
     { key: "p1000", label: "₱1000", value: 1000, color: "#22C55E" },
@@ -20,7 +20,13 @@ const DENOMINATIONS = [
 
 const OPENING_FLOAT = 2000;
 
-const formatCurrency = (val) =>
+const formatCurrency = (val) => {
+    const abs = Math.abs(val).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return val < 0 ? `-₱${abs}` : `₱${abs}`;
+};
+
+// For values displayed inside parentheses (deductions) — always show positive
+const formatAbs = (val) =>
     `₱${Math.abs(val).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const StepIndicator = ({ currentStep }) => {
@@ -37,8 +43,8 @@ const StepIndicator = ({ currentStep }) => {
                     <div className="flex flex-col items-center">
                         <div
                             className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${currentStep >= step.num
-                                    ? "bg-[#22C55E] text-white shadow-md"
-                                    : "bg-gray-200 text-gray-400"
+                                ? "bg-[#22C55E] text-white shadow-md"
+                                : "bg-gray-200 text-gray-400"
                                 }`}
                         >
                             {currentStep > step.num ? <FaCheck className="text-xs" /> : step.num}
@@ -79,6 +85,7 @@ const RemittanceModal = ({ isOpen, onClose, employeeId, employeeName }) => {
     const [remarks, setRemarks] = useState("");
     const [receivedBy, setReceivedBy] = useState("");
     const [submitSuccess, setSubmitSuccess] = useState(false);
+    const [showSlip, setShowSlip] = useState(false);
 
     const totalCashOnHand = DENOMINATIONS.reduce(
         (sum, d) => sum + (denominations[d.key] || 0) * d.value,
@@ -114,6 +121,7 @@ const RemittanceModal = ({ isOpen, onClose, employeeId, employeeName }) => {
             setRemarks("");
             setReceivedBy("");
             setSubmitSuccess(false);
+            setShowSlip(false);
             fetchSummary();
         }
     }, [isOpen, fetchSummary]);
@@ -151,8 +159,8 @@ const RemittanceModal = ({ isOpen, onClose, employeeId, employeeName }) => {
             if (data.success) {
                 setSubmitSuccess(true);
                 setTimeout(() => {
-                    onClose();
-                }, 2000);
+                    setShowSlip(true);
+                }, 1000); // Shorter delay so it pops up faster
             } else {
                 alert("Failed to submit remittance: " + (data.message || "Unknown error"));
             }
@@ -181,20 +189,36 @@ const RemittanceModal = ({ isOpen, onClose, employeeId, employeeName }) => {
 
     return (
         <AnimatePresence>
-            {isOpen && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-                    onClick={onClose}
-                >
+            {isOpen && showSlip && (
+                <CashTurnOverSlipModal
+                    isOpen={true}
+                    onClose={onClose}
+                    summary={summary}
+                    denominations={denominations}
+                    totalCashOnHand={totalCashOnHand}
+                    openingFloat={OPENING_FLOAT}
+                    cashToRemit={cashToRemit}
+                    variance={variance}
+                    employeeName={employeeName}
+                    receivedBy={receivedBy}
+                />
+            )}
+
+            {isOpen && !showSlip && (
+                <div className="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm pointer-events-auto"
+                        onClick={onClose}
+                    />
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+                        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto relative z-10 pointer-events-auto"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
@@ -271,7 +295,7 @@ const RemittanceModal = ({ isOpen, onClose, employeeId, employeeName }) => {
                                                     <div className="flex justify-between text-sm">
                                                         <span className="text-gray-600">Less: (Returns/Refunds)</span>
                                                         <span className="font-semibold text-red-500">
-                                                            ({formatCurrency(summary.returns)})
+                                                            ({formatAbs(summary.returns)})
                                                         </span>
                                                     </div>
 
@@ -356,7 +380,7 @@ const RemittanceModal = ({ isOpen, onClose, employeeId, employeeName }) => {
                                         <div className="flex justify-between text-sm">
                                             <span className="text-gray-600">Less: Opening Float</span>
                                             <span className="font-semibold text-red-500">
-                                                ({formatCurrency(OPENING_FLOAT)})
+                                                ({formatAbs(OPENING_FLOAT)})
                                             </span>
                                         </div>
 
@@ -371,7 +395,7 @@ const RemittanceModal = ({ isOpen, onClose, employeeId, employeeName }) => {
                                         <div className="flex justify-between text-sm">
                                             <span className="text-gray-600">Variance</span>
                                             <span className={`font-semibold ${varianceColor}`}>
-                                                {variance >= 0 ? "+" : "-"}{formatCurrency(variance)} — {varianceLabel} {variance === 0 && "✓"}
+                                                {variance > 0 ? "+" : ""}{formatCurrency(variance)} — {varianceLabel} {variance === 0 && "✓"}
                                             </span>
                                         </div>
                                     </div>
@@ -413,7 +437,7 @@ const RemittanceModal = ({ isOpen, onClose, employeeId, employeeName }) => {
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-gray-600">Less Opening Float</span>
                                                 <span className="font-semibold text-red-500">
-                                                    ({formatCurrency(OPENING_FLOAT)})
+                                                    ({formatAbs(OPENING_FLOAT)})
                                                 </span>
                                             </div>
 
@@ -428,7 +452,7 @@ const RemittanceModal = ({ isOpen, onClose, employeeId, employeeName }) => {
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-gray-600">Variance</span>
                                                 <span className={`font-semibold ${varianceColor}`}>
-                                                    {variance >= 0 ? "+" : "-"}{formatCurrency(variance)} — {varianceLabel}{" "}
+                                                    {variance > 0 ? "+" : ""}{formatCurrency(variance)} — {varianceLabel}{" "}
                                                     {variance === 0 && "✓"}
                                                 </span>
                                             </div>
@@ -482,7 +506,7 @@ const RemittanceModal = ({ isOpen, onClose, employeeId, employeeName }) => {
                             )}
                         </div>
                     </motion.div>
-                </motion.div>
+                </div>
             )}
         </AnimatePresence>
     );

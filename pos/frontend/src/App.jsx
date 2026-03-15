@@ -66,7 +66,7 @@ class ErrorBoundary extends Component {
             <button
               onClick={this.handleRetry}
               className="px-6 py-3 bg-[#AD7F65] text-white rounded-lg hover:bg-[#8B6B4F] transition-colors font-semibold">
-              
+
               Refresh Page
             </button>
           </div>
@@ -85,6 +85,7 @@ const Inventory = lazyWithRetry(() => import("./pages/Inventory"));
 const Logs = lazyWithRetry(() => import("./pages/logs"));
 const Terminal = lazyWithRetry(() => import("./pages/terminal"));
 const Transaction = lazyWithRetry(() => import("./pages/transaction"));
+const CashRemittance = lazyWithRetry(() => import("./pages/CashRemittance"));
 const Settings = lazyWithRetry(() => import("./pages/Settings"));
 const Dashboard = lazyWithRetry(() => import("./pages/owner/Dashboard"));
 const Reports = lazyWithRetry(() => import("./pages/owner/Reports"));
@@ -100,7 +101,7 @@ const ManageData = lazyWithRetry(() => import("./pages/ManageData"));
 
 
 const PageLoader = () =>
-<div className="min-h-screen flex items-center justify-center bg-[#FFFFFF]">
+  <div className="min-h-screen flex items-center justify-center bg-[#FFFFFF]">
     <div className="text-center">
       <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B7355] mb-4"></div>
       <p className="text-gray-600">Loading...</p>
@@ -116,12 +117,12 @@ const MainLayout = memo(({ children }) => {
     <div
       className="min-h-screen transition-colors duration-300"
       style={{ backgroundColor: theme === "dark" ? "#1E1B18" : "#FFFFFF" }}>
-      
+
       <SidebarContext.Provider value={{ isExpanded }}>
         <Sidebar isExpanded={isExpanded} setIsExpanded={setIsExpanded} />
         <main
           className={`transition-all duration-300 px-6 py-4 ${isExpanded ? "ml-80" : "ml-20"}`}>
-          
+
           {children}
         </main>
       </SidebarContext.Provider>
@@ -161,8 +162,8 @@ const LandingGate = () => {
       setStatus({
         loading: false,
         error:
-        error.message ||
-        "Unable to reach the server. Please ensure the backend is running.",
+          error.message ||
+          "Unable to reach the server. Please ensure the backend is running.",
         hasAccounts: false
       });
     }
@@ -176,10 +177,10 @@ const LandingGate = () => {
     return (
       <div
         className={`min-h-screen flex items-center justify-center ${theme === "dark" ? "bg-[#1F1F1F]" : "bg-[#FFFFFF]"}`}>
-        
+
         <p
           className={`${theme === "dark" ? "text-white" : "text-[#8B7355]"} tracking-[0.3em] uppercase text-sm`}>
-          
+
           Preparing CYSPOS...
         </p>
       </div>);
@@ -190,11 +191,11 @@ const LandingGate = () => {
     return (
       <div
         className={`min-h-screen flex flex-col items-center justify-center ${theme === "dark" ? "bg-[#1F1F1F]" : "bg-[#FFFFFF]"} px-4 text-center gap-6`}>
-        
+
         <div className="max-w-md">
           <p
             className={`${theme === "dark" ? "text-white" : "text-[#2D2D2D]"} text-lg font-semibold mb-2`}>
-            
+
             Something went wrong
           </p>
           <p className="text-gray-400 text-sm">{status.error}</p>
@@ -202,7 +203,7 @@ const LandingGate = () => {
         <button
           onClick={checkEmployees}
           className="px-6 py-3 rounded-2xl bg-white text-[#1F1F1F] font-semibold shadow-lg">
-          
+
           Retry
         </button>
       </div>);
@@ -259,189 +260,201 @@ function App() {
             <Router>
               <Toaster position="top-center" reverseOrder={false} />
               <PageTitle />
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/" element={<LandingGate />} />
-                <Route
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<LandingGate />} />
+                  <Route
                     path="/pin"
                     element={
-                    <Suspense fallback={<PageLoader />}>
-                      <PinEntry />
-                    </Suspense>
+                      <Suspense fallback={<PageLoader />}>
+                        <PinEntry />
+                      </Suspense>
                     } />
-                  
-                <Route
+
+                  <Route
                     path="/staff"
                     element={
-                    <Suspense fallback={<PageLoader />}>
-                      <StaffSelection />
-                    </Suspense>
+                      <Suspense fallback={<PageLoader />}>
+                        <StaffSelection />
+                      </Suspense>
                     } />
-                  
-                <Route
+
+                  <Route
                     path="/set-pin"
                     element={
-                    <ProtectedRoute>
-                      <Suspense fallback={<PageLoader />}>
-                        <SetNewPin />
-                      </Suspense>
-                    </ProtectedRoute>
+                      <ProtectedRoute>
+                        <Suspense fallback={<PageLoader />}>
+                          <SetNewPin />
+                        </Suspense>
+                      </ProtectedRoute>
                     } />
-                  
 
-                {}
-                <Route
+
+                  { }
+                  <Route
                     path="/dashboard"
                     element={
-                    <ProtectedRoute ownerOnly={true}>
-                      <MainLayout>
-                        <Suspense fallback={<PageLoader />}>
-                          <Dashboard />
-                        </Suspense>
-                      </MainLayout>
-                    </ProtectedRoute>
+                      <ProtectedRoute ownerOnly={true}>
+                        <MainLayout>
+                          <Suspense fallback={<PageLoader />}>
+                            <Dashboard />
+                          </Suspense>
+                        </MainLayout>
+                      </ProtectedRoute>
                     } />
-                  
-                <Route
+
+                  <Route
                     path="/reports"
                     element={
-                    <ProtectedRoute requiredPermission="generateReports">
-                      <MainLayout>
-                        <Suspense fallback={<PageLoader />}>
-                          <Reports />
-                        </Suspense>
-                      </MainLayout>
-                    </ProtectedRoute>
+                      <ProtectedRoute requiredPermission="generateReports">
+                        <MainLayout>
+                          <Suspense fallback={<PageLoader />}>
+                            <Reports />
+                          </Suspense>
+                        </MainLayout>
+                      </ProtectedRoute>
                     } />
-                  
-                <Route
+
+                  <Route
                     path="/manage-employees"
                     element={
-                    <ProtectedRoute ownerOnly={true}>
-                      <MainLayout>
-                        <Suspense fallback={<PageLoader />}>
-                          <ManageEmployees />
-                        </Suspense>
-                      </MainLayout>
-                    </ProtectedRoute>
+                      <ProtectedRoute ownerOnly={true}>
+                        <MainLayout>
+                          <Suspense fallback={<PageLoader />}>
+                            <ManageEmployees />
+                          </Suspense>
+                        </MainLayout>
+                      </ProtectedRoute>
                     } />
-                  
 
-                {}
-                <Route
+
+                  { }
+                  <Route
                     path="/inventory"
                     element={
-                    <ProtectedRoute requiredPermission="inventory">
-                      <MainLayout>
-                        <Suspense fallback={<PageLoader />}>
-                          <Inventory />
-                        </Suspense>
-                      </MainLayout>
-                    </ProtectedRoute>
+                      <ProtectedRoute requiredPermission="inventory">
+                        <MainLayout>
+                          <Suspense fallback={<PageLoader />}>
+                            <Inventory />
+                          </Suspense>
+                        </MainLayout>
+                      </ProtectedRoute>
                     } />
-                  
-                <Route
+
+                  <Route
                     path="/stock-movement"
                     element={
-                    <ProtectedRoute requiredPermission="inventory">
-                      <MainLayout>
-                        <Suspense fallback={<PageLoader />}>
-                          <Logs />
-                        </Suspense>
-                      </MainLayout>
-                    </ProtectedRoute>
+                      <ProtectedRoute requiredPermission="inventory">
+                        <MainLayout>
+                          <Suspense fallback={<PageLoader />}>
+                            <Logs />
+                          </Suspense>
+                        </MainLayout>
+                      </ProtectedRoute>
                     } />
-                  
-                <Route
+
+                  <Route
                     path="/terminal"
                     element={
-                    <ProtectedRoute requiredPermission="posTerminal">
-                      <MainLayout>
-                        <Suspense fallback={<PageLoader />}>
-                          <Terminal />
-                        </Suspense>
-                      </MainLayout>
-                    </ProtectedRoute>
+                      <ProtectedRoute requiredPermission="posTerminal">
+                        <MainLayout>
+                          <Suspense fallback={<PageLoader />}>
+                            <Terminal />
+                          </Suspense>
+                        </MainLayout>
+                      </ProtectedRoute>
                     } />
-                  
-                <Route
+
+                  <Route
                     path="/transactions"
                     element={
-                    <ProtectedRoute requiredPermission="viewTransactions">
-                      <MainLayout>
-                        <Suspense fallback={<PageLoader />}>
-                          <Transaction />
-                        </Suspense>
-                      </MainLayout>
-                    </ProtectedRoute>
+                      <ProtectedRoute requiredPermission="viewTransactions">
+                        <MainLayout>
+                          <Suspense fallback={<PageLoader />}>
+                            <Transaction />
+                          </Suspense>
+                        </MainLayout>
+                      </ProtectedRoute>
                     } />
-                  
-                <Route
+
+                  <Route
+                    path="/cash-remittance"
+                    element={
+                      <ProtectedRoute requiredPermission="viewTransactions">
+                        <MainLayout>
+                          <Suspense fallback={<PageLoader />}>
+                            <CashRemittance />
+                          </Suspense>
+                        </MainLayout>
+                      </ProtectedRoute>
+                    } />
+
+                  <Route
                     path="/settings"
                     element={
-                    <ProtectedRoute requiredPermission={null}>
-                      <MainLayout>
-                        <Suspense fallback={<PageLoader />}>
-                          <Settings />
-                        </Suspense>
-                      </MainLayout>
-                    </ProtectedRoute>
+                      <ProtectedRoute requiredPermission={null}>
+                        <MainLayout>
+                          <Suspense fallback={<PageLoader />}>
+                            <Settings />
+                          </Suspense>
+                        </MainLayout>
+                      </ProtectedRoute>
                     } />
-                  
-                <Route
+
+                  <Route
                     path="/manage-data"
                     element={
-                    <ProtectedRoute requiredPermission={null}>
-                      <MainLayout>
-                        <Suspense fallback={<PageLoader />}>
-                          <ManageData />
-                        </Suspense>
-                      </MainLayout>
-                    </ProtectedRoute>
+                      <ProtectedRoute requiredPermission={null}>
+                        <MainLayout>
+                          <Suspense fallback={<PageLoader />}>
+                            <ManageData />
+                          </Suspense>
+                        </MainLayout>
+                      </ProtectedRoute>
                     } />
-                  
-                <Route
+
+                  <Route
                     path="/discount-management"
                     element={
-                    <ProtectedRoute requiredPermission={null}>
-                      <MainLayout>
-                        <Suspense fallback={<PageLoader />}>
-                          <DiscountManagement />
-                        </Suspense>
-                      </MainLayout>
-                    </ProtectedRoute>
+                      <ProtectedRoute requiredPermission={null}>
+                        <MainLayout>
+                          <Suspense fallback={<PageLoader />}>
+                            <DiscountManagement />
+                          </Suspense>
+                        </MainLayout>
+                      </ProtectedRoute>
                     } />
-                  
-                <Route
+
+                  <Route
                     path="/brand-partners"
                     element={
-                    <ProtectedRoute requiredPermission={null}>
-                      <MainLayout>
-                        <Suspense fallback={<PageLoader />}>
-                          <BrandPartners />
-                        </Suspense>
-                      </MainLayout>
-                    </ProtectedRoute>
+                      <ProtectedRoute requiredPermission={null}>
+                        <MainLayout>
+                          <Suspense fallback={<PageLoader />}>
+                            <BrandPartners />
+                          </Suspense>
+                        </MainLayout>
+                      </ProtectedRoute>
                     } />
-                  
-                <Route
+
+                  <Route
                     path="/categories"
                     element={
-                    <ProtectedRoute requiredPermission={null}>
-                      <MainLayout>
-                        <Suspense fallback={<PageLoader />}>
-                          <Categories />
-                        </Suspense>
-                      </MainLayout>
-                    </ProtectedRoute>
+                      <ProtectedRoute requiredPermission={null}>
+                        <MainLayout>
+                          <Suspense fallback={<PageLoader />}>
+                            <Categories />
+                          </Suspense>
+                        </MainLayout>
+                      </ProtectedRoute>
                     } />
-                  
-              </Routes>
-            </Suspense>
-          </Router>
-        </DataCacheProvider>
-      </AuthProvider>
-    </ThemeProvider>
+
+                </Routes>
+              </Suspense>
+            </Router>
+          </DataCacheProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </ErrorBoundary>);
 
 }
