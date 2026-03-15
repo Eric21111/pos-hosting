@@ -407,84 +407,131 @@ const Dashboard = () => {
 
         { }
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Total Sales */}
-          <div className={`rounded-xl p-4 shadow-sm border relative overflow-hidden group hover:shadow-md transition-shadow ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
+          { }
+          <div
+            className={`rounded-xl p-5 shadow-sm border relative overflow-hidden group hover:shadow-md transition-shadow ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
+
             <div className="absolute top-0 left-0 w-1 h-full bg-blue-400"></div>
-            <div className="flex flex-col h-full justify-between">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <p className={`text-sm font-bold text-blue-500`}>Total Sales</p>
-                  <p className="text-[10px] text-green-500 mt-0.5">+{metrics.growthRate}% vs last period</p>
-                </div>
-                <div className="bg-blue-50 p-2 rounded-full">
-                  <FaShoppingBag className="text-blue-400 text-sm" />
-                </div>
-              </div>
+            <div className="flex justify-between items-start">
               <div>
-                <p className={`text-3xl font-extrabold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>
+                <p className="text-2xl font-bold text-blue-600">
                   {formatCurrency(metrics.totalSalesToday)}
                 </p>
+                <p
+                  className={`text-xs font-bold mt-1 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+
+                  Total Sales
+                </p>
+                <p
+                  className={`text-[10px] ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>
+
+                  Total revenue from all transactions
+                </p>
+                <p className="text-[10px] text-green-500 mt-1 flex items-center">
+                  +{metrics.growthRate}%{" "}
+                  <span
+                    className={`ml-1 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>
+
+                    vs last period
+                  </span>
+                </p>
+              </div>
+              <div className="bg-blue-50 p-2.5 rounded-full">
+                <FaShoppingBag className="text-blue-500 text-lg" />
               </div>
             </div>
           </div>
 
-          {/* Total Transactions */}
-          <div className={`rounded-xl p-4 shadow-sm border relative overflow-hidden hover:shadow-md transition-shadow ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
+          { }
+          <div
+            className={`rounded-xl p-5 shadow-sm border relative overflow-hidden hover:shadow-md transition-shadow ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
+
             <div className="absolute top-0 left-0 w-1 h-full bg-purple-400"></div>
-            <div className="flex flex-col h-full justify-between">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <p className={`text-sm font-bold text-purple-600`}>Total Transactions</p>
-                  <p className="text-[10px] text-green-500 mt-0.5">+12% vs last period</p>
-                </div>
-                <div className="bg-purple-50 p-2 rounded-full">
-                  <FaHandshake className="text-purple-400 text-sm" />
-                </div>
-              </div>
+            <div className="flex justify-between items-start">
               <div>
-                <p className={`text-3xl font-extrabold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>
+                <p className="text-2xl font-bold text-purple-600">
                   {metrics.totalTransactions}
                 </p>
+                <p
+                  className={`text-xs font-bold mt-1 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+
+                  Total Transactions
+                </p>
+                <p
+                  className={`text-[10px] ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>
+
+                  Number of sales made today
+                </p>
+                <p className="text-[10px] text-green-500 mt-1 flex items-center">
+                  +12%{" "}
+                  <span
+                    className={`ml-1 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>
+
+                    vs last period
+                  </span>
+                </p>
+              </div>
+              <div className="bg-purple-50 p-2.5 rounded-full">
+                <FaHandshake className="text-purple-500 text-lg" />
               </div>
             </div>
           </div>
 
-          {/* Average Growth Rate */}
-          <div className={`rounded-xl p-4 shadow-sm border relative overflow-hidden hover:shadow-md transition-shadow ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
+          { }
+          <div
+            className={`rounded-xl p-5 shadow-sm border relative overflow-hidden hover:shadow-md transition-shadow ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
+
             <div className="absolute top-0 left-0 w-1 h-full bg-green-400"></div>
-            <div className="flex flex-col h-full justify-between">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <p className={`text-sm font-bold text-green-600`}>Average Growth Rate</p>
-                </div>
-                <div className="bg-green-50 p-2 rounded-full">
-                  <FaChartLine className="text-green-500 text-sm" />
-                </div>
-              </div>
+            <div className="flex justify-between items-start">
               <div>
-                <p className={`text-3xl font-extrabold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>
+                <p className="text-2xl font-bold text-green-600">
                   {metrics.growthRate}%
                 </p>
+                <p
+                  className={`text-xs font-bold mt-1 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+
+                  Average Growth Rate
+                </p>
+                <p
+                  className={`text-[10px] ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>
+
+                  Average trend of sales
+                </p>
+                <p className="text-[10px] text-green-500 mt-1 flex items-center">
+                  <span
+                    className={`${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>
+
+                    Consistent growth
+                  </span>
+                </p>
+              </div>
+              <div className="bg-green-50 p-2.5 rounded-full">
+                <FaChartLine className="text-green-500 text-lg" />
               </div>
             </div>
           </div>
 
-          {/* Low Stock Items */}
-          <div className={`rounded-xl p-4 shadow-sm border relative overflow-hidden hover:shadow-md transition-shadow ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
+          { }
+          <div
+            className={`rounded-xl p-5 shadow-sm border relative overflow-hidden hover:shadow-md transition-shadow ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
+
             <div className="absolute top-0 left-0 w-1 h-full bg-red-400"></div>
-            <div className="flex flex-col h-full justify-between">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <p className={`text-sm font-bold text-red-500`}>Low Stock Items</p>
-                </div>
-                <div className="bg-red-50 p-2 rounded-full">
-                  <FaExclamationTriangle className="text-red-500 text-sm" />
-                </div>
-              </div>
-              <div className="flex justify-center flex-grow items-center">
-                <p className={`text-4xl font-extrabold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-2xl font-bold text-red-500">
                   {metrics.lowStockItems}
                 </p>
+                <p className="text-xs font-bold text-red-600 mt-1">
+                  Low Stock Items
+                </p>
+                <p
+                  className={`text-[10px] ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>
+
+                  Number of products below stock threshold
+                </p>
+              </div>
+              <div className="bg-red-50 p-2.5 rounded-full">
+                <FaExclamationTriangle className="text-red-500 text-lg" />
               </div>
             </div>
           </div>
