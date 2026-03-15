@@ -408,7 +408,6 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Total Sales */}
               <div className={`rounded-xl p-4 shadow-sm border relative overflow-hidden group hover:shadow-md transition-shadow ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
                 <div className="absolute top-0 left-0 w-1 h-full bg-blue-400"></div>
                 <div className="flex flex-col h-full justify-between">
@@ -450,7 +449,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Average Growth Rate */}
+
               <div className={`rounded-xl p-4 shadow-sm border relative overflow-hidden hover:shadow-md transition-shadow ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
                 <div className="absolute top-0 left-0 w-1 h-full bg-green-400"></div>
                 <div className="flex flex-col h-full justify-between">
@@ -470,7 +469,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Low Stock Items */}
+
               <div className={`rounded-xl p-4 shadow-sm border relative overflow-hidden hover:shadow-md transition-shadow ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
                 <div className="absolute top-0 left-0 w-1 h-full bg-red-400"></div>
                 <div className="flex flex-col h-full justify-between">
@@ -491,7 +490,7 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Sales Over Time and Growth */}
+
             <div
               className={`p-6 rounded-xl shadow-sm border ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
 
@@ -682,7 +681,7 @@ const Dashboard = () => {
 
           { }
           <div className="flex flex-col gap-6">
-            {/* Active Employees */}
+
             <div
               className={`p-6 rounded-xl shadow-sm border ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
 
@@ -717,7 +716,7 @@ const Dashboard = () => {
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] text-gray-400 whitespace-nowrap">
-                          {employee.dateJoined ? `Joined ${new Date(employee.dateJoined).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : "Online"}
+                          {employee.lastLogin ? `Online since ${new Date(employee.lastLogin).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}` : "Online"}
                         </p>
                       </div>
                     </div>
@@ -736,7 +735,7 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Sales By Category */}
+
             <div
               className={`p-6 rounded-xl shadow-sm border flex-grow ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
 
@@ -776,7 +775,7 @@ const Dashboard = () => {
                         <Tooltip />
                       </PieChart>
                     </ResponsiveContainer>
-                    {/* Category Legend */}
+
                     <div className="grid grid-cols-2 gap-x-8 gap-y-2 mt-2 w-full px-4">
                       {salesByCategoryData.slice(0, 4).map((item, index) =>
                         <div key={index} className="flex items-center gap-2">
@@ -814,9 +813,8 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Third Row: Top Selling & Low Stock */}
+
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-6">
-          {/* Top Selling Products */}
           <div
             className={`p-6 rounded-xl shadow-sm border ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
 
@@ -910,7 +908,6 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Low & Out-of-Stock Items */}
           <div
             className={`p-6 rounded-xl shadow-sm border ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
 
