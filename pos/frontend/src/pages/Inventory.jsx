@@ -1373,6 +1373,11 @@ const Inventory = () => {
                   newVariantPrices[variant] = stockData.newVariantPrices[variant].price || editingProduct.itemPrice || 0;
                   newVariantCostPrices[variant] = stockData.newVariantPrices[variant].costPrice || editingProduct.costPrice || 0;
                 }
+                // Fallback: new variant on a new size — use the new size's price
+                else if (stockData.newSizePrices && stockData.newSizePrices[size]) {
+                  newVariantPrices[variant] = stockData.newSizePrices[size].price || editingProduct.itemPrice || 0;
+                  newVariantCostPrices[variant] = stockData.newSizePrices[size].costPrice || editingProduct.costPrice || 0;
+                }
               }
             });
 

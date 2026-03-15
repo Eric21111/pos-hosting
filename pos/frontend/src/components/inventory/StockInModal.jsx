@@ -804,7 +804,7 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
                                   </div>
 
                                   { }
-                                  {selectedSizes[0] === size && addedVariants.length > 0 && !selectedSizes.some(s => diffPricesPerVariant[s]) &&
+                                  {selectedSizes[0] === size && addedVariants.length > 0 && !isNewSize && !selectedSizes.some(s => diffPricesPerVariant[s]) &&
                                     <div className={`mt-3 pt-3 border-t ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
                                       <label
                                         className={`block text-xs font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
