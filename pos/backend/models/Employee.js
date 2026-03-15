@@ -82,6 +82,14 @@ const employeeSchema = new mongoose.Schema({
   requiresPinReset: {
     type: Boolean,
     default: true
+  },
+  isOnline: {
+    type: Boolean,
+    default: false
+  },
+  lastLogin: {
+    type: Date,
+    default: null
   }
 }, {
   timestamps: true
@@ -159,6 +167,7 @@ employeeSchema.index({ role: 1 });
 employeeSchema.index({ dateJoined: -1 });
 employeeSchema.index({ firstName: 'text', lastName: 'text', name: 'text', email: 'text' }); // Text search index
 employeeSchema.index({ fastPinHash: 1 }); // Fast login lookup
+employeeSchema.index({ isOnline: 1 }); // Online employees dashboard lookup
 
 // Export schema for dynamic connection
 module.exports.schema = employeeSchema;

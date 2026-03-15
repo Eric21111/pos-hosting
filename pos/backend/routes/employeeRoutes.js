@@ -10,7 +10,9 @@ const {
   verifyPin,
   searchEmployees,
   updatePin,
-  sendTemporaryPin
+  sendTemporaryPin,
+  logoutEmployee,
+  getOnlineEmployees
 } = require('../controllers/employeeController');
 
 router.route('/')
@@ -20,6 +22,10 @@ router.route('/')
 router.get('/search/:query', searchEmployees);
 
 router.post('/verify-pin', verifyPin);
+
+router.post('/logout', logoutEmployee);
+
+router.get('/online', getOnlineEmployees);
 
 router.route('/:id')
   .get(getEmployeeById)
@@ -33,4 +39,5 @@ router.put('/:id/pin', updatePin);
 router.post('/:id/send-temporary-pin', sendTemporaryPin);
 
 module.exports = router;
+
 

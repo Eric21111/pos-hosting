@@ -250,20 +250,18 @@ const Dashboard = () => {
 
   const fetchActiveEmployees = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/employees");
+      const response = await fetch(`${API_ENDPOINTS.employeesOnline}`);
       const data = await response.json();
       if (data.success) {
         const timestamp = new Date().getTime();
-        const activeOnly = data.data.filter(emp => emp.status === "Active");
-        // Sort by most recently joined or just take top 3
-        const recentActive = activeOnly.slice(0, 3).map(emp => ({
+        const onlineEmployees = data.data.map(emp => ({
           ...emp,
           image: `http://localhost:5000/api/employees/${emp._id}/image?t=${timestamp}`
         }));
-        setActiveEmployees(recentActive);
+        setActiveEmployees(onlineEmployees);
       }
     } catch (error) {
-      console.error("Error fetching active employees:", error);
+      console.error("Error fetching online employees:", error);
     }
   };
 

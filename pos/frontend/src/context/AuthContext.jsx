@@ -14,7 +14,19 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('currentUser', JSON.stringify(user));
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Notify backend to mark employee as offline
+    if (currentUser?._id) {
+      try {
+        await fetch('http://localhost:5000/api/employees/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ employeeId: currentUser._id })
+        });
+      } catch (err) {
+        console.error('Error notifying logout:', err);
+      }
+    }
     setCurrentUser(null);
     localStorage.removeItem('currentUser');
   };

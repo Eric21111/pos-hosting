@@ -319,6 +319,8 @@ exports.verifyPin = async (req, res) => {
     }).select('-profileImage').lean();
 
     if (fastEmployee) {
+      // Mark employee as online
+      await Employee.findByIdAndUpdate(fastEmployee._id, { isOnline: true, lastLogin: new Date() });
       const { pin: unusedPin, fastPinHash: unusedFastHash, ...employeeWithoutPin } = fastEmployee;
       return res.json({
         success: true,
@@ -358,8 +360,8 @@ exports.verifyPin = async (req, res) => {
     const found = results.find(emp => emp !== null);
 
     if (found) {
-      // Lazy migration: Save the fastPinHash for this employee so their next login is instant
-      await Employee.findByIdAndUpdate(found._id, { fastPinHash: computedFastHash });
+      // Lazy migration: Save the fastPinHash and mark as online
+      await Employee.findByIdAndUpdate(found._id, { fastPinHash: computedFastHash, isOnline: true, lastLogin: new Date() });
 
       const { pin: unusedPin, profileImage: unusedImage, fastPinHash: unusedFastHash, ...employeeWithoutPin } = found;
 
@@ -685,5 +687,33 @@ exports.updatePin = async (req, res) => {
       message: 'Error updating PIN',
       error: error.message
     });
+  }
+};
+
+// Logout employee (set isOnline to false)
+exports.logoutEmployee = async (req, res) => {
+  try {
+    const { employeeId } = req.body;
+    if (!employeeId) {
+      return res.status(400).json({ success: false, message: 'Employee ID is required' });
+    }
+    await Employee.findByIdAndUpdate(employeeId, { isOnline: false });
+    res.json({ success: true, message: 'Logged out successfully' });
+  } catch (error) {
+    console.error('Error logging out employee:', error);
+    res.status(500).json({ success: false, message: 'Error logging out', error: error.message });
+  }
+};
+
+// Get online employees
+exports.getOnlineEmployees = async (req, res) => {
+  try {
+    const onlineEmployees = await Employee.find({ isOnline: true })
+      .select('-pin -fastPinHash -profileImage')
+      .lean();
+    res.json({ success: true, data: onlineEmployees });
+  } catch (error) {
+    console.error('Error fetching online employees:', error);
+    res.status(500).json({ success: false, message: 'Error fetching online employees', error: error.message });
   }
 };
