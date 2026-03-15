@@ -661,8 +661,8 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
                                     }
                                   </label>
 
-                                  {/* Price inputs for new sizes */}
-                                  {isNewSize &&
+                                  {/* Price inputs for new sizes — hide when diff prices per variant is on */}
+                                  {isNewSize && !diffPricesPerVariant[size] &&
                                     <div className={`grid grid-cols-2 gap-2 mb-3 p-2 rounded-lg ${theme === "dark" ? "bg-[#2A2724]" : "bg-gray-100"}`}>
                                       <div>
                                         <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
@@ -804,7 +804,7 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
                                   </div>
 
                                   { }
-                                  {selectedSizes[0] === size && addedVariants.length > 0 &&
+                                  {selectedSizes[0] === size && addedVariants.length > 0 && !selectedSizes.some(s => diffPricesPerVariant[s]) &&
                                     <div className={`mt-3 pt-3 border-t ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
                                       <label
                                         className={`block text-xs font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
