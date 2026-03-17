@@ -31,16 +31,15 @@ const formatAbs = (val) =>
     `₱${Math.abs(val || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 // ─── KPI Card ────────────────────────────────────────────────
-const KpiCard = ({ icon: Icon, label, value, color, subtext }) => (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex flex-col gap-0.5 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${color}`}>
-                <Icon className="text-white text-xs" />
+const KpiCard = ({ icon: Icon, label, value, iconColor }) => (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 min-w-0">
+        <div className="flex items-start justify-between mb-1">
+            <p className="text-xl font-extrabold text-gray-800 truncate">{value}</p>
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ml-2 ${iconColor || 'bg-blue-100'}`}>
+                <Icon className={`text-sm ${iconColor ? 'text-white' : 'text-blue-500'}`} />
             </div>
-            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider truncate">{label}</span>
         </div>
-        <p className="text-lg font-extrabold text-gray-800 truncate">{value}</p>
-        {subtext && <p className="text-[10px] text-gray-400 truncate">{subtext}</p>}
+        <p className="text-xs font-semibold text-blue-500 truncate">{label}</p>
     </div>
 );
 
@@ -64,125 +63,118 @@ const ReceiptContent = ({ remit }) => {
         .filter(d => d.qty > 0);
 
     return (
-        <div className="p-5 space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto">
-            {/* Official Header */}
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 text-center">
-                <p className="text-[9px] text-amber-600 uppercase tracking-[3px] font-bold">Official Document</p>
-                <h4 className="text-base font-extrabold text-gray-800 mt-1">Cash Turn-Over Slip</h4>
+        <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
+            {/* ── Dark Navy Header ── */}
+            <div className="bg-gradient-to-br from-[#1A2744] to-[#2A3F5F] p-6 text-center">
+                <p className="text-[10px] text-gray-400 uppercase tracking-[4px] font-mono">Official Document</p>
+                <h4 className="text-lg font-extrabold text-white mt-1 font-serif italic">Cash Turn-Over Slip</h4>
+                <p className="text-[11px] text-gray-400 mt-0.5">Santos General Merchandise</p>
             </div>
 
-            {/* Slip Details */}
-            <div className="grid grid-cols-2 gap-3">
-                <div>
-                    <p className="text-[9px] text-gray-400 uppercase tracking-wider font-bold">Slip No.</p>
-                    <p className="text-xs font-bold text-gray-700 mt-0.5 font-mono">CTS-{remit._id.slice(-6).toUpperCase()}</p>
-                </div>
-                <div>
-                    <p className="text-[9px] text-gray-400 uppercase tracking-wider font-bold">Date</p>
-                    <p className="text-xs font-bold text-gray-700 mt-0.5">
-                        {new Date(remit.shiftDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-                    </p>
-                </div>
-                <div>
-                    <p className="text-[9px] text-gray-400 uppercase tracking-wider font-bold">Time</p>
-                    <p className="text-xs font-bold text-gray-700 mt-0.5">
-                        {new Date(remit.createdAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-                    </p>
-                </div>
-                <div>
-                    <p className="text-[9px] text-gray-400 uppercase tracking-wider font-bold">Cashier</p>
-                    <p className="text-xs font-bold text-gray-700 mt-0.5">{remit.employeeName}</p>
-                </div>
-                <div>
-                    <p className="text-[9px] text-gray-400 uppercase tracking-wider font-bold">Float</p>
-                    <p className="text-xs font-bold text-gray-700 mt-0.5">{formatCurrency(remit.openingFloat || 2000)}</p>
-                </div>
-                <div>
-                    <p className="text-[9px] text-gray-400 uppercase tracking-wider font-bold">Received By</p>
-                    <p className="text-xs font-bold text-gray-700 mt-0.5">{remit.receivedBy || "—"}</p>
-                </div>
-            </div>
-
-            {/* Z-Reading Section */}
-            <div className="border border-gray-200 rounded-xl p-3">
-                <p className="text-[9px] text-gray-400 uppercase tracking-wider font-bold mb-2">Z-Reading (Machine Reading)</p>
-                <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs">
-                        <span className="text-gray-500">Gross Sales</span>
-                        <span className="font-bold text-gray-700">{formatCurrency(remit.grossSales)}</span>
+            {/* ── Slip Details ── */}
+            <div className="bg-gray-50 p-4 border-b border-gray-200">
+                <div className="grid grid-cols-2 gap-y-3 gap-x-4">
+                    <div>
+                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-mono font-bold">Slip No.</p>
+                        <p className="text-sm font-bold text-gray-800 mt-0.5 font-mono">CTS-{remit._id.slice(-5).toUpperCase()}</p>
                     </div>
-                    <div className="flex justify-between text-xs">
-                        <span className="text-gray-500">Less: Returns</span>
-                        <span className="font-bold text-red-500">({formatAbs(remit.returns)})</span>
+                    <div>
+                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-mono font-bold">Date</p>
+                        <p className="text-sm font-bold text-gray-800 mt-0.5">
+                            {new Date(remit.shiftDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                        </p>
                     </div>
-                    <div className="border-t border-dashed border-gray-200 pt-1.5 flex justify-between text-xs">
-                        <span className="font-bold text-gray-700">Net Z-Reading</span>
-                        <span className="font-extrabold text-gray-800">{formatCurrency(remit.netSales)}</span>
+                    <div>
+                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-mono font-bold">Time</p>
+                        <p className="text-sm font-bold text-gray-800 mt-0.5">
+                            {new Date(remit.createdAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-mono font-bold">Cashier</p>
+                        <p className="text-sm font-bold text-gray-800 mt-0.5">{remit.employeeName}</p>
+                    </div>
+                    <div>
+                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-mono font-bold">Float</p>
+                        <p className="text-sm font-bold text-gray-800 mt-0.5">{formatCurrency(remit.openingFloat || 2000)}</p>
+                    </div>
+                    <div>
+                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-mono font-bold">Type</p>
+                        <p className="text-sm font-bold text-gray-800 mt-0.5">Regular</p>
                     </div>
                 </div>
             </div>
 
-            {/* Cash Count Breakdown */}
-            {denomEntries.length > 0 && (
-                <div className="border border-gray-200 rounded-xl p-3">
-                    <p className="text-[9px] text-gray-400 uppercase tracking-wider font-bold mb-2">Cash Count Breakdown</p>
-                    <div className="space-y-1">
-                        {denomEntries.map(d => (
-                            <div key={d.key} className="flex justify-between text-xs">
-                                <span className="text-gray-500">{d.label} × {d.qty}</span>
-                                <span className="font-medium text-gray-700">{formatCurrency(d.qty * d.value)}</span>
-                            </div>
-                        ))}
-                        <div className="border-t border-dashed border-gray-200 pt-1.5 flex justify-between text-xs">
-                            <span className="font-bold text-gray-700">Total Cash on Hand</span>
-                            <span className="font-extrabold text-gray-800">{formatCurrency(remit.totalCashOnHand)}</span>
+            <div className="p-4 space-y-4">
+                {/* ── Z-Reading Section ── */}
+                <div className="border-l-4 border-blue-500 bg-blue-50/40 rounded-r-lg p-3">
+                    <p className="text-[9px] text-gray-500 uppercase tracking-wider font-mono font-bold mb-2">Z-Reading (Machine Reading)</p>
+                    <div className="space-y-1.5">
+                        <div className="flex justify-between text-xs">
+                            <span className="text-gray-600">Gross Sales</span>
+                            <span className="font-bold text-gray-800">{formatCurrency(remit.grossSales)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                            <span className="text-gray-600">Less: Returns</span>
+                            <span className="font-bold text-red-500">({formatAbs(remit.returns)})</span>
+                        </div>
+                        <div className="border-t border-dashed border-gray-300 pt-1.5 flex justify-between text-sm">
+                            <span className="font-bold text-gray-700">Net Z-Reading</span>
+                            <span className="font-extrabold text-gray-900">{formatCurrency(remit.netSales)}</span>
                         </div>
                     </div>
                 </div>
-            )}
 
-            {/* Remittance Computation */}
-            <div className="border border-gray-200 rounded-xl p-3">
-                <p className="text-[9px] text-gray-400 uppercase tracking-wider font-bold mb-2">Remittance Computation</p>
-                <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs">
-                        <span className="text-gray-500">Total Cash in Drawer</span>
-                        <span className="font-bold text-gray-700">{formatCurrency(remit.totalCashOnHand)}</span>
+                {/* ── Cash Count Breakdown ── */}
+                {denomEntries.length > 0 && (
+                    <div className="border-l-4 border-blue-500 bg-blue-50/40 rounded-r-lg p-3">
+                        <p className="text-[9px] text-gray-500 uppercase tracking-wider font-mono font-bold mb-2">Cash Count Breakdown</p>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1">
+                            {denomEntries.map(d => (
+                                <span key={d.key} className="text-xs text-gray-700">
+                                    <span className="font-mono text-gray-500">{d.label}×{d.qty}</span>
+                                    {' '}
+                                    <span className="font-bold">{formatCurrency(d.qty * d.value)}</span>
+                                </span>
+                            ))}
+                        </div>
                     </div>
-                    <div className="flex justify-between text-xs">
-                        <span className="text-gray-500">Less: Opening Float</span>
-                        <span className="font-bold text-red-500">({formatAbs(remit.openingFloat || 2000)})</span>
-                    </div>
-                    <div className="border-t border-dashed border-gray-200 pt-2 flex justify-between items-center">
-                        <span className="text-sm font-extrabold text-gray-800">CASH TO REMIT</span>
-                        <span className="text-lg font-extrabold text-gray-900">{formatCurrency(remit.cashToRemit)}</span>
+                )}
+
+                {/* ── Remittance Computation ── */}
+                <div className="border-l-4 border-blue-500 bg-blue-50/40 rounded-r-lg p-3">
+                    <p className="text-[9px] text-gray-500 uppercase tracking-wider font-mono font-bold mb-2">Remittance Computation</p>
+                    <div className="space-y-1.5">
+                        <div className="flex justify-between text-xs">
+                            <span className="text-gray-600">Total Cash in Drawer</span>
+                            <span className="font-bold text-gray-800">{formatCurrency(remit.totalCashOnHand)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                            <span className="text-gray-600">Less: Opening Float</span>
+                            <span className="font-bold text-gray-800">({formatAbs(remit.openingFloat || 2000)})</span>
+                        </div>
+                        <div className="border-t border-dashed border-gray-300 pt-2 flex justify-between items-center">
+                            <span className="text-sm font-extrabold text-gray-900 tracking-wide">CASH TO REMIT</span>
+                            <span className="text-lg font-extrabold text-gray-900">{formatCurrency(remit.cashToRemit)}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Variance Badge */}
-            <div className={`rounded-xl p-3 text-center ${remit.variance === 0 ? 'bg-green-50 border border-green-200' :
-                remit.variance > 0 ? 'bg-blue-50 border border-blue-200' :
-                    'bg-red-50 border border-red-200'
-                }`}>
-                <p className="text-[9px] uppercase tracking-wider font-bold mb-1 text-gray-400">Variance</p>
-                <p className={`text-xl font-extrabold ${remit.variance === 0 ? 'text-green-600' :
-                    remit.variance > 0 ? 'text-blue-600' : 'text-red-600'
+                {/* ── Variance Badge ── */}
+                <div className={`rounded-lg p-3 flex items-center justify-between ${remit.variance === 0 ? 'bg-green-50 border border-green-200' :
+                    remit.variance > 0 ? 'bg-blue-50 border border-blue-200' :
+                        'bg-red-50 border border-red-200'
                     }`}>
-                    {remit.variance > 0 ? '+' : ''}{formatCurrency(remit.variance)}
-                    <span className="text-xs ml-2 font-bold">
-                        — {remit.variance === 0 ? 'BALANCED' : remit.variance > 0 ? 'OVER' : 'SHORT'}
+                    <span className={`text-sm font-extrabold uppercase tracking-wider ${remit.variance === 0 ? 'text-green-600' :
+                        remit.variance > 0 ? 'text-blue-600' : 'text-red-600'
+                        }`}>Variance</span>
+                    <span className={`text-base font-extrabold ${remit.variance === 0 ? 'text-green-600' :
+                        remit.variance > 0 ? 'text-blue-600' : 'text-red-600'
+                        }`}>
+                        {formatCurrency(remit.variance)} — {remit.variance === 0 ? 'BALANCED' : remit.variance > 0 ? 'OVER' : 'SHORT'}
                     </span>
-                </p>
-            </div>
-
-            {/* Remarks */}
-            {remit.remarks && (
-                <div className="bg-gray-50 rounded-xl p-3">
-                    <p className="text-[9px] text-gray-400 uppercase tracking-wider font-bold mb-1">Remarks</p>
-                    <p className="text-xs text-gray-600">{remit.remarks}</p>
                 </div>
-            )}
+            </div>
         </div>
     );
 };
@@ -305,29 +297,25 @@ const CashRemittance = () => {
                         icon={FaChartLine}
                         label="Total Net Sales"
                         value={formatCurrency(kpis.totalNetSales)}
-                        color="bg-gradient-to-br from-emerald-500 to-green-600"
-                        subtext="Today's revenue"
+                        iconColor="bg-blue-100"
                     />
                     <KpiCard
                         icon={FaHandHoldingUsd}
                         label="Total Remitted"
                         value={formatCurrency(kpis.totalRemitted)}
-                        color="bg-gradient-to-br from-blue-500 to-indigo-600"
-                        subtext={`${kpis.count} remittance${kpis.count !== 1 ? 's' : ''} today`}
+                        iconColor="bg-green-100"
                     />
                     <KpiCard
                         icon={FaBalanceScale}
                         label="Total Variance"
                         value={`${kpis.totalVariance > 0 ? '+' : ''}${formatCurrency(kpis.totalVariance)}`}
-                        color={kpis.totalVariance === 0 ? "bg-gradient-to-br from-green-500 to-emerald-600" : kpis.totalVariance > 0 ? "bg-gradient-to-br from-blue-500 to-blue-600" : "bg-gradient-to-br from-red-500 to-rose-600"}
-                        subtext={kpis.totalVariance === 0 ? "All balanced ✓" : kpis.totalVariance < 0 ? "⚠ Cash shortage" : "Cash over"}
+                        iconColor="bg-amber-100"
                     />
                     <KpiCard
                         icon={FaClock}
                         label="Unremitted"
                         value={formatCurrency(kpis.unremittedCash)}
-                        color="bg-gradient-to-br from-amber-500 to-orange-600"
-                        subtext="Outstanding today"
+                        iconColor="bg-red-100"
                     />
                 </div>
 
