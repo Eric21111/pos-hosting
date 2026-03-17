@@ -31,15 +31,15 @@ const formatAbs = (val) =>
     `₱${Math.abs(val || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 // ─── KPI Card ────────────────────────────────────────────────
-const KpiCard = ({ icon: Icon, label, value, iconColor }) => (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 min-w-0">
-        <div className="flex items-start justify-between mb-1">
-            <p className="text-xl font-extrabold text-gray-800 truncate">{value}</p>
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ml-2 ${iconColor || 'bg-blue-100'}`}>
-                <Icon className={`text-sm ${iconColor ? 'text-white' : 'text-blue-500'}`} />
+const KpiCard = ({ icon: Icon, label, value, iconBg, iconColor, textColor }) => (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 min-w-0 flex flex-col justify-center">
+        <div className="flex items-center justify-between mb-2">
+            <p className="text-3xl font-black text-gray-800 truncate tracking-tight">{value}</p>
+            <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ml-2 ${iconBg || 'bg-blue-50'}`}>
+                <Icon className={`text-xl ${iconColor || 'text-blue-500'}`} />
             </div>
         </div>
-        <p className="text-xs font-semibold text-blue-500 truncate">{label}</p>
+        <p className={`text-sm font-bold truncate ${textColor || 'text-blue-500'}`}>{label}</p>
     </div>
 );
 
@@ -217,20 +217,16 @@ const CashRemittance = () => {
         }
     }, [remittances]);
 
-    // ─── Compute KPIs from today's remittances ──────────────
+    // ─── Compute KPIs from all loaded remittances ──────────────
     const kpis = useMemo(() => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        // Calculate based on filteredRemittances so it respects search & status filters natively
+        // but if that feels wrong, we can just use `remittances` (all data).
+        // For now, using all `remittances` makes the top line "Global" totals.
+        const targetList = remittances;
 
-        const todayRemittances = remittances.filter(r => {
-            const d = new Date(r.shiftDate);
-            d.setHours(0, 0, 0, 0);
-            return d.getTime() === today.getTime();
-        });
-
-        const totalNetSales = todayRemittances.reduce((sum, r) => sum + (r.netSales || 0), 0);
-        const totalRemitted = todayRemittances.reduce((sum, r) => sum + (r.cashToRemit || 0), 0);
-        const totalVariance = todayRemittances.reduce((sum, r) => sum + (r.variance || 0), 0);
+        const totalNetSales = targetList.reduce((sum, r) => sum + (r.netSales || 0), 0);
+        const totalRemitted = targetList.reduce((sum, r) => sum + (r.cashToRemit || 0), 0);
+        const totalVariance = targetList.reduce((sum, r) => sum + (r.variance || 0), 0);
         const unremittedCash = totalNetSales - totalRemitted;
 
         return {
@@ -238,7 +234,7 @@ const CashRemittance = () => {
             totalRemitted,
             totalVariance,
             unremittedCash: unremittedCash > 0 ? unremittedCash : 0,
-            count: todayRemittances.length
+            count: targetList.length
         };
     }, [remittances]);
 
@@ -297,25 +293,33 @@ const CashRemittance = () => {
                         icon={FaChartLine}
                         label="Total Net Sales"
                         value={formatCurrency(kpis.totalNetSales)}
-                        iconColor="bg-blue-100"
+                        iconBg="bg-blue-50"
+                        iconColor="text-blue-500"
+                        textColor="text-blue-500"
                     />
                     <KpiCard
                         icon={FaHandHoldingUsd}
                         label="Total Remitted"
                         value={formatCurrency(kpis.totalRemitted)}
-                        iconColor="bg-green-100"
+                        iconBg="bg-green-50"
+                        iconColor="text-green-500"
+                        textColor="text-green-500"
                     />
                     <KpiCard
                         icon={FaBalanceScale}
                         label="Total Variance"
                         value={`${kpis.totalVariance > 0 ? '+' : ''}${formatCurrency(kpis.totalVariance)}`}
-                        iconColor="bg-amber-100"
+                        iconBg="bg-amber-50"
+                        iconColor="text-amber-500"
+                        textColor="text-amber-500"
                     />
                     <KpiCard
                         icon={FaClock}
                         label="Unremitted"
                         value={formatCurrency(kpis.unremittedCash)}
-                        iconColor="bg-red-100"
+                        iconBg="bg-red-50"
+                        iconColor="text-red-500"
+                        textColor="text-red-500"
                     />
                 </div>
 
