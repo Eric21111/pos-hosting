@@ -115,7 +115,9 @@ export const API_ENDPOINTS = {
   dataManagement: `${API_BASE_URL}/api/data-management`,
 
   remittances: `${API_BASE_URL}/api/remittances`,
-  remittanceSummary: `${API_BASE_URL}/api/remittances/summary`
+  remittanceSummary: `${API_BASE_URL}/api/remittances/summary`,
+
+  globalSettings: `${API_BASE_URL}/api/global-settings`,
 };
 
 

@@ -4,7 +4,7 @@ import { API_ENDPOINTS } from "../config/api";
 import {
     FaMoneyBillWave, FaSearch, FaFileInvoiceDollar, FaCheckCircle,
     FaExclamationTriangle, FaChartLine, FaHandHoldingUsd,
-    FaBalanceScale, FaClock, FaTimes, FaPrint
+    FaBalanceScale, FaClock, FaTimes, FaPrint, FaPlus
 } from "react-icons/fa";
 
 const DENOMINATIONS = [
@@ -189,6 +189,46 @@ const CashRemittance = () => {
     const [statusFilter, setStatusFilter] = useState("ALL");
     const [selectedRemittance, setSelectedRemittance] = useState(null);
 
+    // Global Opening Float
+    const [globalFloat, setGlobalFloat] = useState(2000);
+    const [showFloatModal, setShowFloatModal] = useState(false);
+    const [floatInput, setFloatInput] = useState("");
+    const [savingFloat, setSavingFloat] = useState(false);
+
+    const fetchGlobalFloat = async () => {
+        try {
+            const res = await fetch(API_ENDPOINTS.globalSettings);
+            const data = await res.json();
+            if (data.success && data.data) {
+                setGlobalFloat(data.data.openingFloat || 2000);
+            }
+        } catch (err) {
+            console.error("Error fetching global settings:", err);
+        }
+    };
+
+    const handleSaveFloat = async () => {
+        const val = parseFloat(floatInput);
+        if (isNaN(val) || val < 0) return;
+        setSavingFloat(true);
+        try {
+            const res = await fetch(API_ENDPOINTS.globalSettings, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ openingFloat: val })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setGlobalFloat(data.data.openingFloat);
+                setShowFloatModal(false);
+            }
+        } catch (err) {
+            console.error("Error saving float:", err);
+        } finally {
+            setSavingFloat(false);
+        }
+    };
+
     const fetchRemittances = async () => {
         setLoading(true);
         setError(null);
@@ -208,7 +248,7 @@ const CashRemittance = () => {
         }
     };
 
-    useEffect(() => { fetchRemittances(); }, []);
+    useEffect(() => { fetchRemittances(); fetchGlobalFloat(); }, []);
 
     // Auto-select first remittance when data loads
     useEffect(() => {
@@ -284,7 +324,7 @@ const CashRemittance = () => {
     }
 
     return (
-        <div className="p-6 max-w-[1600px] mx-auto animate-fade-in pb-24">
+        <div className="p-6 max-w-[1600px] mx-auto animate-fade-in pb-24" style={{ fontFamily: "'Poppins', sans-serif" }}>
             {/* ═══════ ROW 1: KPIs (left) | Opening Float (right) ═══════ */}
             <div className="flex gap-6 items-start mb-6">
                 {/* Left: 4 KPI Cards */}
@@ -323,19 +363,57 @@ const CashRemittance = () => {
                     />
                 </div>
 
-                {/* Right: Opening Float */}
+                {/* Right: Opening Float — white card matching reference */}
                 <div className="w-[380px] flex-shrink-0">
-                    <div className="bg-gradient-to-r from-[#1A3A5C] to-[#2A5A8C] rounded-2xl p-5 shadow-sm h-full flex items-center justify-between">
-                        <div>
-                            <p className="text-[10px] text-blue-200 uppercase tracking-wider font-bold">Opening Float</p>
-                            <p className="text-3xl font-extrabold text-white mt-1">{formatCurrency(selectedRemittance?.openingFloat || 2000)}</p>
-                        </div>
-                        <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center">
-                            <FaMoneyBillWave className="text-white text-xl" />
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 h-full">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-3xl font-black text-gray-800">{formatCurrency(globalFloat)}</p>
+                                <p className="text-sm font-semibold text-gray-400 mt-1">Opening Float</p>
+                            </div>
+                            {isOwner() && (
+                                <button
+                                    onClick={() => { setFloatInput(String(globalFloat)); setShowFloatModal(true); }}
+                                    className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2.5 rounded-xl font-bold text-sm transition-colors cursor-pointer shadow-sm"
+                                >
+                                    <FaPlus className="text-xs" /> New
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* ═══════ Opening Float Edit Modal ═══════ */}
+            {showFloatModal && (
+                <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" onClick={() => setShowFloatModal(false)}>
+                    <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-gray-800">Set Opening Float</h3>
+                            <button onClick={() => setShowFloatModal(false)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 cursor-pointer"><FaTimes /></button>
+                        </div>
+                        <p className="text-xs text-gray-500 mb-3">This will set the global opening float used for all new remittances.</p>
+                        <input
+                            type="number"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 mb-4"
+                            placeholder="e.g. 2000"
+                            value={floatInput}
+                            onChange={e => setFloatInput(e.target.value)}
+                            autoFocus
+                        />
+                        <div className="flex gap-2">
+                            <button onClick={() => setShowFloatModal(false)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 cursor-pointer">Cancel</button>
+                            <button
+                                onClick={handleSaveFloat}
+                                disabled={savingFloat || !floatInput}
+                                className="flex-1 py-2.5 rounded-xl bg-green-500 hover:bg-green-600 text-white text-sm font-bold disabled:opacity-50 cursor-pointer"
+                            >
+                                {savingFloat ? 'Saving...' : 'Save'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ═══════ ROW 2+3: Left Column (search + table) | Right Column (receipt) ═══════ */}
             <div className="flex gap-6 items-start">

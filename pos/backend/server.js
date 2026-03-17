@@ -167,6 +167,7 @@ app.use("/api/data-management", require("./routes/dataManagementRoutes"));
 app.use("/api/merchant-settings", require("./routes/merchantSettingsRoutes"));
 app.use("/api/payments", require("./routes/paymentRoutes"));
 app.use("/api/remittances", require("./routes/remittanceRoutes"));
+app.use("/api/global-settings", require("./routes/globalSettingsRoutes"));
 
 const PORT = process.env.PORT || 5000;
 const HOST = "0.0.0.0";
