@@ -28,10 +28,10 @@ const Terminal = () => {
   const { theme } = useTheme();
   const { currentUser } = useAuth();
   const { getCachedData, setCachedData, isCacheValid, invalidateCache } =
-  useDataCache();
+    useDataCache();
 
   const userId =
-  currentUser?._id || currentUser?.id || currentUser?.email || "guest";
+    currentUser?._id || currentUser?.id || currentUser?.email || "guest";
 
   const cartId = userId;
   const [products, setProducts] = useState(
@@ -60,6 +60,7 @@ const Terminal = () => {
   const [showProductModal, setShowProductModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [sortOption, setSortOption] = useState("newest");
+  const [isProcessingTransaction, setIsProcessingTransaction] = useState(false);
   const itemsPerPage = 10;
 
   const resolveItemSize = (item = {}) => {
@@ -80,20 +81,20 @@ const Terminal = () => {
     selectedSize: resolveItemSize(item),
     selectedVariation: item.selectedVariation || item.variant || '',
     sizes:
-    item.sizes ||
-    productSizes[item._id || item.productId] ||
-    productSizes[item.productId || item._id] ||
-    {}
+      item.sizes ||
+      productSizes[item._id || item.productId] ||
+      productSizes[item.productId || item._id] ||
+      {}
   });
 
   const defaultCategories = [
-  { name: "All", icon: allIcon },
-  { name: "Tops", icon: topIcon },
-  { name: "Bottoms", icon: bottomsIcon },
-  { name: "Dresses", icon: dressesIcon },
-  { name: "Makeup", icon: makeupIcon },
-  { name: "Shoes", icon: shoesIcon },
-  { name: "Essentials", icon: accessoriesIcon }];
+    { name: "All", icon: allIcon },
+    { name: "Tops", icon: topIcon },
+    { name: "Bottoms", icon: bottomsIcon },
+    { name: "Dresses", icon: dressesIcon },
+    { name: "Makeup", icon: makeupIcon },
+    { name: "Shoes", icon: shoesIcon },
+    { name: "Essentials", icon: accessoriesIcon }];
 
 
   const [categories, setCategories] = useState(defaultCategories);
@@ -117,11 +118,11 @@ const Terminal = () => {
       if (data.success && Array.isArray(data.data)) {
 
         const activeDbCategories = data.data.
-        filter((cat) => cat.status === "active").
-        map((cat) => ({
-          name: cat.name,
-          icon: categoryIconMap[cat.name] || allIcon
-        }));
+          filter((cat) => cat.status === "active").
+          map((cat) => ({
+            name: cat.name,
+            icon: categoryIconMap[cat.name] || allIcon
+          }));
 
 
         const mergedCategories = [...defaultCategories];
@@ -179,13 +180,13 @@ const Terminal = () => {
                 if (Array.isArray(parsedCart) && parsedCart.length > 0) {
                   setCart(
                     parsedCart.map((item) =>
-                    normalizeCartItem({
-                      ...item,
-                      sizes:
-                      item.sizes ||
-                      productSizes[item._id || item.productId] ||
-                      {}
-                    })
+                      normalizeCartItem({
+                        ...item,
+                        sizes:
+                          item.sizes ||
+                          productSizes[item._id || item.productId] ||
+                          {}
+                      })
                     )
                   );
                 }
@@ -211,13 +212,13 @@ const Terminal = () => {
             if (Array.isArray(parsedCart)) {
               setCart(
                 parsedCart.map((item) =>
-                normalizeCartItem({
-                  ...item,
-                  sizes:
-                  item.sizes ||
-                  productSizes[item._id || item.productId] ||
-                  {}
-                })
+                  normalizeCartItem({
+                    ...item,
+                    sizes:
+                      item.sizes ||
+                      productSizes[item._id || item.productId] ||
+                      {}
+                  })
                 )
               );
             }
@@ -288,17 +289,15 @@ const Terminal = () => {
     filtered = filtered.filter((product) => {
 
       if (
-      product.sizes &&
-      typeof product.sizes === "object" &&
-      Object.keys(product.sizes).length > 0)
-      {
+        product.sizes &&
+        typeof product.sizes === "object" &&
+        Object.keys(product.sizes).length > 0) {
 
         const hasStock = Object.values(product.sizes).some((sizeData) => {
           if (
-          typeof sizeData === "object" &&
-          sizeData !== null &&
-          sizeData.quantity !== undefined)
-          {
+            typeof sizeData === "object" &&
+            sizeData !== null &&
+            sizeData.quantity !== undefined) {
             return sizeData.quantity > 0;
           }
           return (typeof sizeData === "number" ? sizeData : 0) > 0;
@@ -318,9 +317,9 @@ const Terminal = () => {
     if (searchQuery) {
       filtered = filtered.filter(
         (product) =>
-        product.itemName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchQuery.toLowerCase())
+          product.itemName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          product.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          product.category.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -553,8 +552,8 @@ const Terminal = () => {
       if (product.sizes && typeof product.sizes === "object") {
         return Object.values(product.sizes).some((sizeData) => {
           return typeof sizeData === "object" && sizeData !== null &&
-          sizeData.variants && typeof sizeData.variants === "object" &&
-          Object.keys(sizeData.variants).length > 0;
+            sizeData.variants && typeof sizeData.variants === "object" &&
+            Object.keys(sizeData.variants).length > 0;
         });
       }
       return false;
@@ -581,10 +580,9 @@ const Terminal = () => {
 
 
     if (
-    product.sizes &&
-    typeof product.sizes === "object" &&
-    Object.keys(product.sizes).length > 0)
-    {
+      product.sizes &&
+      typeof product.sizes === "object" &&
+      Object.keys(product.sizes).length > 0) {
       if (!size) {
         alert("Please select a size before adding to cart");
         return;
@@ -618,9 +616,9 @@ const Terminal = () => {
           availableStock = sizeData.quantity || 0;
 
           itemPrice =
-          sizeData.price !== undefined ?
-          sizeData.price :
-          product.itemPrice || 0;
+            sizeData.price !== undefined ?
+              sizeData.price :
+              product.itemPrice || 0;
         }
       } else {
         availableStock = typeof sizeData === "number" ? sizeData : 0;
@@ -637,17 +635,17 @@ const Terminal = () => {
 
 
     const existingItem = productHasAnyVariants ?
-    cart.find(
-      (item) => item._id === product._id && item.selectedSize === size && item.selectedVariation === variant
-    ) :
-    cart.find(
-      (item) => item._id === product._id && item.selectedSize === size
-    );
+      cart.find(
+        (item) => item._id === product._id && item.selectedSize === size && item.selectedVariation === variant
+      ) :
+      cart.find(
+        (item) => item._id === product._id && item.selectedSize === size
+      );
 
 
     const totalQuantityAfterAdd = existingItem ?
-    existingItem.quantity + quantity :
-    quantity;
+      existingItem.quantity + quantity :
+      quantity;
 
 
     if (totalQuantityAfterAdd > availableStock) {
@@ -692,11 +690,11 @@ const Terminal = () => {
 
     setCart(
       cart.map((item) =>
-      item._id === product._id &&
-      item.selectedSize === product.selectedSize &&
-      item.selectedVariation === product.selectedVariation ?
-      { ...item, quantity: item.quantity + product.quantity } :
-      item
+        item._id === product._id &&
+          item.selectedSize === product.selectedSize &&
+          item.selectedVariation === product.selectedVariation ?
+          { ...item, quantity: item.quantity + product.quantity } :
+          item
       )
     );
 
@@ -716,48 +714,47 @@ const Terminal = () => {
 
   const addToCart = (product) => {
     const defaultSize =
-    product.sizes && typeof product.sizes === "object" ?
-    Object.keys(product.sizes)[0] || "" :
-    product.size || "";
+      product.sizes && typeof product.sizes === "object" ?
+        Object.keys(product.sizes)[0] || "" :
+        product.size || "";
 
 
     let itemPrice = product.itemPrice || 0;
     if (product.sizes && typeof product.sizes === "object" && defaultSize) {
       const sizeData = product.sizes[defaultSize];
       if (
-      typeof sizeData === "object" &&
-      sizeData !== null &&
-      sizeData.price !== undefined)
-      {
+        typeof sizeData === "object" &&
+        sizeData !== null &&
+        sizeData.price !== undefined) {
         itemPrice = sizeData.price;
       }
     }
 
     const existingItem = cart.find(
       (item) =>
-      item._id === product._id &&
-      (item.selectedSize || "") === (defaultSize || "")
+        item._id === product._id &&
+        (item.selectedSize || "") === (defaultSize || "")
     );
 
     if (existingItem) {
       setCart(
         cart.map((item) =>
-        item._id === product._id &&
-        (item.selectedSize || "") === (defaultSize || "") ?
-        { ...item, quantity: item.quantity + 1 } :
-        item
+          item._id === product._id &&
+            (item.selectedSize || "") === (defaultSize || "") ?
+            { ...item, quantity: item.quantity + 1 } :
+            item
         )
       );
     } else {
       setCart([
-      ...cart,
-      {
-        ...product,
-        productId: product._id,
-        selectedSize: defaultSize,
-        quantity: 1,
-        itemPrice: itemPrice
-      }]
+        ...cart,
+        {
+          ...product,
+          productId: product._id,
+          selectedSize: defaultSize,
+          quantity: 1,
+          itemPrice: itemPrice
+        }]
       );
     }
   };
@@ -765,9 +762,9 @@ const Terminal = () => {
   const updateQuantity = (itemOrId, newQuantity) => {
 
     const item =
-    typeof itemOrId === "object" ?
-    itemOrId :
-    cart.find((i) => i._id === itemOrId);
+      typeof itemOrId === "object" ?
+        itemOrId :
+        cart.find((i) => i._id === itemOrId);
     const productId = typeof itemOrId === "object" ? itemOrId._id : itemOrId;
     const selectedSize = typeof itemOrId === "object" ? itemOrId.selectedSize || '' : '';
     const selectedVariation = typeof itemOrId === "object" ? itemOrId.selectedVariation || '' : '';
@@ -782,11 +779,11 @@ const Terminal = () => {
     } else {
       setCart(
         cart.map((cartItem) =>
-        cartItem._id === productId &&
-        (cartItem.selectedSize || '') === selectedSize &&
-        (cartItem.selectedVariation || '') === selectedVariation ?
-        { ...cartItem, quantity: newQuantity } :
-        cartItem
+          cartItem._id === productId &&
+            (cartItem.selectedSize || '') === selectedSize &&
+            (cartItem.selectedVariation || '') === selectedVariation ?
+            { ...cartItem, quantity: newQuantity } :
+            cartItem
         )
       );
     }
@@ -809,17 +806,17 @@ const Terminal = () => {
           performedById: currentUser?._id || currentUser?.id,
           performedByName: currentUser?.name,
           items: [
-          {
-            productId: item.productId || item._id,
-            itemName: item.itemName,
-            sku: item.sku,
-            variant: item.variant,
-            selectedSize: resolveItemSize(item) || null,
-            quantity: item.quantity || 1,
-            price: item.itemPrice || 0,
-            itemImage: item.itemImage || "",
-            voidReason: voidReason || null
-          }],
+            {
+              productId: item.productId || item._id,
+              itemName: item.itemName,
+              sku: item.sku,
+              variant: item.variant,
+              selectedSize: resolveItemSize(item) || null,
+              quantity: item.quantity || 1,
+              price: item.itemPrice || 0,
+              itemImage: item.itemImage || "",
+              voidReason: voidReason || null
+            }],
 
           paymentMethod: "void",
           amountReceived: 0,
@@ -907,24 +904,24 @@ const Terminal = () => {
               itemToVoid._id || itemToVoid.productId || itemToVoid.id || ""
             ).trim();
             const sameProduct =
-            itemId !== "" && voidId !== "" && itemId === voidId;
+              itemId !== "" && voidId !== "" && itemId === voidId;
 
 
             const itemSize = String(
               item.selectedSize || item.size || resolveItemSize(item) || ""
             ).
-            toLowerCase().
-            trim();
+              toLowerCase().
+              trim();
             const voidSize = String(
               itemToVoid.selectedSize ||
               itemToVoid.size ||
               resolveItemSize(itemToVoid) ||
               ""
             ).
-            toLowerCase().
-            trim();
+              toLowerCase().
+              trim();
             const sameSize =
-            itemSize === voidSize || itemSize === "" && voidSize === "";
+              itemSize === voidSize || itemSize === "" && voidSize === "";
 
 
             const shouldRemove = sameProduct && sameSize;
@@ -965,30 +962,30 @@ const Terminal = () => {
               itemToVoid._id || itemToVoid.productId || itemToVoid.id || ""
             ).trim();
             const sameProduct =
-            itemId !== "" && voidId !== "" && itemId === voidId;
+              itemId !== "" && voidId !== "" && itemId === voidId;
 
             const itemSize = String(
               item.selectedSize || item.size || resolveItemSize(item) || ""
             ).
-            toLowerCase().
-            trim();
+              toLowerCase().
+              trim();
             const voidSize = String(
               itemToVoid.selectedSize ||
               itemToVoid.size ||
               resolveItemSize(itemToVoid) ||
               ""
             ).
-            toLowerCase().
-            trim();
+              toLowerCase().
+              trim();
             const sameSize =
-            itemSize === voidSize || itemSize === "" && voidSize === "";
+              itemSize === voidSize || itemSize === "" && voidSize === "";
 
             return sameProduct && sameSize;
           });
 
 
           itemWasRemoved =
-          foundMatch && initialLength > finalLength && !itemStillInCart;
+            foundMatch && initialLength > finalLength && !itemStillInCart;
 
           console.log("[confirmRemoveItem] Cart update result:", {
             foundMatch,
@@ -1030,23 +1027,23 @@ const Terminal = () => {
                 itemToVoid._id || itemToVoid.productId || itemToVoid.id || ""
               ).trim();
               const sameProduct =
-              itemId !== "" && voidId !== "" && itemId === voidId;
+                itemId !== "" && voidId !== "" && itemId === voidId;
 
               const itemSize = String(
                 item.selectedSize || item.size || resolveItemSize(item) || ""
               ).
-              toLowerCase().
-              trim();
+                toLowerCase().
+                trim();
               const voidSize = String(
                 itemToVoid.selectedSize ||
                 itemToVoid.size ||
                 resolveItemSize(itemToVoid) ||
                 ""
               ).
-              toLowerCase().
-              trim();
+                toLowerCase().
+                trim();
               const sameSize =
-              itemSize === voidSize || itemSize === "" && voidSize === "";
+                itemSize === voidSize || itemSize === "" && voidSize === "";
 
               return sameProduct && sameSize;
             });
@@ -1110,28 +1107,28 @@ const Terminal = () => {
         "[confirmRemoveItem] ✅ Item removed successfully, recording void transaction..."
       );
       recordVoidedItem(itemToVoid, voidReason).
-      then(() => {
-        console.log(
-          "[confirmRemoveItem] Void transaction recorded successfully"
-        );
+        then(() => {
+          console.log(
+            "[confirmRemoveItem] Void transaction recorded successfully"
+          );
 
-        setShowRemoveItemModal(false);
-        setItemToRemove(null);
-        console.log("[confirmRemoveItem] Modal closed and item cleared");
-      }).
-      catch((error) => {
-        console.error(
-          "[confirmRemoveItem] Error recording void transaction:",
-          error
-        );
+          setShowRemoveItemModal(false);
+          setItemToRemove(null);
+          console.log("[confirmRemoveItem] Modal closed and item cleared");
+        }).
+        catch((error) => {
+          console.error(
+            "[confirmRemoveItem] Error recording void transaction:",
+            error
+          );
 
 
-        setShowRemoveItemModal(false);
-        setItemToRemove(null);
-        alert(
-          "Item removed from cart, but failed to record void transaction. Please check logs."
-        );
-      });
+          setShowRemoveItemModal(false);
+          setItemToRemove(null);
+          alert(
+            "Item removed from cart, but failed to record void transaction. Please check logs."
+          );
+        });
     } catch (error) {
       console.error("[confirmRemoveItem] Error:", error);
       alert("Failed to void item. Please try again.");
@@ -1151,8 +1148,8 @@ const Terminal = () => {
     setCart((prevCart) => {
       const itemId = String(item._id || item.productId || item.id || "").trim();
       const itemSize = String(item.selectedSize || item.size || "").
-      toLowerCase().
-      trim();
+        toLowerCase().
+        trim();
 
       return prevCart.filter((cartItem) => {
         const cartItemId = String(
@@ -1161,13 +1158,13 @@ const Terminal = () => {
         const cartItemSize = String(
           cartItem.selectedSize || cartItem.size || ""
         ).
-        toLowerCase().
-        trim();
+          toLowerCase().
+          trim();
 
 
         const sameProduct = cartItemId === itemId;
         const sameSize =
-        cartItemSize === itemSize || cartItemSize === "" && itemSize === "";
+          cartItemSize === itemSize || cartItemSize === "" && itemSize === "";
 
         return !(sameProduct && sameSize);
       });
@@ -1220,10 +1217,9 @@ const Terminal = () => {
 
 
     if (
-    appliesToType === "products" &&
-    discountItem.productIds &&
-    discountItem.productIds.length > 0)
-    {
+      appliesToType === "products" &&
+      discountItem.productIds &&
+      discountItem.productIds.length > 0) {
       const hasMatchingItem = cartItems.some((item) => {
         const itemId = item._id || item.productId || item.id;
         return discountItem.productIds.some((pid) => {
@@ -1237,7 +1233,7 @@ const Terminal = () => {
         return {
           valid: false,
           message:
-          "This discount only applies to specific products. Your cart does not contain any eligible items."
+            "This discount only applies to specific products. Your cart does not contain any eligible items."
         };
       }
       return { valid: true };
@@ -1284,7 +1280,7 @@ const Terminal = () => {
       try {
         let totalEligibleAmount = 0;
         const appliesToType =
-        selectedDiscount.appliesToType || selectedDiscount.appliesTo;
+          selectedDiscount.appliesToType || selectedDiscount.appliesTo;
 
 
         if (appliesToType === "all") {
@@ -1305,10 +1301,9 @@ const Terminal = () => {
             return sum;
           }, 0);
         } else if (
-        appliesToType === "products" &&
-        selectedDiscount.productIds &&
-        selectedDiscount.productIds.length > 0)
-        {
+          appliesToType === "products" &&
+          selectedDiscount.productIds &&
+          selectedDiscount.productIds.length > 0) {
           totalEligibleAmount = cart.reduce((sum, item) => {
             const itemId = item._id || item.productId || item.id;
             const isEligible = selectedDiscount.productIds.some((pid) => {
@@ -1326,9 +1321,8 @@ const Terminal = () => {
 
 
         if (
-        typeof discountValueStr === "string" &&
-        discountValueStr.includes("%"))
-        {
+          typeof discountValueStr === "string" &&
+          discountValueStr.includes("%")) {
           const percentage = parseFloat(
             discountValueStr.replace("% OFF", "").replace(/\s/g, "")
           );
@@ -1336,9 +1330,8 @@ const Terminal = () => {
             totalDiscount += totalEligibleAmount * percentage / 100;
           }
         } else if (
-        typeof discountValueStr === "string" && (
-        discountValueStr.includes("P") || discountValueStr.includes("₱")))
-        {
+          typeof discountValueStr === "string" && (
+            discountValueStr.includes("P") || discountValueStr.includes("₱"))) {
           const amount = parseFloat(discountValueStr.replace(/[P₱\sOFF]/g, ""));
           if (!isNaN(amount)) {
 
@@ -1384,29 +1377,35 @@ const Terminal = () => {
   };
 
   const mapCartItemsForStockUpdate = () =>
-  cart.map((item) => ({
-    _id: item.productId || item._id,
-    sku: item.sku || null,
-    size: resolveItemSize(item) || null,
-    variant: item.selectedVariation || item.variant || null,
-    quantity: item.quantity || 1
-  }));
+    cart.map((item) => ({
+      _id: item.productId || item._id,
+      sku: item.sku || null,
+      size: resolveItemSize(item) || null,
+      variant: item.selectedVariation || item.variant || null,
+      quantity: item.quantity || 1
+    }));
 
   const mapCartItemsForTransaction = () =>
-  cart.map((item) => ({
-    productId: item.productId || item._id,
-    itemName: item.itemName,
-    sku: item.sku,
-    variant: item.variant,
-    selectedSize: resolveItemSize(item) || null,
-    quantity: item.quantity || 1,
-    price: item.itemPrice || 0,
-    itemImage: item.itemImage || ""
-  }));
+    cart.map((item) => ({
+      productId: item.productId || item._id,
+      itemName: item.itemName,
+      sku: item.sku,
+      variant: item.variant,
+      selectedSize: resolveItemSize(item) || null,
+      quantity: item.quantity || 1,
+      price: item.itemPrice || 0,
+      itemImage: item.itemImage || ""
+    }));
 
   const finalizeTransaction = async (meta = {}) => {
     if (!cart.length) return null;
 
+    if (isProcessingTransaction) {
+      console.warn("Transaction is already processing, ignoring duplicate call.");
+      return null;
+    }
+
+    setIsProcessingTransaction(true);
 
     const cartSnapshot = [...cart];
 
@@ -1478,23 +1477,23 @@ const Terminal = () => {
         body: JSON.stringify({
           items: stockItems,
           performedByName:
-          currentUser?.name ||
-          `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
-          "System",
+            currentUser?.name ||
+            `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
+            "System",
           performedById: currentUser?._id || currentUser?.id || ""
         })
       }).
-      then((res) => res.json()).
-      then((data) => {
-        if (!data.success) console.error("Stock update failed:", data);
+        then((res) => res.json()).
+        then((data) => {
+          if (!data.success) console.error("Stock update failed:", data);
 
-        return fetchProducts(true);
-      }).
-      catch((err) => {
-        console.error("Stock update error:", err);
+          return fetchProducts(true);
+        }).
+        catch((err) => {
+          console.error("Stock update error:", err);
 
-        fetchProducts(true).catch(() => {});
-      });
+          fetchProducts(true).catch(() => { });
+        });
 
 
       return transactionData.data;
@@ -1507,6 +1506,8 @@ const Terminal = () => {
         `Transaction failed: ${errorMessage}\n\nYour cart has been restored. Please try again.`
       );
       throw error;
+    } finally {
+      setIsProcessingTransaction(false);
     }
   };
 
@@ -1546,7 +1547,7 @@ const Terminal = () => {
 
     setTimeout(() => {
       fetchProducts(true).catch((err) =>
-      console.warn("Background product refresh failed:", err)
+        console.warn("Background product refresh failed:", err)
       );
     }, 1500);
 
@@ -1554,7 +1555,7 @@ const Terminal = () => {
     setTimeout(() => {
       invalidateCache("products");
       fetchProducts(true).catch((err) =>
-      console.warn("Second product refresh failed:", err)
+        console.warn("Second product refresh failed:", err)
       );
     }, 4000);
 
@@ -1619,11 +1620,11 @@ const Terminal = () => {
     <>
       <div
         className={`relative flex flex-col h-screen ${theme === "dark" ? "bg-[#121212]" : "bg-[#F5F5F5]"}`}>
-        
+
         <div
           className={`absolute top-0 left-0 right-[420px] px-6 py-4 z-40 transition-colors duration-300 flex flex-col gap-4 ${theme === "dark" ? "bg-[#121212]" : "bg-[#F5F5F5]"}`}
           style={{ paddingRight: "24px" }}>
-          
+
           <Header
             pageName="Terminal"
             showSearch={true}
@@ -1639,22 +1640,22 @@ const Terminal = () => {
             profileGap="gap-3"
             sortOption={sortOption}
             onSortChange={setSortOption} />
-          
 
-          {}
+
+          { }
           <div className="grid grid-cols-7 gap-3 pb-2 w-full">
             {categories.map((cat) =>
-            <button
-              key={cat.name}
-              onClick={() => setSelectedCategory(cat.name)}
-              className={`flex items-center justify-center px-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border truncate ${selectedCategory === cat.name ?
-              "bg-[#AD7F65] text-white border-[#AD7F65] shadow-md" :
-              theme === "dark" ?
-              "bg-[#2A2724] text-gray-300 border-gray-600 hover:bg-[#352F2A]" :
-              "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"}`
-              }
-              title={cat.name}>
-              
+              <button
+                key={cat.name}
+                onClick={() => setSelectedCategory(cat.name)}
+                className={`flex items-center justify-center px-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border truncate ${selectedCategory === cat.name ?
+                  "bg-[#AD7F65] text-white border-[#AD7F65] shadow-md" :
+                  theme === "dark" ?
+                    "bg-[#2A2724] text-gray-300 border-gray-600 hover:bg-[#352F2A]" :
+                    "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"}`
+                }
+                title={cat.name}>
+
                 <span className="truncate w-full text-center">{cat.name}</span>
               </button>
             )}
@@ -1667,49 +1668,49 @@ const Terminal = () => {
             style={{
               paddingTop: `${130 + Math.ceil(categories.length / 7) * 50}px`
             }}>
-            
+
             <div>
               <h2
                 className={`text-lg font-semibold mb-3 ${theme === "dark" ? "text-white" : "text-gray-800"}`}>
-                
+
                 Products
               </h2>
               {loading ?
-              <div
-                className={`text-center py-10 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
-                
+                <div
+                  className={`text-center py-10 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
+
                   Loading...
                 </div> :
-              filteredProducts.length === 0 ?
-              <div
-                className={`text-center py-10 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                
-                  No products found
-                </div> :
+                filteredProducts.length === 0 ?
+                  <div
+                    className={`text-center py-10 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
 
-              <div className="grid grid-cols-5 gap-4 items-start">
-                  {paginatedProducts.map((product) =>
-                <ProductCard
-                  key={product._id}
-                  product={product}
-                  onToggleExpand={handleProductClick} />
+                    No products found
+                  </div> :
 
-                )}
-                </div>
+                  <div className="grid grid-cols-5 gap-4 items-start">
+                    {paginatedProducts.map((product) =>
+                      <ProductCard
+                        key={product._id}
+                        product={product}
+                        onToggleExpand={handleProductClick} />
+
+                    )}
+                  </div>
               }
             </div>
             {filteredProducts.length >= itemsPerPage &&
-            <Pagination
-              currentPage={currentPage}
-              totalPages={Math.ceil(filteredProducts.length / itemsPerPage)}
-              onPageChange={setCurrentPage} />
+              <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(filteredProducts.length / itemsPerPage)}
+                onPageChange={setCurrentPage} />
 
             }
           </div>
 
           <div
             className={`w-[420px] border-l-0 p-4 relative ${theme === "dark" ? "bg-[#121212]" : "bg-gray-50"}`}>
-            
+
             <OrderSummary
               cart={cart}
               products={products}
@@ -1728,7 +1729,7 @@ const Terminal = () => {
               onQRPayment={handleQRPayment}
               onOpenDiscountModal={handleOpenDiscountModal}
               onSelectDiscount={handleSelectDiscount} />
-            
+
           </div>
         </div>
       </div>
@@ -1737,7 +1738,7 @@ const Terminal = () => {
         isOpen={showCheckoutModal}
         onClose={() => setShowCheckoutModal(false)}
         onConfirm={confirmCheckout} />
-      
+
 
       <CashPaymentModal
         isOpen={showCashPaymentModal}
@@ -1749,7 +1750,7 @@ const Terminal = () => {
         onProceed={handleCashProceed}
         cartItems={cart}
         cashierName={currentUser?.name} />
-      
+
 
       <QRCodePaymentModal
         isOpen={showQRPaymentModal}
@@ -1763,7 +1764,7 @@ const Terminal = () => {
         performedById={currentUser?._id || currentUser?.id}
         performedByName={currentUser?.name}
         onTransactionComplete={handleGCashTransactionComplete} />
-      
+
 
       <DiscountModal
         isOpen={showDiscountModal}
@@ -1772,7 +1773,7 @@ const Terminal = () => {
         cart={cart}
         products={products}
         selectedDiscounts={selectedDiscounts} />
-      
+
 
       <RemoveItemPinModal
         isOpen={showRemoveItemModal}
@@ -1782,7 +1783,7 @@ const Terminal = () => {
         }}
         onConfirm={confirmRemoveItem}
         item={itemToRemove} />
-      
+
 
       <DuplicateItemModal
         isOpen={showDuplicateModal}
@@ -1790,31 +1791,40 @@ const Terminal = () => {
         onConfirm={handleConfirmDuplicateAdd}
         item={pendingDuplicateItem?.product}
         existingQuantity={pendingDuplicateItem?.existingQuantity || 0} />
-      
+
 
       <ProductDetailsModal
         isOpen={showProductModal}
         onClose={handleCloseProductModal}
         product={selectedProduct}
         productQuantity={
-        selectedProduct ? productQuantities[selectedProduct._id] || 1 : 1
+          selectedProduct ? productQuantities[selectedProduct._id] || 1 : 1
         }
         onDecrement={() =>
-        selectedProduct && updateProductQuantity(selectedProduct._id, -1)
+          selectedProduct && updateProductQuantity(selectedProduct._id, -1)
         }
         onIncrement={() =>
-        selectedProduct && updateProductQuantity(selectedProduct._id, 1)
+          selectedProduct && updateProductQuantity(selectedProduct._id, 1)
         }
         onAdd={() => selectedProduct && addToCartFromExpanded(selectedProduct)}
         selectedSize={selectedProduct ? productSizes[selectedProduct._id] : ""}
         onSelectSize={(size) =>
-        selectedProduct && handleSizeSelection(selectedProduct._id, size)
+          selectedProduct && handleSizeSelection(selectedProduct._id, size)
         }
         selectedVariant={selectedProduct ? productVariants[selectedProduct._id] : ""}
         onSelectVariant={(variant) =>
-        selectedProduct && handleVariantSelection(selectedProduct._id, variant)
+          selectedProduct && handleVariantSelection(selectedProduct._id, variant)
         } />
-      
+
+      {isProcessingTransaction && (
+        <div className="fixed inset-0 z-[10000] flex flex-col justify-center items-center bg-black/60 backdrop-blur-sm">
+          <div className="w-16 h-16 border-4 border-[#AD7F65]/30 border-t-[#AD7F65] rounded-full animate-spin shadow-lg"></div>
+          <p className="mt-4 text-white text-lg font-bold tracking-wide shadow-black drop-shadow-md">
+            Processing Transaction...
+          </p>
+          <p className="mt-1 text-gray-300 text-sm">Please wait</p>
+        </div>
+      )}
     </>);
 
 };
