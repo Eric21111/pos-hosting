@@ -1,4 +1,5 @@
 import { useTheme } from "../../context/ThemeContext";
+import { generateDynamicSku } from "../../utils/skuUtils";
 
 const ViewProductModal = ({
   showViewModal,
@@ -285,8 +286,7 @@ const ViewProductModal = ({
                                 const variantQty = typeof variantData === 'number' ? variantData : (variantData && typeof variantData === 'object' ? variantData.quantity || 0 : 0);
 
                                 // Format Variant for SKU
-                                const variantInitial = variantName.substring(0, 2).toUpperCase();
-                                const dynamicSku = `${baseSku}-${variantInitial}-${sizeInitial}`;
+                                const dynamicSku = generateDynamicSku(baseSku, variantName, size);
 
                                 rows.push(
                                   <tr key={`${size}-${variantName}`} className={`transition-colors ${theme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-50"}`}>
@@ -307,7 +307,7 @@ const ViewProductModal = ({
                               });
                             } else {
                               const stock = typeof sizeData === "object" && sizeData !== null && sizeData.quantity !== undefined ? sizeData.quantity : (typeof sizeData === "number" ? sizeData : 0);
-                              const dynamicSku = `${baseSku}-${sizeInitial}`;
+                              const dynamicSku = generateDynamicSku(baseSku, null, size);
 
                               rows.push(
                                 <tr key={size} className={`transition-colors ${theme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-50"}`}>

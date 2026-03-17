@@ -1,6 +1,7 @@
 import { FaMinus, FaPlus, FaTimes } from "react-icons/fa";
 import { MdCategory, MdShoppingBag } from "react-icons/md";
 import { useTheme } from "../../context/ThemeContext";
+import { generateDynamicSku } from "../../utils/skuUtils";
 
 const ProductDetailsModal = ({
   isOpen,
@@ -221,19 +222,8 @@ const ProductDetailsModal = ({
   };
 
   const getDisplaySku = () => {
-    let sku = product.sku || "N/A";
-    if (sku === "N/A" || !hasVariants()) return sku;
-
-    let suffix = "";
-    if (selectedVariant) {
-      suffix += `-${selectedVariant.substring(0, 2).toUpperCase()}`;
-    }
-    if (selectedSize) {
-      const sizeInitial = selectedSize === "Free Size" ? "FS" : selectedSize.substring(0, 2).toUpperCase();
-      suffix += `-${sizeInitial}`;
-    }
-
-    return `${sku}${suffix}`;
+    if (!hasVariants()) return product.sku || "N/A";
+    return generateDynamicSku(product.sku, selectedVariant, selectedSize);
   };
 
 

@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import RemoveItemPinModal from './RemoveItemPinModal';
 import VoidTransactionModal from './VoidTransactionModal';
+import { generateDynamicSku } from '../../utils/skuUtils';
 
 const OrderSummary = memo(({
   cart,
@@ -632,7 +633,7 @@ const OrderSummary = memo(({
                         {item.itemName ? item.itemName.replace(/\s*\([^)]*\)\s*$/, '').trim() : 'Item'}
                       </h3>
                       <p className={`text-xs mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                        SKU: {item.sku}<br />
+                        SKU: {generateDynamicSku(item.sku, item.selectedVariation, item.selectedSize || item.size)}<br />
                         Size: {item.selectedSize || item.size || 'N/A'}<br />
                         Color: {item.selectedVariation || 'N/A'}
                       </p>
