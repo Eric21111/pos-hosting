@@ -421,19 +421,23 @@ const CashRemittance = () => {
                 {/* ─── LEFT COLUMN ─── */}
                 <div className="flex-1 min-w-0 space-y-4">
                     {/* Search & Filters */}
-                    <div className="bg-white p-2.5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-2">
-                        {/* Brown circular search icon */}
-                        <div className="w-10 h-10 rounded-full bg-[#8B6914] flex items-center justify-center flex-shrink-0">
-                            <FaSearch className="text-white text-sm" />
+                    <div className="flex items-center gap-3">
+                        {/* Terminal-style Search Bar */}
+                        <div className="relative flex-1">
+                            <div
+                                className="absolute left-1 top-1/2 transform -translate-y-1/2 w-10 h-9 flex items-center justify-center text-white rounded-xl"
+                                style={{ background: "linear-gradient(135deg, #AD7F65 0%, #76462B 100%)" }}
+                            >
+                                <FaSearch className="text-sm" />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Search For..."
+                                className="w-full h-11 pl-14 pr-4 border border-gray-200 bg-white text-gray-900 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent transition-colors text-sm placeholder-gray-400"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
                         </div>
-                        {/* Search input */}
-                        <input
-                            type="text"
-                            placeholder="Search For..."
-                            className="flex-1 px-3 py-2 bg-transparent border-none focus:outline-none text-sm text-gray-700 placeholder-gray-400 min-w-0"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
                         {/* Filter dropdowns */}
                         <select
                             className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-300 cursor-pointer appearance-none pr-7 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M6%208L1%203h10z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[right_8px_center]"
