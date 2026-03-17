@@ -65,6 +65,8 @@ const AddProductModal = ({
   const [showBrandModal, setShowBrandModal] = useState(false);
   const [showCustomSizeInput, setShowCustomSizeInput] = useState(false);
   const [customSizeValue, setCustomSizeValue] = useState("");
+  const [productImages, setProductImages] = useState([]);
+  const [imageUrlInput, setImageUrlInput] = useState("");
   const [customSizes, setCustomSizes] = useState([]);
   const [multipleVariantsPerSize, setMultipleVariantsPerSize] = useState({});
   const [sizeMultiVariants, setSizeMultiVariants] = useState({});
@@ -327,6 +329,8 @@ const AddProductModal = ({
       setCustomSizeValue("");
       setCustomSizes([]);
       setCurrentStep(1);
+      setProductImages([]);
+      setImageUrlInput("");
     } else {
       setShowDraftNotice(false);
     }
@@ -2084,37 +2088,111 @@ const AddProductModal = ({
                         )}
                       </div>
                     </div>
-                    {/* Image Upload */}
+                    {/* Image Upload - Multiple Images */}
                     <div className="flex flex-col">
+                      {/* Image thumbnails grid */}
+                      {productImages.length > 0 && (
+                        <div className="grid grid-cols-3 gap-2 mb-3">
+                          {productImages.map((img, index) => (
+                            <div key={index} className={`relative group rounded-lg overflow-hidden border ${index === 0 ? 'ring-2 ring-[#AD7F65]' : ''} ${theme === 'dark' ? 'border-gray-600' : 'border-gray-200'}`} style={{ aspectRatio: '1' }}>
+                              <img src={img} alt={`Product ${index + 1}`} className="w-full h-full object-cover" />
+                              {index === 0 && (
+                                <span className="absolute top-1 left-1 bg-[#AD7F65] text-white text-[10px] px-1.5 py-0.5 rounded-full font-medium">Main</span>
+                              )}
+                              <button type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setProductImages(prev => {
+                                    const updated = prev.filter((_, i) => i !== index);
+                                    setNewProduct(p => ({ ...p, itemImage: updated[0] || '' }));
+                                    return updated;
+                                  });
+                                }}
+                                className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold hover:bg-red-600"
+                              >×</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Warning for 3+ images */}
+                      {productImages.length > 3 && (
+                        <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-700">
+                          <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          <span className="text-xs font-medium">Adding more than 3 photos may slow down the system.</span>
+                        </div>
+                      )}
+
+                      {/* Upload area */}
                       <div
                         onClick={() => document.getElementById("fileInput").click()}
                         className={`w-full border-2 border-dashed rounded-2xl flex flex-col items-center justify-center p-6 cursor-pointer transition-all ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 hover:bg-[#2A2724] hover:border-[#AD7F65]" : "bg-gray-50 border-gray-300 hover:bg-gray-100 hover:border-[#AD7F65]"}`}
-                        style={{ height: "280px" }}>
-                        <input id="fileInput" type="file" accept="image/*" onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) { const reader = new FileReader(); reader.onloadend = () => { setNewProduct((prev) => ({ ...prev, itemImage: reader.result })); }; reader.readAsDataURL(file); }
+                        style={{ height: productImages.length > 0 ? '120px' : '200px' }}>
+                        <input id="fileInput" type="file" accept="image/*" multiple onChange={(e) => {
+                          const files = Array.from(e.target.files);
+                          files.forEach(file => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setProductImages(prev => {
+                                const updated = [...prev, reader.result];
+                                setNewProduct(p => ({ ...p, itemImage: updated[0] }));
+                                return updated;
+                              });
+                            };
+                            reader.readAsDataURL(file);
+                          });
+                          e.target.value = '';
                         }} className="hidden" />
-                        {newProduct.itemImage && newProduct.itemImage.trim() !== "" ? (
-                          <div className="w-full h-full flex items-center justify-center p-4">
-                            <img src={newProduct.itemImage} alt="Product Preview" className="max-w-full max-h-full object-contain rounded-lg" style={{ display: "block" }} />
-                          </div>
-                        ) : (
-                          <>
-                            <div className={`w-16 h-16 rounded-lg flex items-center justify-center mb-3 ${theme === "dark" ? "bg-[#2A2724]" : "bg-gray-200"}`}>
-                              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                            </div>
-                            <p className={`text-sm mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>Upload an Image</p>
-                            <p className={`text-xs ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Click to browse</p>
-                          </>
-                        )}
-                      </div>
-                      {!newProduct.itemImage && (
-                        <div className="mt-3">
-                          <input type="text" name="itemImage" value={newProduct.itemImage} onChange={handleInputChange} placeholder="Or paste image URL"
-                            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white placeholder-gray-300" : "bg-white border-gray-300 placeholder-gray-400"}`} />
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-2 ${theme === "dark" ? "bg-[#2A2724]" : "bg-gray-200"}`}>
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
                         </div>
+                        <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                          {productImages.length > 0 ? 'Add more images' : 'Upload Images'}
+                        </p>
+                        <p className={`text-xs ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Click to browse (multiple files)</p>
+                      </div>
+
+                      {/* URL input */}
+                      <div className="mt-3 flex gap-2">
+                        <input type="text" value={imageUrlInput} onChange={(e) => setImageUrlInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const url = imageUrlInput.trim();
+                              if (url) {
+                                setProductImages(prev => {
+                                  const updated = [...prev, url];
+                                  setNewProduct(p => ({ ...p, itemImage: updated[0] }));
+                                  return updated;
+                                });
+                                setImageUrlInput('');
+                              }
+                            }
+                          }}
+                          placeholder="Or paste image URL and press Enter"
+                          className={`flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white placeholder-gray-300" : "bg-white border-gray-300 placeholder-gray-400"}`} />
+                        <button type="button"
+                          onClick={() => {
+                            const url = imageUrlInput.trim();
+                            if (url) {
+                              setProductImages(prev => {
+                                const updated = [...prev, url];
+                                setNewProduct(p => ({ ...p, itemImage: updated[0] }));
+                                return updated;
+                              });
+                              setImageUrlInput('');
+                            }
+                          }}
+                          disabled={!imageUrlInput.trim()}
+                          className={`px-4 py-2 text-sm rounded-lg font-medium transition-colors ${imageUrlInput.trim() ? 'bg-[#AD7F65] text-white hover:bg-[#8B6553]' : (theme === 'dark' ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-gray-200 text-gray-400 cursor-not-allowed')}`}
+                        >Add</button>
+                      </div>
+                      {productImages.length > 0 && (
+                        <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>{productImages.length} image{productImages.length > 1 ? 's' : ''} added. First image will be the main display image.</p>
                       )}
                     </div>
                   </div>
@@ -2529,8 +2607,17 @@ const AddProductModal = ({
                           </div>
                         </div>
                         {/* Image preview */}
-                        <div className="flex items-start justify-center">
-                          {newProduct.itemImage && newProduct.itemImage.trim() !== "" ? (
+                        <div className="flex flex-col items-center justify-start gap-2">
+                          {productImages.length > 0 ? (
+                            <div className="grid grid-cols-3 gap-2 w-full">
+                              {productImages.map((img, idx) => (
+                                <div key={idx} className={`relative rounded-lg overflow-hidden border ${idx === 0 ? 'ring-2 ring-[#AD7F65]' : ''} ${theme === 'dark' ? 'border-gray-600' : 'border-gray-200'}`} style={{ aspectRatio: '1' }}>
+                                  <img src={img} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                                  {idx === 0 && <span className="absolute top-1 left-1 bg-[#AD7F65] text-white text-[10px] px-1.5 py-0.5 rounded-full font-medium">Main</span>}
+                                </div>
+                              ))}
+                            </div>
+                          ) : newProduct.itemImage && newProduct.itemImage.trim() !== "" ? (
                             <img src={newProduct.itemImage} alt="Preview" className="max-h-48 object-contain rounded-lg border border-gray-200" />
                           ) : (
                             <div className={`w-full h-40 rounded-lg flex items-center justify-center ${theme === "dark" ? "bg-[#2A2724]" : "bg-gray-200"}`}>
