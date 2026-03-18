@@ -9,9 +9,9 @@ const DuplicateItemModal = ({ isOpen, onClose, onConfirm, item, existingQuantity
   if (!isOpen || !item) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000]">
       <div className={`rounded-2xl w-full max-w-md mx-4 overflow-hidden shadow-2xl ${theme === 'dark' ? 'bg-[#1E1B18]' : 'bg-white'}`}>
-        {}
+        { }
         <div className={`px-6 py-4 border-b flex items-center justify-between ${theme === 'dark' ? 'border-gray-700' : 'border-gray-100'}`}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
@@ -22,24 +22,24 @@ const DuplicateItemModal = ({ isOpen, onClose, onConfirm, item, existingQuantity
           <button
             onClick={onClose}
             className={`p-2 rounded-full transition-colors ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}>
-            
+
             <FaTimes className="text-gray-400" />
           </button>
         </div>
 
-        {}
+        { }
         <div className="px-6 py-5">
-          {}
+          { }
           <div className={`flex items-center gap-4 p-4 rounded-xl mb-4 ${theme === 'dark' ? 'bg-[#2A2724]' : 'bg-gray-50'}`}>
             <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden shrink-0">
               {item.itemImage && item.itemImage.trim() !== '' ?
-              <img
-                src={item.itemImage}
-                alt={item.itemName}
-                className="w-full h-full object-cover" /> :
+                <img
+                  src={item.itemImage}
+                  alt={item.itemName}
+                  className="w-full h-full object-cover" /> :
 
 
-              <div className="w-full h-full flex items-center justify-center">
+                <div className="w-full h-full flex items-center justify-center">
                   <MdCategory className="text-2xl text-gray-400" />
                 </div>
               }
@@ -56,7 +56,7 @@ const DuplicateItemModal = ({ isOpen, onClose, onConfirm, item, existingQuantity
             </div>
           </div>
 
-          {}
+          { }
           <div className="text-center mb-2">
             <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>
               This item is already in your cart with a quantity of{' '}
@@ -68,22 +68,22 @@ const DuplicateItemModal = ({ isOpen, onClose, onConfirm, item, existingQuantity
           </div>
         </div>
 
-        {}
+        { }
         <div className={`px-6 py-4 flex gap-3 ${theme === 'dark' ? 'bg-[#2A2724]' : 'bg-gray-50'}`}>
           <button
             onClick={onClose}
             className={`flex-1 py-3 px-4 border rounded-xl font-medium transition-colors ${theme === 'dark' ?
-            'border-gray-600 text-gray-300 hover:bg-gray-700' :
-            'border-gray-300 text-gray-700 hover:bg-gray-100'}`
+              'border-gray-600 text-gray-300 hover:bg-gray-700' :
+              'border-gray-300 text-gray-700 hover:bg-gray-100'}`
             }>
-            
+
             Cancel
           </button>
           <button
             onClick={onConfirm}
             className="flex-1 py-3 px-4 text-white rounded-xl font-medium hover:opacity-90 transition-all shadow-md"
             style={{ background: 'linear-gradient(135deg, #AD7F65 0%, #76462B 100%)' }}>
-            
+
             Yes, Add More
           </button>
         </div>
