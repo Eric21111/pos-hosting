@@ -623,6 +623,9 @@ exports.stockInProduct = async (req, res) => {
       return sum + (typeof sizeData === "number" ? safeNum(sizeData, 0) : 0);
     }, 0);
 
+    const hadZeroStockBefore = hasZeroStock(product.toObject());
+    const hasZeroStockNow = hasZeroStock({ ...product.toObject(), sizes: updatedSizes, currentStock: totalStock });
+
     const updatePayload = {
       $set: {
         sizes: updatedSizes,
@@ -788,6 +791,9 @@ exports.stockOutProduct = async (req, res) => {
       }
       return sum + (typeof sizeData === "number" ? safeNum(sizeData, 0) : 0);
     }, 0);
+
+    const hadZeroStockBefore = hasZeroStock(product.toObject());
+    const hasZeroStockNow = hasZeroStock({ ...product.toObject(), sizes: updatedSizes, currentStock: totalStock });
 
     const updatePayload = {
       $set: {
