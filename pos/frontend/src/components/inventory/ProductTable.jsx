@@ -21,10 +21,9 @@ const ProductTable = ({
 
   const getSizePrice = (sizeData) => {
     if (
-    typeof sizeData === "object" &&
-    sizeData !== null &&
-    sizeData.price !== undefined)
-    {
+      typeof sizeData === "object" &&
+      sizeData !== null &&
+      sizeData.price !== undefined) {
       return sizeData.price;
     }
     return null;
@@ -33,10 +32,9 @@ const ProductTable = ({
 
   const getSizeQuantity = (sizeData) => {
     if (
-    typeof sizeData === "object" &&
-    sizeData !== null &&
-    sizeData.quantity !== undefined)
-    {
+      typeof sizeData === "object" &&
+      sizeData !== null &&
+      sizeData.quantity !== undefined) {
       return sizeData.quantity;
     }
     return typeof sizeData === "number" ? sizeData : 0;
@@ -47,298 +45,308 @@ const ProductTable = ({
   useEffect(() => {
     if (selectAllRef.current) {
       selectAllRef.current.indeterminate =
-      showSelection && !allVisibleSelected && someVisibleSelected;
+        showSelection && !allVisibleSelected && someVisibleSelected;
     }
   }, [showSelection, allVisibleSelected, someVisibleSelected]);
 
 
   const getPriceRange = (product) => {
+    let prices = [];
 
     if (product.sizes && typeof product.sizes === "object") {
-      const prices = [];
-
       Object.values(product.sizes).forEach((sizeData) => {
-        const price = getSizePrice(sizeData);
-        if (price !== null) {
-          prices.push(price);
+        if (typeof sizeData === "object" && sizeData !== null) {
+          if (sizeData.variants && typeof sizeData.variants === "object") {
+            Object.entries(sizeData.variants).forEach(([vName, v]) => {
+              const vPrice = v?.price ?? sizeData.variantPrices?.[vName] ?? sizeData.price;
+              if (vPrice !== undefined && vPrice !== null) prices.push(Number(vPrice));
+            });
+          } else if (sizeData.variantPrices && typeof sizeData.variantPrices === "object") {
+            Object.values(sizeData.variantPrices).forEach((p) => {
+              if (p !== undefined && p !== null) prices.push(Number(p));
+            });
+          } else if (sizeData.price !== undefined && sizeData.price !== null) {
+            prices.push(Number(sizeData.price));
+          }
         }
       });
-
-
-      if (prices.length > 0) {
-        const minPrice = Math.min(...prices);
-        const maxPrice = Math.max(...prices);
-
-
-        if (minPrice !== maxPrice) {
-          return { min: minPrice, max: maxPrice, isRange: true };
-        }
-
-        return { min: minPrice, max: maxPrice, isRange: false };
-      }
     }
 
+    if (prices.length === 0) {
+      prices.push(Number(product.itemPrice || 0));
+    }
+
+    const validPrices = prices.filter(p => !isNaN(p));
+    if (validPrices.length > 0) {
+      const minPrice = Math.min(...validPrices);
+      const maxPrice = Math.max(...validPrices);
+      return {
+        min: minPrice,
+        max: maxPrice,
+        isRange: minPrice !== maxPrice
+      };
+    }
 
     return {
-      min: product.itemPrice || 0,
-      max: product.itemPrice || 0,
+      min: 0,
+      max: 0,
       isRange: false
     };
   };
   return (
     <div
       className={`rounded-lg shadow ${theme === "dark" ? "bg-[#2A2724] border border-[#4A4037]" : "bg-white"}`}>
-      
+
       <div className="overflow-x-auto p-6">
         {loading ?
-        <div className="text-center py-10">Loading...</div> :
-        filteredProducts.length === 0 ?
-        <div className="text-center py-10 text-gray-500">
-            No products found. Click "Add New Item" to add your first product.
-          </div> :
+          <div className="text-center py-10">Loading...</div> :
+          filteredProducts.length === 0 ?
+            <div className="text-center py-10 text-gray-500">
+              No products found. Click "Add New Item" to add your first product.
+            </div> :
 
-        <table
-          className="w-full relative border-separate"
-          style={{ borderSpacing: "0" }}>
-          
-            <thead
-            className={`border-b ${theme === "dark" ? "border-[#4A4037]" : "border-gray-200"}`}>
-            
-              <tr
-              className={`text-left text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-              
-                {showSelection &&
-              <th className="pb-3 pr-4 w-10">
-                    <input
-                  ref={selectAllRef}
-                  type="checkbox"
-                  className="w-4 h-4 text-[#AD7F65] border-gray-300 rounded focus:ring-[#AD7F65]"
-                  onChange={onToggleSelectAll}
-                  checked={showSelection ? allVisibleSelected : false} />
-                
-                  </th>
-              }
-                <th className="pb-3 pr-4">Item Image</th>
-                <th className="pb-3 px-4">SKU</th>
-                <th className="pb-3 px-4">Item Name</th>
-                <th className="pb-3 px-4">Category</th>
-                <th className="pb-3 px-4">Brand</th>
-                <th className="pb-3 px-4">Item Price</th>
-                <th className="pb-3 px-4 text-center">Current Stock</th>
-                <th className="pb-3 px-4 text-center">Terminal</th>
-                <th className="pb-3 pl-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="relative">
-              {filteredProducts.map((product) =>
-            <tr
-              key={product._id}
-              className={`border-b transition-colors cursor-pointer ${theme === "dark" ?
-              "border-[#4A4037] hover:bg-[#352F2A] text-gray-300" :
-              "border-gray-100 hover:bg-gray-50 text-gray-800"}`
-              }
-              onClick={() => handleViewProduct(product)}>
-              
+            <table
+              className="w-full relative border-separate"
+              style={{ borderSpacing: "0" }}>
+
+              <thead
+                className={`border-b ${theme === "dark" ? "border-[#4A4037]" : "border-gray-200"}`}>
+
+                <tr
+                  className={`text-left text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+
                   {showSelection &&
-              <td
-                className="py-3 pr-4"
-                onClick={(e) => e.stopPropagation()}>
-                
+                    <th className="pb-3 pr-4 w-10">
                       <input
-                  type="checkbox"
-                  className="w-4 h-4 text-[#AD7F65] border-gray-300 rounded focus:ring-[#AD7F65]"
-                  checked={selectedProductIds.includes(product._id)}
-                  onChange={() =>
-                  onToggleSelect && onToggleSelect(product._id)
-                  } />
-                
-                    </td>
-              }
-                  <td className="py-3 pr-4">
-                    {product.itemImage && product.itemImage.trim() !== "" ?
-                <img
-                  src={product.itemImage}
-                  alt={product.itemName}
-                  className="w-12 h-12 object-cover rounded" /> :
+                        ref={selectAllRef}
+                        type="checkbox"
+                        className="w-4 h-4 text-[#AD7F65] border-gray-300 rounded focus:ring-[#AD7F65]"
+                        onChange={onToggleSelectAll}
+                        checked={showSelection ? allVisibleSelected : false} />
 
-
-                <div
-                  className={`w-12 h-12 rounded flex items-center justify-center ${theme === "dark" ? "bg-[#352F2A] text-gray-500" : "bg-gray-200 text-gray-400"}`}>
-                  
-                        <MdCategory />
-                      </div>
-                }
-                  </td>
-                  <td className="py-3 px-4">{product.sku}</td>
-                  <td className="py-3 px-4">{product.itemName}</td>
-                  <td className="py-3 px-4">{product.category}</td>
-                  <td className="py-3 px-4">{product.brandName || "-"}</td>
-                  <td className="py-3 px-4">
-                    {(() => {
-                  const priceRange = getPriceRange(product);
-                  return priceRange.isRange ?
-                  `PHP ${priceRange.min.toFixed(2)} - ${priceRange.max.toFixed(2)}` :
-                  `PHP ${priceRange.min.toFixed(2)}`;
-                })()}
-                  </td>
-                  <td className="py-3 px-4 text-center">
-                    {(() => {
-                  const totalStock =
-                  product.sizes &&
-                  typeof product.sizes === "object" &&
-                  Object.keys(product.sizes).length > 0 ?
-                  Object.values(product.sizes).reduce(
-                    (sum, sd) => sum + getSizeQuantity(sd),
-                    0
-                  ) :
-                  product.currentStock || 0;
-                  return (
-                    <span
-                      className={`px-2 py-1 rounded font-semibold ${totalStock === 0 ?
-                      "bg-red-100 text-red-700" :
-                      totalStock <= (product.reorderNumber || 10) ?
-                      "bg-yellow-100 text-yellow-700" :
-                      "bg-green-100 text-green-700"}`
-                      }>
-                      
-                          {totalStock}
-                        </span>);
-
-                })()}
-                  </td>
-                  <td className="py-3 px-4 text-center">
-                    <span
-                  className={`px-2 py-1 rounded text-sm font-medium ${product.displayInTerminal !== false ?
-                  "bg-green-100 text-green-700" :
-                  "bg-gray-100 text-gray-600"}`
-                  }>
-                  
-                      {product.terminalStatus || (
-                  product.displayInTerminal !== false ?
-                  "shown" :
-                  "not shown")}
-                    </span>
-                  </td>
-                  <td
-                className="py-3 pl-4"
-                onClick={(e) => e.stopPropagation()}>
-                
-                    <div className="flex items-center gap-2">
-                      {}
-                      <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleStockUpdate(product, "in");
-                    }}
-                    className={`p-2 rounded-lg transition-colors group relative ${theme === "dark" ? "hover:bg-[#352F2A]" : "hover:bg-green-50"}`}
-                    title="Stock In">
-                    
-                        <div className="relative w-6 h-6 flex items-center justify-center">
-                          <svg
-                        className={`w-6 h-6 ${theme === "dark" ? "text-gray-400 group-hover:text-green-500" : "text-gray-600 group-hover:text-green-600"}`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        
-                            <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                        
-                          </svg>
-                          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center border border-white">
-                            <span className="text-white text-[8px] font-bold leading-none">
-                              +
-                            </span>
-                          </span>
-                        </div>
-                      </button>
-
-                      {}
-                      <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleStockUpdate(product, "out");
-                    }}
-                    className={`p-2 rounded-lg transition-colors group relative ${theme === "dark" ? "hover:bg-[#352F2A]" : "hover:bg-red-50"}`}
-                    title="Stock Out">
-                    
-                        <div className="relative w-6 h-6 flex items-center justify-center">
-                          <svg
-                        className={`w-6 h-6 ${theme === "dark" ? "text-gray-400 group-hover:text-red-500" : "text-gray-600 group-hover:text-red-600"}`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        
-                            <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                        
-                          </svg>
-                          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center border border-white">
-                            <span className="text-white text-[8px] font-bold leading-none">
-                              -
-                            </span>
-                          </span>
-                        </div>
-                      </button>
-
-                      {}
-                      <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditProduct(product);
-                    }}
-                    className={`p-2 rounded-lg transition-colors group ${theme === "dark" ? "hover:bg-[#352F2A]" : "hover:bg-blue-50"}`}
-                    title="Update">
-                    
-                        <svg
-                      className="w-6 h-6 text-blue-500 group-hover:text-blue-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      
-                          <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      
-                        </svg>
-                      </button>
-
-                      {}
-                      <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (handleArchiveProduct) handleArchiveProduct(product);
-                    }}
-                    className={`p-2 rounded-lg transition-colors group ${theme === "dark" ? "hover:bg-[#352F2A]" : "hover:bg-orange-50"}`}
-                    title="Archive">
-                    
-                        <svg
-                      className="w-6 h-6 text-orange-400 group-hover:text-orange-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      
-                          <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                      
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
+                    </th>
+                  }
+                  <th className="pb-3 pr-4">Item Image</th>
+                  <th className="pb-3 px-4">SKU</th>
+                  <th className="pb-3 px-4">Item Name</th>
+                  <th className="pb-3 px-4">Category</th>
+                  <th className="pb-3 px-4">Brand</th>
+                  <th className="pb-3 px-4">Item Price</th>
+                  <th className="pb-3 px-4 text-center">Current Stock</th>
+                  <th className="pb-3 px-4 text-center">Terminal</th>
+                  <th className="pb-3 pl-4">Actions</th>
                 </tr>
-            )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="relative">
+                {filteredProducts.map((product) =>
+                  <tr
+                    key={product._id}
+                    className={`border-b transition-colors cursor-pointer ${theme === "dark" ?
+                      "border-[#4A4037] hover:bg-[#352F2A] text-gray-300" :
+                      "border-gray-100 hover:bg-gray-50 text-gray-800"}`
+                    }
+                    onClick={() => handleViewProduct(product)}>
+
+                    {showSelection &&
+                      <td
+                        className="py-3 pr-4"
+                        onClick={(e) => e.stopPropagation()}>
+
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 text-[#AD7F65] border-gray-300 rounded focus:ring-[#AD7F65]"
+                          checked={selectedProductIds.includes(product._id)}
+                          onChange={() =>
+                            onToggleSelect && onToggleSelect(product._id)
+                          } />
+
+                      </td>
+                    }
+                    <td className="py-3 pr-4">
+                      {product.itemImage && product.itemImage.trim() !== "" ?
+                        <img
+                          src={product.itemImage}
+                          alt={product.itemName}
+                          className="w-12 h-12 object-cover rounded" /> :
+
+
+                        <div
+                          className={`w-12 h-12 rounded flex items-center justify-center ${theme === "dark" ? "bg-[#352F2A] text-gray-500" : "bg-gray-200 text-gray-400"}`}>
+
+                          <MdCategory />
+                        </div>
+                      }
+                    </td>
+                    <td className="py-3 px-4">{product.sku}</td>
+                    <td className="py-3 px-4">{product.itemName}</td>
+                    <td className="py-3 px-4">{product.category}</td>
+                    <td className="py-3 px-4">{product.brandName || "-"}</td>
+                    <td className="py-3 px-4">
+                      {(() => {
+                        const priceRange = getPriceRange(product);
+                        return priceRange.isRange ?
+                          `PHP ${priceRange.min.toFixed(2)} - ${priceRange.max.toFixed(2)}` :
+                          `PHP ${priceRange.min.toFixed(2)}`;
+                      })()}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      {(() => {
+                        const totalStock =
+                          product.sizes &&
+                            typeof product.sizes === "object" &&
+                            Object.keys(product.sizes).length > 0 ?
+                            Object.values(product.sizes).reduce(
+                              (sum, sd) => sum + getSizeQuantity(sd),
+                              0
+                            ) :
+                            product.currentStock || 0;
+                        return (
+                          <span
+                            className={`px-2 py-1 rounded font-semibold ${totalStock === 0 ?
+                              "bg-red-100 text-red-700" :
+                              totalStock <= (product.reorderNumber || 10) ?
+                                "bg-yellow-100 text-yellow-700" :
+                                "bg-green-100 text-green-700"}`
+                            }>
+
+                            {totalStock}
+                          </span>);
+
+                      })()}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <span
+                        className={`px-2 py-1 rounded text-sm font-medium ${product.displayInTerminal !== false ?
+                          "bg-green-100 text-green-700" :
+                          "bg-gray-100 text-gray-600"}`
+                        }>
+
+                        {product.terminalStatus || (
+                          product.displayInTerminal !== false ?
+                            "shown" :
+                            "not shown")}
+                      </span>
+                    </td>
+                    <td
+                      className="py-3 pl-4"
+                      onClick={(e) => e.stopPropagation()}>
+
+                      <div className="flex items-center gap-2">
+                        { }
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStockUpdate(product, "in");
+                          }}
+                          className={`p-2 rounded-lg transition-colors group relative ${theme === "dark" ? "hover:bg-[#352F2A]" : "hover:bg-green-50"}`}
+                          title="Stock In">
+
+                          <div className="relative w-6 h-6 flex items-center justify-center">
+                            <svg
+                              className={`w-6 h-6 ${theme === "dark" ? "text-gray-400 group-hover:text-green-500" : "text-gray-600 group-hover:text-green-600"}`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24">
+
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+
+                            </svg>
+                            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center border border-white">
+                              <span className="text-white text-[8px] font-bold leading-none">
+                                +
+                              </span>
+                            </span>
+                          </div>
+                        </button>
+
+                        { }
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStockUpdate(product, "out");
+                          }}
+                          className={`p-2 rounded-lg transition-colors group relative ${theme === "dark" ? "hover:bg-[#352F2A]" : "hover:bg-red-50"}`}
+                          title="Stock Out">
+
+                          <div className="relative w-6 h-6 flex items-center justify-center">
+                            <svg
+                              className={`w-6 h-6 ${theme === "dark" ? "text-gray-400 group-hover:text-red-500" : "text-gray-600 group-hover:text-red-600"}`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24">
+
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+
+                            </svg>
+                            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center border border-white">
+                              <span className="text-white text-[8px] font-bold leading-none">
+                                -
+                              </span>
+                            </span>
+                          </div>
+                        </button>
+
+                        { }
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditProduct(product);
+                          }}
+                          className={`p-2 rounded-lg transition-colors group ${theme === "dark" ? "hover:bg-[#352F2A]" : "hover:bg-blue-50"}`}
+                          title="Update">
+
+                          <svg
+                            className="w-6 h-6 text-blue-500 group-hover:text-blue-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24">
+
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+
+                          </svg>
+                        </button>
+
+                        { }
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (handleArchiveProduct) handleArchiveProduct(product);
+                          }}
+                          className={`p-2 rounded-lg transition-colors group ${theme === "dark" ? "hover:bg-[#352F2A]" : "hover:bg-orange-50"}`}
+                          title="Archive">
+
+                          <svg
+                            className="w-6 h-6 text-orange-400 group-hover:text-orange-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24">
+
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
         }
       </div>
     </div>);
