@@ -199,7 +199,7 @@ const ViewProductModal = ({
                   <p
                     className={`text-sm ${theme === "dark" ? "text-gray-200" : "text-gray-900"}`}>
 
-                    {viewingProduct.category}
+                    {viewingProduct.category} {viewingProduct.subCategory ? `> ${viewingProduct.subCategory}` : ""}
                   </p>
                 </div>
                 <div>

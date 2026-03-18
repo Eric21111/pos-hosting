@@ -30,7 +30,7 @@ const preferredExportFieldOrder = [
   "sku",
   "itemName",
   "category",
-  "genderCategory",
+  "subCategory",
   "brandName",
   "variant",
   "itemPrice",
@@ -60,7 +60,7 @@ const fieldToHeaderMap = {
   sku: "SKU",
   itemName: "Item Name",
   category: "Category",
-  genderCategory: "Gender Category",
+  subCategory: "SubCategory",
   brandName: "Brand",
   variant: "Variant",
   itemPrice: "Item Price",
@@ -131,8 +131,8 @@ const Inventory = () => {
   const defaultProductState = {
     sku: "",
     itemName: "",
-    category: "Tops",
-    genderCategory: "Unisex",
+    category: "",
+    subCategory: "",
     brandName: "Default",
     variant: "",
     size: "",
@@ -334,7 +334,7 @@ const Inventory = () => {
 
     if (filterCategory !== "All") {
       filtered = filtered.filter(
-        (product) => product.category === filterCategory
+        (product) => product.category === filterCategory || product.subCategory === filterCategory
       );
     }
 
@@ -368,7 +368,8 @@ const Inventory = () => {
         (product) =>
           product.itemName.toLowerCase().includes(searchQuery.toLowerCase()) ||
           product.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (product.category && product.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (product.subCategory && product.subCategory.toLowerCase().includes(searchQuery.toLowerCase())) ||
           product.brandName &&
           product.brandName.
             toLowerCase().
@@ -571,8 +572,8 @@ const Inventory = () => {
     setNewProduct({
       sku: generateSKU(defaultCategory, defaultVariant),
       itemName: "",
-      category: defaultCategory,
-      genderCategory: "Unisex",
+      category: "",
+      subCategory: "",
       brandName: "Default",
       variant: defaultVariant,
       size: "",
@@ -942,8 +943,8 @@ const Inventory = () => {
     setNewProduct({
       sku: product.sku || "",
       itemName: product.itemName || "",
-      category: product.category || "Tops",
-      genderCategory: product.genderCategory || "Unisex",
+      category: product.category || "",
+      subCategory: product.subCategory || "",
       brandName: product.brandName || "Default",
       variant: product.variant || "",
       size: product.size || "",
@@ -1485,28 +1486,28 @@ const Inventory = () => {
   /* eslint-disable no-unreachable */
   /* eslint-enable no-unreachable */
 
-      /*
-      const data = await response.json();
+  /*
+  const data = await response.json();
 
-      if (data.success) {
-        setShowStockModal(false);
-        setEditingProduct(null);
-        setStockAmount("");
-        setSuccessMessage("Stock added successfully!");
-        setShowSuccessModal(true);
-        invalidateCache("products");
-        fetchProducts();
-      } else {
-        alert(data.message || "Failed to update stock");
-      }
-    } catch (error) {
-      console.error("Error updating stock:", error);
-      alert("Failed to update stock. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-      */
+  if (data.success) {
+    setShowStockModal(false);
+    setEditingProduct(null);
+    setStockAmount("");
+    setSuccessMessage("Stock added successfully!");
+    setShowSuccessModal(true);
+    invalidateCache("products");
+    fetchProducts();
+  } else {
+    alert(data.message || "Failed to update stock");
+  }
+} catch (error) {
+  console.error("Error updating stock:", error);
+  alert("Failed to update stock. Please try again.");
+} finally {
+  setLoading(false);
+}
+};
+  */
 
   const formatDate = (date) => {
     if (!date) return "-";

@@ -51,17 +51,28 @@ const AddProductModal = ({
 }) => {
   const { theme } = useTheme();
 
-  const genderCategoryOptions = ["Unisex", "Male", "Female", "Kids"];
+  const categoryStructure = {
+    "Apparel - Men": ["Tops", "Bottoms", "Outerwear"],
+    "Apparel - Women": ["Tops", "Bottoms", "Dresses", "Outerwear"],
+    "Apparel - Kids": ["Tops", "Bottoms", "Dresses", "Outerwear"],
+    "Apparel - Unisex": ["Tops", "Bottoms", "Dresses", "Outerwear"],
+    "Foods": ["Beverages", "Snacks", "Meals", "Desserts", "Ingredients", "Other"],
+    "Makeup": ["Face", "Eyes", "Lips", "Others"],
+    "Accessories": ["Jewelry", "Bags", "Head Wear", "Others"],
+    "Shoes": ["Sneakers", "Boots", "Sandals", "Others"],
+    "Others": ["Others"]
+  };
 
-  const builtInCategories = [
-    "Tops",
-    "Bottoms",
-    "Dresses",
-    "Makeup",
-    "Accessories",
-    "Shoes",
-    "Head Wear",
-    "Foods"];
+  const parentCategories = Object.keys(categoryStructure);
+
+  const customSubCategories = categories
+    .filter((cat) => cat.name !== "All" && cat.name !== "Others")
+    .map((c) => c.name);
+
+  const getSubcategories = (parentCat) => {
+    const defaultSubs = categoryStructure[parentCat] || [];
+    return [...new Set([...defaultSubs, ...customSubCategories])];
+  };
 
   const [showDraftNotice, setShowDraftNotice] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -121,30 +132,30 @@ const AddProductModal = ({
   };
 
   const isStepValid = (step) => {
-    if (editingProduct) return true; // Wizard is only for adding new products
+    if (editingProduct) return true;
 
     switch (step) {
       case 1:
         if (!newProduct.itemName || !newProduct.itemName.trim()) return false;
-        if (!newProduct.category || newProduct.category === "__add_new__") return false;
-        if (newProduct.category === "Foods" && (!newProduct.foodSubtype || !newProduct.foodSubtype.trim())) return false;
+        if (!newProduct.category) return false;
+        if (!newProduct.subCategory || newProduct.subCategory === "__add_new__") return false;
         return true;
       case 2:
         if (!newProduct.selectedSizes || newProduct.selectedSizes.length === 0) return false;
         return true;
       case 3:
-        // Must have at least some stock entered in step 3
+
         if (newProduct.selectedSizes?.length > 0) {
           const totalStock = getTotalStockFromInputs();
           if (totalStock <= 0) return false;
         }
 
         if (!newProduct.differentPricesPerSize && !Object.values(differentPricesPerVariant).some(v => v)) {
-          // Global pricing
+
           if (!newProduct.itemPrice || parseFloat(newProduct.itemPrice) <= 0) return false;
           if (!newProduct.costPrice || parseFloat(newProduct.costPrice) <= 0) return false;
         } else if (newProduct.differentPricesPerSize && selectedVariants.length === 0) {
-          // Size pricing
+
           for (const size of newProduct.selectedSizes || []) {
             if (!newProduct.sizePrices?.[size] || parseFloat(newProduct.sizePrices[size]) <= 0) return false;
             if (!newProduct.sizeCostPrices?.[size] || parseFloat(newProduct.sizeCostPrices[size]) <= 0) return false;
@@ -544,68 +555,23 @@ const AddProductModal = ({
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label
-                            className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-
-                            Choose a Category
+                          <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                            Category
                           </label>
                           <select
                             name="category"
-                            value={newProduct.category}
+                            value={newProduct.category || ""}
                             onChange={(e) => {
-                              if (e.target.value === "__add_new__") {
-                                setShowCategoryModal(true);
-
-
-                                return;
-                              }
-
                               handleInputChange(e);
-
-
-                              setSelectedVariants([]);
-                              setCustomColorInput("");
-                              setVariantQuantities({});
-                              setVariantPrices({});
-                              setVariantCostPrices({});
-                              setDifferentPricesPerVariant({});
-
-
-                              if (e.target.value !== "Foods") {
-                                setNewProduct((prev) => ({
-                                  ...prev,
-                                  foodSubtype: ""
-                                }));
-                              }
+                              setNewProduct(prev => ({ ...prev, subCategory: "" }));
                             }}
                             required
-                            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ?
-                              "bg-[#1E1B18] border-gray-600 text-white" :
-                              "bg-gray-50 border-gray-300"}`
-                            }>
-
-                            {categories.
-                              filter(
-                                (cat) =>
-                                  cat.name !== "All" && cat.name !== "Others"
-                              ).
-                              map((category) =>
-                                <option
-                                  key={category.name}
-                                  value={category.name}
-                                  className={
-                                    theme === "dark" ? "bg-[#2A2724]" : ""
-                                  }>
-
-                                  {category.name}
-                                </option>
-                              )}
-                            <option
-                              value="__add_new__"
-                              className="font-semibold text-[#AD7F65]">
-
-                              + Add Category
-                            </option>
+                            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-gray-50 border-gray-300"}`}
+                          >
+                            <option value="" disabled className={theme === "dark" ? "bg-[#2A2724]" : ""}>Select Category</option>
+                            {parentCategories.map(cat => (
+                              <option key={cat} value={cat} className={theme === "dark" ? "bg-[#2A2724]" : ""}>{cat}</option>
+                            ))}
                           </select>
                         </div>
                         <div>
@@ -659,68 +625,37 @@ const AddProductModal = ({
                           </select>
                         </div>
                       </div>
-                      {newProduct.category === "Foods" &&
-                        <div className="mt-3">
-                          <label
-                            className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-
-                            Food Type
-                          </label>
-                          <select
-                            name="foodSubtype"
-                            value={newProduct.foodSubtype || ""}
-                            onChange={handleInputChange}
-                            required
-                            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ?
-                              "bg-[#1E1B18] border-gray-600 text-white" :
-                              "bg-gray-50 border-gray-300"}`
-                            }>
-
-                            <option
-                              value=""
-                              className={theme === "dark" ? "bg-[#2A2724]" : ""}>
-
-                              Select Food Type
-                            </option>
-                            <option
-                              value="Beverages"
-                              className={theme === "dark" ? "bg-[#2A2724]" : ""}>
-
-                              Beverages
-                            </option>
-                            <option
-                              value="Snacks"
-                              className={theme === "dark" ? "bg-[#2A2724]" : ""}>
-
-                              Snacks
-                            </option>
-                            <option
-                              value="Meals"
-                              className={theme === "dark" ? "bg-[#2A2724]" : ""}>
-
-                              Meals
-                            </option>
-                            <option
-                              value="Desserts"
-                              className={theme === "dark" ? "bg-[#2A2724]" : ""}>
-
-                              Desserts
-                            </option>
-                            <option
-                              value="Ingredients"
-                              className={theme === "dark" ? "bg-[#2A2724]" : ""}>
-
-                              Ingredients
-                            </option>
-                            <option
-                              value="Other"
-                              className={theme === "dark" ? "bg-[#2A2724]" : ""}>
-
-                              Other
-                            </option>
-                          </select>
-                        </div>
-                      }
+                      <div className="mt-3">
+                        <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                          SubCategory
+                        </label>
+                        <select
+                          name="subCategory"
+                          value={newProduct.subCategory || ""}
+                          onChange={(e) => {
+                            if (e.target.value === "__add_new__") {
+                              setShowCategoryModal(true);
+                              return;
+                            }
+                            handleInputChange(e);
+                            setSelectedVariants([]);
+                            setCustomColorInput("");
+                            setVariantQuantities({});
+                            setVariantPrices({});
+                            setVariantCostPrices({});
+                            setDifferentPricesPerVariant({});
+                          }}
+                          required
+                          disabled={!newProduct.category}
+                          className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-gray-50 border-gray-300"} ${!newProduct.category ? "opacity-50 cursor-not-allowed" : ""}`}
+                        >
+                          <option value="" disabled className={theme === "dark" ? "bg-[#2A2724]" : ""}>Select SubCategory</option>
+                          {getSubcategories(newProduct.category).map(sub => (
+                            <option key={sub} value={sub} className={theme === "dark" ? "bg-[#2A2724]" : ""}>{sub}</option>
+                          ))}
+                          <option value="__add_new__" className="font-semibold text-[#AD7F65]">+ Add Subcategory</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
 
@@ -1003,21 +938,38 @@ const AddProductModal = ({
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Choose a Category</label>
-                            <select name="category" value={newProduct.category} onChange={(e) => {
-                              if (e.target.value === "__add_new__") { setShowCategoryModal(true); return; }
+                            <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Category</label>
+                            <select name="category" value={newProduct.category || ""} onChange={(e) => {
                               handleInputChange(e);
-                              setSelectedVariants([]); setCustomColorInput(""); setVariantQuantities({}); setVariantPrices({}); setVariantCostPrices({}); setDifferentPricesPerVariant({});
-                              if (e.target.value !== "Foods") { setNewProduct((prev) => ({ ...prev, foodSubtype: "" })); }
+                              setNewProduct(prev => ({ ...prev, subCategory: "" }));
                             }} required
                               className={`w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent appearance-none bg-no-repeat bg-[length:16px] bg-[center_right_12px] ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-white border-gray-300"}`}
                               style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")` }}>
-                              {categories.filter((cat) => cat.name !== "All" && cat.name !== "Others").map((category) => (
-                                <option key={category.name} value={category.name} className={theme === "dark" ? "bg-[#2A2724]" : ""}>{category.name}</option>
+                              <option value="" disabled className={theme === "dark" ? "bg-[#2A2724]" : ""}>Select Category</option>
+                              {parentCategories.map((cat) => (
+                                <option key={cat} value={cat} className={theme === "dark" ? "bg-[#2A2724]" : ""}>{cat}</option>
                               ))}
-                              <option value="__add_new__" className="font-semibold text-[#AD7F65]">+ Add Category</option>
                             </select>
                           </div>
+                          <div>
+                            <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>SubCategory</label>
+                            <select name="subCategory" value={newProduct.subCategory || ""} onChange={(e) => {
+                              if (e.target.value === "__add_new__") { setShowCategoryModal(true); return; }
+                              handleInputChange(e);
+                              setSelectedVariants([]); setCustomColorInput(""); setVariantQuantities({}); setVariantPrices({}); setVariantCostPrices({}); setDifferentPricesPerVariant({});
+                            }} required disabled={!newProduct.category}
+                              className={`w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent appearance-none bg-no-repeat bg-[length:16px] bg-[center_right_12px] ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-white border-gray-300"} ${!newProduct.category ? "opacity-50 cursor-not-allowed" : ""}`}
+                              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")` }}>
+                              <option value="" disabled className={theme === "dark" ? "bg-[#2A2724]" : ""}>Select SubCategory</option>
+                              {getSubcategories(newProduct.category).map(sub => (
+                                <option key={sub} value={sub} className={theme === "dark" ? "bg-[#2A2724]" : ""}>{sub}</option>
+                              ))}
+                              <option value="__add_new__" className="font-semibold text-[#AD7F65]">+ Add Subcategory</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 mt-3">
                           <div>
                             <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Brand</label>
                             <select name="brandName" value={newProduct.brandName || "Default"} onChange={(e) => {
@@ -1032,47 +984,8 @@ const AddProductModal = ({
                               {legacyBrandSelected && <option value={newProduct.brandName}>{newProduct.brandName} (Inactive)</option>}
                             </select>
                           </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                              Gender Category
-                            </label>
-                            <select
-                              name="genderCategory"
-                              value={newProduct.genderCategory || "Unisex"}
-                              onChange={handleInputChange}
-                              className={`w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent appearance-none bg-no-repeat bg-[length:16px] bg-[center_right_12px] ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-white border-gray-300"}`}
-                              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")` }}
-                            >
-                              {genderCategoryOptions.map((option) => (
-                                <option
-                                  key={option}
-                                  value={option}
-                                  className={theme === "dark" ? "bg-[#2A2724]" : ""}
-                                >
-                                  {option}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
                           <div />
                         </div>
-
-                        {newProduct.category === "Foods" && (
-                          <div>
-                            <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Food Type</label>
-                            <select name="foodSubtype" value={newProduct.foodSubtype || ""} onChange={handleInputChange} required
-                              className={`w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent appearance-none bg-no-repeat bg-[length:16px] bg-[center_right_12px] ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-white border-gray-300"}`}
-                              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")` }}>
-                              <option value="" className={theme === "dark" ? "bg-[#2A2724]" : ""}>Select Food Type</option>
-                              {["Beverages", "Snacks", "Meals", "Desserts", "Ingredients", "Other"].map(ft => (
-                                <option key={ft} value={ft} className={theme === "dark" ? "bg-[#2A2724]" : ""}>{ft}</option>
-                              ))}
-                            </select>
-                          </div>
-                        )}
                       </div>
                     </div>
                     {/* Image Upload - Multiple Images */}
@@ -1276,23 +1189,27 @@ const AddProductModal = ({
                         <div className="grid grid-cols-4 gap-2 mb-3">
                           {(() => {
                             const category = newProduct.category;
-                            const foodSubtype = newProduct.foodSubtype || "";
+                            const subCategory = newProduct.subCategory || "";
                             let sizes = [];
-                            const isBuiltIn = builtInCategories.includes(category);
-                            if (!isBuiltIn) { sizes = ["Free Size"]; }
+
+                            const parentHasSizes = categoryStructure[category] !== undefined;
+
+                            if (!parentHasSizes) { sizes = ["Free Size"]; }
                             else if (category === "Foods") {
-                              switch (foodSubtype) {
+                              switch (subCategory) {
                                 case "Beverages": sizes = ["Small", "Medium", "Large", "Extra Large", "Free Size"]; break;
                                 case "Snacks": sizes = ["Small Pack", "Medium Pack", "Large Pack", "Family Pack", "Free Size"]; break;
                                 case "Meals": sizes = ["Regular", "Large", "Family Size", "Free Size"]; break;
                                 case "Desserts": sizes = ["Small", "Medium", "Large", "Free Size"]; break;
                                 case "Ingredients": sizes = ["100g", "250g", "500g", "1kg", "Free Size"]; break;
-
                                 default: sizes = ["Small", "Medium", "Large", "Free Size"];
                               }
-                            } else if (["Tops", "Bottoms", "Dresses"].includes(category)) { sizes = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Free Size"]; }
+                            } else if (["Tops", "Bottoms", "Dresses", "Outerwear"].includes(subCategory)) {
+                              sizes = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Free Size"];
+                            }
                             else if (category === "Shoes") { sizes = ["5", "6", "7", "8", "9", "10", "11", "12"]; }
-                            else if (["Accessories", "Head Wear", "Makeup"].includes(category)) { sizes = ["Free Size"]; }
+                            else if (category === "Accessories" || category === "Makeup") { sizes = ["Free Size"]; }
+                            else { sizes = ["Free Size"]; }
                             return [...sizes, ...customSizes].map((size) => (
                               <label key={size} className="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" checked={newProduct.selectedSizes?.includes(size) || false} onChange={() => handleSizeToggle(size)} className="w-4 h-4 text-[#AD7F65] border-gray-300 rounded focus:ring-[#AD7F65]" />
