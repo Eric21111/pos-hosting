@@ -217,10 +217,14 @@ const ViewProductModal = ({
                       if (viewingProduct.sizes && typeof viewingProduct.sizes === "object") {
                         Object.values(viewingProduct.sizes).forEach((sizeData) => {
                           if (typeof sizeData === "object" && sizeData !== null) {
-                            // Check variant-level prices first
                             if (sizeData.variants && typeof sizeData.variants === "object") {
-                              Object.values(sizeData.variants).forEach((v) => {
-                                if (v && v.price !== undefined && v.price !== null) prices.push(Number(v.price));
+                              Object.entries(sizeData.variants).forEach(([vName, v]) => {
+                                const vPrice = v?.price ?? sizeData.variantPrices?.[vName] ?? sizeData.price;
+                                if (vPrice !== undefined && vPrice !== null) prices.push(Number(vPrice));
+                              });
+                            } else if (sizeData.variantPrices && typeof sizeData.variantPrices === "object") {
+                              Object.values(sizeData.variantPrices).forEach((p) => {
+                                if (p !== undefined && p !== null) prices.push(Number(p));
                               });
                             } else if (sizeData.price !== undefined && sizeData.price !== null) {
                               prices.push(Number(sizeData.price));
@@ -272,8 +276,9 @@ const ViewProductModal = ({
                         Object.values(viewingProduct.sizes).forEach((sizeData) => {
                           if (typeof sizeData === "object" && sizeData !== null) {
                             if (sizeData.variants && typeof sizeData.variants === "object") {
-                              Object.values(sizeData.variants).forEach((v) => {
-                                if (v && v.costPrice !== undefined && v.costPrice !== null) costs.push(Number(v.costPrice));
+                              Object.entries(sizeData.variants).forEach(([vName, v]) => {
+                                const vCost = v?.costPrice ?? sizeData.variantCostPrices?.[vName] ?? sizeData.costPrice;
+                                if (vCost !== undefined && vCost !== null) costs.push(Number(vCost));
                               });
                             } else if (sizeData.costPrice !== undefined && sizeData.costPrice !== null) {
                               costs.push(Number(sizeData.costPrice));
@@ -428,10 +433,10 @@ const ViewProductModal = ({
                                         <td className="px-4 py-3">
                                           <div className="space-y-0.5">
                                             <div className={`text-xs font-medium ${theme === "dark" ? "text-green-400" : "text-green-600"}`}>
-                                              Sell: ₱{Number(variantData?.price ?? sizeData?.price ?? viewingProduct.itemPrice ?? 0).toFixed(2)}
+                                              Sell: ₱{Number(variantData?.price ?? variantPrices?.[variantName] ?? sizeData?.price ?? viewingProduct.itemPrice ?? 0).toFixed(2)}
                                             </div>
                                             <div className={`text-xs ${theme === "dark" ? "text-red-400" : "text-red-500"}`}>
-                                              Cost: ₱{Number(variantData?.costPrice ?? sizeData?.costPrice ?? viewingProduct.costPrice ?? 0).toFixed(2)}
+                                              Cost: ₱{Number(variantData?.costPrice ?? sizeData?.variantCostPrices?.[variantName] ?? sizeData?.costPrice ?? viewingProduct.costPrice ?? 0).toFixed(2)}
                                             </div>
                                           </div>
                                         </td>
