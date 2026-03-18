@@ -11,8 +11,6 @@ const ViewProductModal = ({
   const { theme } = useTheme();
   const [showBatchView, setShowBatchView] = useState(false);
 
-  if (!showViewModal || !viewingProduct) return null;
-
   const toNum = (v) => {
     const n = typeof v === "number" ? v : parseInt(v);
     return Number.isFinite(n) ? n : 0;
@@ -24,6 +22,7 @@ const ViewProductModal = ({
   };
 
   const hasBatch2 = useMemo(() => {
+    if (!viewingProduct) return false;
     const sizes = viewingProduct.sizes;
     if (!sizes || typeof sizes !== "object") return false;
     return Object.values(sizes).some((sizeData) => {
@@ -41,6 +40,8 @@ const ViewProductModal = ({
       return false;
     });
   }, [viewingProduct]);
+
+  if (!showViewModal || !viewingProduct) return null;
 
   // If the user opens a different product, reset back to normal view
   // (prevents batch view “sticking” across products)
