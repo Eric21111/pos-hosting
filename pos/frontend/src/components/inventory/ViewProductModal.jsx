@@ -346,7 +346,10 @@ const ViewProductModal = ({
                               <th className="px-4 py-3 font-semibold">Batch 2</th>
                             </>
                           ) : (
-                            <th className="px-4 py-3 font-semibold">Stock</th>
+                            <>
+                              <th className="px-4 py-3 font-semibold">Stock</th>
+                              <th className="px-4 py-3 font-semibold">Price</th>
+                            </>
                           )}
                         </tr>
                       </thead>
@@ -413,14 +416,26 @@ const ViewProductModal = ({
                                         </td>
                                       </>
                                     ) : (
-                                      <td className="px-4 py-3">
-                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${variantQty === 0 ? "bg-red-100 text-red-700" :
-                                          variantQty <= (viewingProduct.reorderNumber || 10) ? "bg-yellow-100 text-yellow-700" :
-                                            "bg-green-100 text-green-700"
-                                          }`}>
-                                          {variantQty} {viewingProduct.unitOfMeasure || 'pcs'}
-                                        </span>
-                                      </td>
+                                      <>
+                                        <td className="px-4 py-3">
+                                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${variantQty === 0 ? "bg-red-100 text-red-700" :
+                                            variantQty <= (viewingProduct.reorderNumber || 10) ? "bg-yellow-100 text-yellow-700" :
+                                              "bg-green-100 text-green-700"
+                                            }`}>
+                                            {variantQty} {viewingProduct.unitOfMeasure || 'pcs'}
+                                          </span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                          <div className="space-y-0.5">
+                                            <div className={`text-xs font-medium ${theme === "dark" ? "text-green-400" : "text-green-600"}`}>
+                                              Sell: ₱{Number(variantData?.price ?? sizeData?.price ?? viewingProduct.itemPrice ?? 0).toFixed(2)}
+                                            </div>
+                                            <div className={`text-xs ${theme === "dark" ? "text-red-400" : "text-red-500"}`}>
+                                              Cost: ₱{Number(variantData?.costPrice ?? sizeData?.costPrice ?? viewingProduct.costPrice ?? 0).toFixed(2)}
+                                            </div>
+                                          </div>
+                                        </td>
+                                      </>
                                     )}
                                   </tr>
                                 );
@@ -470,14 +485,26 @@ const ViewProductModal = ({
                                       </td>
                                     </>
                                   ) : (
-                                    <td className="px-4 py-3">
-                                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${stock === 0 ? "bg-red-100 text-red-700" :
-                                        stock <= (viewingProduct.reorderNumber || 10) ? "bg-yellow-100 text-yellow-700" :
-                                          "bg-green-100 text-green-700"
-                                        }`}>
-                                        {stock} {viewingProduct.unitOfMeasure || 'pcs'}
-                                      </span>
-                                    </td>
+                                    <>
+                                      <td className="px-4 py-3">
+                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${stock === 0 ? "bg-red-100 text-red-700" :
+                                          stock <= (viewingProduct.reorderNumber || 10) ? "bg-yellow-100 text-yellow-700" :
+                                            "bg-green-100 text-green-700"
+                                          }`}>
+                                          {stock} {viewingProduct.unitOfMeasure || 'pcs'}
+                                        </span>
+                                      </td>
+                                      <td className="px-4 py-3">
+                                        <div className="space-y-0.5">
+                                          <div className={`text-xs font-medium ${theme === "dark" ? "text-green-400" : "text-green-600"}`}>
+                                            Sell: ₱{Number(typeof sizeData === "object" && sizeData !== null ? (sizeData.price ?? viewingProduct.itemPrice ?? 0) : (viewingProduct.itemPrice ?? 0)).toFixed(2)}
+                                          </div>
+                                          <div className={`text-xs ${theme === "dark" ? "text-red-400" : "text-red-500"}`}>
+                                            Cost: ₱{Number(typeof sizeData === "object" && sizeData !== null ? (sizeData.costPrice ?? viewingProduct.costPrice ?? 0) : (viewingProduct.costPrice ?? 0)).toFixed(2)}
+                                          </div>
+                                        </div>
+                                      </td>
+                                    </>
                                   )}
                                 </tr>
                               );
