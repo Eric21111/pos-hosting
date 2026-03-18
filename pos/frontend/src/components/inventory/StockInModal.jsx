@@ -463,7 +463,7 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4 backdrop-blur-sm pointer-events-none">
+    <div className="fixed inset-0 flex items-center justify-center z-9999 p-4 backdrop-blur-sm pointer-events-none">
       <div
         className={`rounded-2xl w-full max-w-3xl relative pointer-events-auto overflow-hidden ${theme === "dark" ? "bg-[#1E1B18]" : "bg-white"}`}
         style={{
@@ -758,7 +758,9 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
                   </div>
                 )}
 
-                {/* Original stock input UI (Add Stocks step) */}
+                {/* Step 1: Stock inputs only */}
+                {currentStep === 1 && (
+                <>
                 {hasSizes ?
                   <div>
                     <label
@@ -1248,92 +1250,8 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
 
                   </div>
                 }
+                </>
                 )}
-
-                {/* Batch / Lot Tracking (optional) */}
-                <div className={`p-3 rounded-lg border ${theme === "dark" ? "border-gray-700 bg-[#2A2724]" : "border-gray-200 bg-gray-50"}`}>
-                  <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
-                    Batch / Lot (optional)
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                        Batch Code
-                      </label>
-                      <input
-                        type="text"
-                        value={batchCode}
-                        onChange={(e) => setBatchCode(e.target.value)}
-                        placeholder="e.g. LOT-2026-001"
-                        className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-700 text-white placeholder-gray-500" : "bg-white border-gray-300 text-gray-900"}`}
-                      />
-                    </div>
-                    <div>
-                      <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                        Expiration Date
-                      </label>
-                      <input
-                        type="date"
-                        value={batchExpirationDate}
-                        onChange={(e) => setBatchExpirationDate(e.target.value)}
-                        className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-700 text-white" : "bg-white border-gray-300 text-gray-900"}`}
-                      />
-                    </div>
-                  </div>
-                  <p className={`text-xs mt-2 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
-                    These will be saved on the newly added stock batch only (Batch 2).
-                  </p>
-                </div>
-
-                <div>
-                  <label
-                    className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
-
-                    Reason
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={reason}
-                      onChange={(e) => {
-                        setReason(e.target.value);
-                        if (e.target.value !== "Other") {
-                          setOtherReason("");
-                        }
-                      }}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent appearance-none cursor-pointer ${theme === "dark" ? "bg-[#2A2724] border-gray-600 text-white" : "bg-white border-gray-300 text-gray-900"}`}>
-
-                      {reasons.map((r) =>
-                        <option key={r} value={r}>
-                          {r}
-                        </option>
-                      )}
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <svg
-                        className="w-5 h-5 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24">
-
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7" />
-
-                      </svg>
-                    </div>
-                  </div>
-                  {reason === "Other" &&
-                    <input
-                      type="text"
-                      value={otherReason}
-                      onChange={(e) => setOtherReason(e.target.value)}
-                      placeholder="Please specify the reason"
-                      className={`w-full mt-2 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#2A2724] border-gray-600 text-white placeholder-gray-500" : "bg-white border-gray-300 text-gray-900"}`} />
-
-                  }
-                </div>
               </div>
 
               <div
@@ -1346,17 +1264,44 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
 
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 disabled:opacity-50 transition-all"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #10B981 0%, #059669 100%)"
-                  }}>
+                {currentStep > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep((prev) => Math.max(1, prev - 1))}
+                    className={`px-6 py-3 border rounded-lg font-medium transition-colors ${theme === "dark" ? "border-gray-600 text-gray-300 hover:bg-gray-800" : "border-gray-300 text-gray-700 hover:bg-gray-50"}`}>
+                    ← Back
+                  </button>
+                )}
 
-                  {loading ? "Adding..." : "Add Stocks"}
-                </button>
+                {currentStep < 3 && (
+                  <button
+                    type="button"
+                    disabled={!isStepValid(currentStep)}
+                    onClick={() => {
+                      if (!isStepValid(currentStep)) return;
+                      setCurrentStep((prev) => prev + 1);
+                    }}
+                    className="px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 disabled:opacity-50 transition-all"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #AD7F65 0%, #8B6553 100%)"
+                    }}>
+                    Continue →
+                  </button>
+                )}
+
+                {currentStep === 3 && (
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 disabled:opacity-50 transition-all"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #10B981 0%, #059669 100%)"
+                    }}>
+                    {loading ? "Adding..." : "Confirm Stock-In"}
+                  </button>
+                )}
               </div>
             </div>
           </div>
