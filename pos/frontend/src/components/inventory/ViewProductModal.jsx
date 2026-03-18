@@ -73,7 +73,7 @@ const ViewProductModal = ({
       onClick={() => setShowViewModal(false)}>
 
       <div
-        className={`rounded-2xl w-full max-w-4xl max-h-[90vh] relative overflow-hidden flex flex-col ${theme === "dark" ? "bg-[#1E1B18]" : "bg-white"}`}
+        className={`rounded-2xl w-full max-w-5xl max-h-[90vh] relative overflow-hidden flex flex-col ${theme === "dark" ? "bg-[#1E1B18]" : "bg-white"}`}
         style={{
           boxShadow:
             "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.1)"

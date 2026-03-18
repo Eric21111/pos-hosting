@@ -594,7 +594,7 @@ const AddProductModal = ({
                           <label
                             className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
 
-                            Brand
+                            Brand Partner
                           </label>
                           <select
                             name="brandName"
