@@ -1450,6 +1450,25 @@ const AddProductModal = ({
                       </div>
                     )}
 
+                    {/* Reorder Level */}
+                    <div>
+                      <label className={`block text-xs font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                        Low Stock Alert (Reorder Level)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        name="reorderNumber"
+                        value={newProduct.reorderNumber || ""}
+                        onChange={handleInputChange}
+                        placeholder="e.g., 10"
+                        className={`w-full max-w-xs px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500" : "bg-white border-gray-300 text-gray-900"}`}
+                      />
+                      <p className={`text-[10px] mt-1 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
+                        Get notified when stock size or variant falls below this number (Optional).
+                      </p>
+                    </div>
+
                     {/* Per-size pricing options */}
                     {hasVariants && newProduct.selectedSizes?.length > 0 && (
                       <>
@@ -1771,15 +1790,15 @@ const AddProductModal = ({
                 {currentStep === 1 ? "Cancel" : "← Back"}
               </button>
               {currentStep < 4 ? (
-                <button type="button"
-                  onClick={() => setCurrentStep((prev) => prev + 1)}
+                <button key="btn-continue" type="button"
+                  onClick={(e) => { e.preventDefault(); setCurrentStep((prev) => prev + 1); }}
                   disabled={!isStepValid(currentStep)}
                   className={`px-8 py-2.5 text-sm font-semibold rounded-xl text-white transition-all shadow-md hover:opacity-90 ${!isStepValid(currentStep) ? 'opacity-50 cursor-not-allowed' : ''}`}
                   style={{ background: "linear-gradient(135deg, #AD7F65 0%, #8B6553 100%)" }}>
                   Continue →
                 </button>
               ) : (
-                <button type="submit" disabled={loading}
+                <button key="btn-submit" type="submit" disabled={loading}
                   className="px-10 py-2.5 text-sm font-semibold rounded-xl text-white transition-all shadow-md hover:opacity-90 disabled:opacity-50"
                   style={{ background: "linear-gradient(135deg, #10B981 0%, #059669 100%)" }}>
                   {loading ? "Adding..." : "Save Product"}
