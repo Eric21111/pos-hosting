@@ -1448,7 +1448,7 @@ const AddProductModal = ({
                                   {!differentPricesPerVariant[size] && (newProduct.differentPricesPerSize || Object.values(differentPricesPerVariant).some((v) => v)) && (
                                     <div className="grid grid-cols-2 gap-2 mb-3">
                                       <div>
-                                        <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Cost Price</label>
+                                        <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Purchase Price</label>
                                         <div className="flex items-center gap-1">
                                           <span className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>₱</span>
                                           <input type="number" min="0" step="0.01" value={newProduct.sizeCostPrices?.[size] || ""}
@@ -1488,12 +1488,12 @@ const AddProductModal = ({
                                         {differentPricesPerVariant[size] && (
                                           <>
                                             <div className="flex items-center gap-1">
-                                              <span className={`text-[10px] ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Cost:</span>
+                                              <span className={`text-[10px] ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Purchase:</span>
                                               <input type="number" min="0" step="0.01" value={variantCostPrices[size]?.[variant] || ""} onChange={(e) => handleVariantCostPriceChange(size, variant, e.target.value)}
                                                 placeholder="₱" className={`w-20 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-gray-50 border-gray-300"}`} />
                                             </div>
                                             <div className="flex items-center gap-1">
-                                              <span className={`text-[10px] ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Price:</span>
+                                              <span className={`text-[10px] ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Selling:</span>
                                               <input type="number" min="0" step="0.01" value={variantPrices[size]?.[variant] || ""} onChange={(e) => handleVariantPriceChange(size, variant, e.target.value)}
                                                 placeholder="₱" className={`w-20 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-gray-50 border-gray-300"}`} />
                                             </div>
@@ -1569,7 +1569,7 @@ const AddProductModal = ({
                               {newProduct.selectedSizes.map((size) => (
                                 <div key={size} className="grid grid-cols-2 gap-3">
                                   <div>
-                                    <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>{size} Cost Price</label>
+                                    <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>{size} Purchase Price</label>
                                     <input type="number" step="0.01" min="0" value={newProduct.sizeCostPrices?.[size] || ""}
                                       onChange={(e) => { setNewProduct((prev) => ({ ...prev, sizeCostPrices: { ...prev.sizeCostPrices, [size]: e.target.value } })); }}
                                       placeholder="Enter cost price" className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#2A2724] border-gray-600 text-white" : "bg-white border-gray-300"}`} />
@@ -1593,7 +1593,7 @@ const AddProductModal = ({
                         <h3 className="text-base font-semibold mb-3">Pricing</h3>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Cost Price</label>
+                            <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Purchase Price</label>
                             <input type="number" step="0.01" name="costPrice" value={newProduct.costPrice} onChange={handleInputChange} placeholder="Enter cost price"
                               className={`w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-white border-gray-300"}`} />
                           </div>
