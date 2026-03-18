@@ -608,8 +608,17 @@ const Inventory = () => {
         newProduct.selectedSizes?.length > 0 &&
         Object.values(newProduct.sizeQuantities || {}).some((qty) => qty > 0);
       const hasStock = parseInt(newProduct.currentStock) > 0;
+      const hasVariantQuantities =
+        newProduct.selectedSizes?.length > 0 &&
+        newProduct.variantQuantities &&
+        Object.keys(newProduct.variantQuantities).length > 0 &&
+        Object.values(newProduct.variantQuantities).some((sizeVariants) =>
+          sizeVariants &&
+          typeof sizeVariants === "object" &&
+          Object.values(sizeVariants).some((qty) => parseInt(qty) > 0)
+        );
 
-      if (!hasSizeQuantities && !hasStock) {
+      if (!hasSizeQuantities && !hasVariantQuantities && !hasStock) {
         alert(
           "Please either select sizes with quantities or provide a stock value."
         );
@@ -629,14 +638,10 @@ const Inventory = () => {
         );
 
 
-      const hasVariantQuantities = newProduct.variantQuantities &&
-        Object.keys(newProduct.variantQuantities).length > 0 &&
-        Object.values(newProduct.variantQuantities).some((sizeVariants) =>
-          sizeVariants && Object.values(sizeVariants).some((qty) => parseInt(qty) > 0)
-        );
+      const hasVariantQuantitiesForConfirm = hasVariantQuantities;
 
 
-      if (hasAnyVariantPricing || hasVariantPrices || hasVariantQuantities) {
+      if (hasAnyVariantPricing || hasVariantPrices || hasVariantQuantitiesForConfirm) {
 
 
         setShowConfirmModal(true);

@@ -40,6 +40,7 @@ const AddProductModal = ({
   handleAddProduct,
   handleInputChange,
   handleSizeToggle,
+  handleSizeQuantityChange,
   handleSizePriceChange,
   resetProductForm,
   loading,
@@ -87,6 +88,36 @@ const AddProductModal = ({
     { id: 4, label: "Review" },
   ];
 
+  const getVariantsForSize = (size) => {
+    if (!size) return [];
+
+    if (newProduct.differentVariantsPerSize) {
+      if (multipleVariantsPerSize[size]) {
+        return (sizeMultiVariants[size] || []).filter(Boolean);
+      }
+      const single = (newProduct.sizeVariants?.[size] || "").trim();
+      return single ? [single] : [];
+    }
+
+    return (selectedVariants || []).filter(Boolean);
+  };
+
+  const getTotalStockFromInputs = () => {
+    const sizeTotal = Object.values(newProduct.sizeQuantities || {}).reduce(
+      (sum, q) => sum + (parseInt(q) || 0),
+      0
+    );
+    const variantTotal = Object.values(newProduct.variantQuantities || {}).reduce(
+      (sum, perSize) =>
+        sum +
+        (perSize && typeof perSize === "object" ?
+          Object.values(perSize).reduce((s, q) => s + (parseInt(q) || 0), 0) :
+          0),
+      0
+    );
+    return Math.max(sizeTotal, variantTotal);
+  };
+
   const isStepValid = (step) => {
     if (editingProduct) return true; // Wizard is only for adding new products
 
@@ -100,6 +131,12 @@ const AddProductModal = ({
         if (!newProduct.selectedSizes || newProduct.selectedSizes.length === 0) return false;
         return true;
       case 3:
+        // Must have at least some stock entered in step 3
+        if (newProduct.selectedSizes?.length > 0) {
+          const totalStock = getTotalStockFromInputs();
+          if (totalStock <= 0) return false;
+        }
+
         if (!newProduct.differentPricesPerSize && !Object.values(differentPricesPerVariant).some(v => v)) {
           // Global pricing
           if (!newProduct.itemPrice || parseFloat(newProduct.itemPrice) <= 0) return false;
@@ -1267,6 +1304,90 @@ const AddProductModal = ({
                 {currentStep === 3 && (
                   <div className="space-y-5">
                     <h3 className={`text-base font-semibold mb-3 ${theme === "dark" ? "text-white" : "text-gray-800"}`}>Pricing & Stock</h3>
+
+                    {/* Stock quantities */}
+                    {newProduct.selectedSizes?.length > 0 && (
+                      <div className={`p-3 rounded-lg border ${theme === "dark" ? "bg-[#1E1B18] border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+                        <label className={`block text-xs font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                          {newProduct.differentVariantsPerSize || selectedVariants.length > 0 ? "Quantity per Variant per Size:" : "Quantity per Size:"}
+                        </label>
+
+                        {/* If there are variants (global or per-size), capture per-variant quantities */}
+                        {(newProduct.differentVariantsPerSize || selectedVariants.length > 0) ? (
+                          <div className="space-y-4">
+                            {newProduct.selectedSizes.map((size) => {
+                              const variants = getVariantsForSize(size);
+                              return (
+                                <div key={size} className={`p-3 rounded-lg ${theme === "dark" ? "bg-[#2A2724]" : "bg-white"}`}>
+                                  <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-200" : "text-gray-800"}`}>
+                                    {size}
+                                  </label>
+
+                                  {variants.length === 0 ? (
+                                    <p className={`text-xs ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
+                                      No variants selected for this size. Go back to Step 2 and add/select variants, or turn off per-size variants.
+                                    </p>
+                                  ) : (
+                                    <div className="grid grid-cols-2 gap-2">
+                                      {variants.map((variant) => (
+                                        <div key={`${size}-${variant}`}>
+                                          <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                                            {variant}
+                                          </label>
+                                          <input
+                                            type="number"
+                                            min="0"
+                                            value={newProduct.variantQuantities?.[size]?.[variant] ?? ""}
+                                            onChange={(e) => {
+                                              const value = e.target.value;
+                                              setVariantQuantities((prev) => {
+                                                const updated = {
+                                                  ...prev,
+                                                  [size]: {
+                                                    ...(prev[size] || {}),
+                                                    [variant]: parseInt(value) || 0
+                                                  }
+                                                };
+                                                setNewProduct((p) => ({ ...p, variantQuantities: updated }));
+                                                return updated;
+                                              });
+                                            }}
+                                            placeholder="Qty"
+                                            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500" : "bg-white border-gray-300 text-gray-900"}`}
+                                          />
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-3">
+                            {newProduct.selectedSizes.map((size) => (
+                              <div key={size}>
+                                <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                                  {size}
+                                </label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={newProduct.sizeQuantities?.[size] ?? ""}
+                                  onChange={(e) => handleSizeQuantityChange(size, e.target.value)}
+                                  placeholder="Qty"
+                                  className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500" : "bg-white border-gray-300 text-gray-900"}`}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        <p className={`text-xs mt-2 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
+                          Total stock to add: {getTotalStockFromInputs()}
+                        </p>
+                      </div>
+                    )}
 
                     {/* Per-size pricing options */}
                     {newProduct.selectedSizes?.length > 0 && (
