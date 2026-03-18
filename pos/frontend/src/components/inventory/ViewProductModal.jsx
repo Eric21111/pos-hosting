@@ -212,37 +212,29 @@ const ViewProductModal = ({
                     className={`text-sm font-semibold ${theme === "dark" ? "text-green-400" : "text-green-600"}`}>
 
                     {(() => {
-                      const getSizePrice = (sizeData) => {
-                        if (
-                          typeof sizeData === "object" &&
-                          sizeData !== null &&
-                          sizeData.price !== undefined) {
-                          return sizeData.price;
-                        }
-                        return null;
-                      };
+                      const prices = [];
 
-                      if (
-                        viewingProduct.sizes &&
-                        typeof viewingProduct.sizes === "object") {
-                        const prices = [];
-                        Object.values(viewingProduct.sizes).forEach(
-                          (sizeData) => {
-                            const price = getSizePrice(sizeData);
-                            if (price !== null) {
-                              prices.push(price);
+                      if (viewingProduct.sizes && typeof viewingProduct.sizes === "object") {
+                        Object.values(viewingProduct.sizes).forEach((sizeData) => {
+                          if (typeof sizeData === "object" && sizeData !== null) {
+                            // Check variant-level prices first
+                            if (sizeData.variants && typeof sizeData.variants === "object") {
+                              Object.values(sizeData.variants).forEach((v) => {
+                                if (v && v.price !== undefined && v.price !== null) prices.push(Number(v.price));
+                              });
+                            } else if (sizeData.price !== undefined && sizeData.price !== null) {
+                              prices.push(Number(sizeData.price));
                             }
                           }
-                        );
+                        });
+                      }
 
-                        if (prices.length > 0) {
-                          const minPrice = Math.min(...prices);
-                          const maxPrice = Math.max(...prices);
-                          if (minPrice !== maxPrice) {
-                            return `₱${minPrice.toFixed(2)} - ₱${maxPrice.toFixed(2)}`;
-                          }
-                          return `₱${minPrice.toFixed(2)}`;
-                        }
+                      if (prices.length > 0) {
+                        const minP = Math.min(...prices);
+                        const maxP = Math.max(...prices);
+                        return minP !== maxP
+                          ? `₱${minP.toFixed(2)} - ₱${maxP.toFixed(2)}`
+                          : `₱${minP.toFixed(2)}`;
                       }
                       return `₱${viewingProduct.itemPrice?.toFixed(2) || "0.00"}`;
                     })()}
@@ -273,7 +265,32 @@ const ViewProductModal = ({
                   <p
                     className={`text-sm font-semibold ${theme === "dark" ? "text-red-400" : "text-red-600"}`}>
 
-                    ₱{viewingProduct.costPrice?.toFixed(2) || "0.00"}
+                    {(() => {
+                      const costs = [];
+
+                      if (viewingProduct.sizes && typeof viewingProduct.sizes === "object") {
+                        Object.values(viewingProduct.sizes).forEach((sizeData) => {
+                          if (typeof sizeData === "object" && sizeData !== null) {
+                            if (sizeData.variants && typeof sizeData.variants === "object") {
+                              Object.values(sizeData.variants).forEach((v) => {
+                                if (v && v.costPrice !== undefined && v.costPrice !== null) costs.push(Number(v.costPrice));
+                              });
+                            } else if (sizeData.costPrice !== undefined && sizeData.costPrice !== null) {
+                              costs.push(Number(sizeData.costPrice));
+                            }
+                          }
+                        });
+                      }
+
+                      if (costs.length > 0) {
+                        const minC = Math.min(...costs);
+                        const maxC = Math.max(...costs);
+                        return minC !== maxC
+                          ? `₱${minC.toFixed(2)} - ₱${maxC.toFixed(2)}`
+                          : `₱${minC.toFixed(2)}`;
+                      }
+                      return `₱${viewingProduct.costPrice?.toFixed(2) || "0.00"}`;
+                    })()}
                   </p>
                 </div>
               </div>
