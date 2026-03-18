@@ -21,6 +21,11 @@ const productSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  unitOfMeasure: {
+    type: String,
+    default: 'pcs',
+    trim: true
+  },
   brandName: {
     type: String,
     default: '',

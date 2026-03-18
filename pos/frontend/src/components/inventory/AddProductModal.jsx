@@ -641,36 +641,59 @@ const AddProductModal = ({
                           </select>
                         </div>
                       </div>
-                      <div className="mt-3">
-                        <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                          SubCategory
-                        </label>
-                        <select
-                          name="subCategory"
-                          value={newProduct.subCategory || ""}
-                          onChange={(e) => {
-                            if (e.target.value === "__add_new__") {
-                              setShowCategoryModal(true);
-                              return;
-                            }
-                            handleInputChange(e);
-                            setSelectedVariants([]);
-                            setCustomColorInput("");
-                            setVariantQuantities({});
-                            setVariantPrices({});
-                            setVariantCostPrices({});
-                            setDifferentPricesPerVariant({});
-                          }}
-                          required
-                          disabled={!newProduct.category}
-                          className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-gray-50 border-gray-300"} ${!newProduct.category ? "opacity-50 cursor-not-allowed" : ""}`}
-                        >
-                          <option value="" disabled className={theme === "dark" ? "bg-[#2A2724]" : ""}>Select SubCategory</option>
-                          {getSubcategories(newProduct.category).map(sub => (
-                            <option key={sub} value={sub} className={theme === "dark" ? "bg-[#2A2724]" : ""}>{sub}</option>
-                          ))}
-                          <option value="__add_new__" className="font-semibold text-[#AD7F65]">+ Add Subcategory</option>
-                        </select>
+                      <div className="grid grid-cols-2 gap-3 mt-3">
+                        <div>
+                          <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                            SubCategory
+                          </label>
+                          <select
+                            name="subCategory"
+                            value={newProduct.subCategory || ""}
+                            onChange={(e) => {
+                              if (e.target.value === "__add_new__") {
+                                setShowCategoryModal(true);
+                                return;
+                              }
+                              handleInputChange(e);
+                              setSelectedVariants([]);
+                              setCustomColorInput("");
+                              setVariantQuantities({});
+                              setVariantPrices({});
+                              setVariantCostPrices({});
+                              setDifferentPricesPerVariant({});
+                            }}
+                            required
+                            disabled={!newProduct.category}
+                            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-gray-50 border-gray-300"} ${!newProduct.category ? "opacity-50 cursor-not-allowed" : ""}`}
+                          >
+                            <option value="" disabled className={theme === "dark" ? "bg-[#2A2724]" : ""}>Select SubCategory</option>
+                            {getSubcategories(newProduct.category).map(sub => (
+                              <option key={sub} value={sub} className={theme === "dark" ? "bg-[#2A2724]" : ""}>{sub}</option>
+                            ))}
+                            <option value="__add_new__" className="font-semibold text-[#AD7F65]">+ Add Subcategory</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                            Unit of Measure
+                          </label>
+                          <select
+                            name="unitOfMeasure"
+                            value={newProduct.unitOfMeasure || "pcs"}
+                            onChange={handleInputChange}
+                            required
+                            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent appearance-none bg-no-repeat bg-[length:16px] bg-[center_right_12px] ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-gray-50 border-gray-300"}`}
+                            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")` }}
+                          >
+                            <option value="pcs" className={theme === "dark" ? "bg-[#2A2724]" : ""}>Pieces (pcs)</option>
+                            <option value="kg" className={theme === "dark" ? "bg-[#2A2724]" : ""}>Kilograms (kg)</option>
+                            <option value="g" className={theme === "dark" ? "bg-[#2A2724]" : ""}>Grams (g)</option>
+                            <option value="L" className={theme === "dark" ? "bg-[#2A2724]" : ""}>Liters (L)</option>
+                            <option value="ml" className={theme === "dark" ? "bg-[#2A2724]" : ""}>Milliliters (ml)</option>
+                            <option value="packs" className={theme === "dark" ? "bg-[#2A2724]" : ""}>Packs</option>
+                            <option value="boxes" className={theme === "dark" ? "bg-[#2A2724]" : ""}>Boxes</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1000,7 +1023,25 @@ const AddProductModal = ({
                               {legacyBrandSelected && <option value={newProduct.brandName}>{newProduct.brandName} (Inactive)</option>}
                             </select>
                           </div>
-                          <div />
+                          <div>
+                            <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Unit of Measure</label>
+                            <select
+                              name="unitOfMeasure"
+                              value={newProduct.unitOfMeasure || "pcs"}
+                              onChange={handleInputChange}
+                              required
+                              className={`w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent appearance-none bg-no-repeat bg-[length:16px] bg-[center_right_12px] ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-white border-gray-300"}`}
+                              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")` }}
+                            >
+                              <option value="pcs" className={theme === "dark" ? "bg-[#2A2724]" : ""}>Pieces (pcs)</option>
+                              <option value="kg" className={theme === "dark" ? "bg-[#2A2724]" : ""}>Kilograms (kg)</option>
+                              <option value="g" className={theme === "dark" ? "bg-[#2A2724]" : ""}>Grams (g)</option>
+                              <option value="L" className={theme === "dark" ? "bg-[#2A2724]" : ""}>Liters (L)</option>
+                              <option value="ml" className={theme === "dark" ? "bg-[#2A2724]" : ""}>Milliliters (ml)</option>
+                              <option value="packs" className={theme === "dark" ? "bg-[#2A2724]" : ""}>Packs</option>
+                              <option value="boxes" className={theme === "dark" ? "bg-[#2A2724]" : ""}>Boxes</option>
+                            </select>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1598,6 +1639,10 @@ const AddProductModal = ({
                             <div>
                               <p className={`text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Brand</p>
                               <p className={`text-sm mt-0.5 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>{newProduct.brandName || "Default"}</p>
+                            </div>
+                            <div>
+                              <p className={`text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Unit of Measure</p>
+                              <p className={`text-sm mt-0.5 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>{newProduct.unitOfMeasure || "pcs"}</p>
                             </div>
                           </div>
                           {selectedVariants.length > 0 && (

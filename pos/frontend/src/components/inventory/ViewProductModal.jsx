@@ -370,7 +370,7 @@ const ViewProductModal = ({
                                           {b1 ? (
                                             <div className="space-y-0.5">
                                               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${toNum(b1.qty) === 0 ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
-                                                {toNum(b1.qty)} pcs
+                                                {toNum(b1.qty)} {viewingProduct.unitOfMeasure || 'pcs'}
                                               </span>
                                               <div className={`text-[11px] ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
                                                 Sell: ₱{(b1.price ?? 0).toFixed ? b1.price.toFixed(2) : Number(b1.price || 0).toFixed(2)} · Buy: ₱{(b1.costPrice ?? 0).toFixed ? b1.costPrice.toFixed(2) : Number(b1.costPrice || 0).toFixed(2)}
@@ -384,7 +384,7 @@ const ViewProductModal = ({
                                           {b2 ? (
                                             <div className="space-y-0.5">
                                               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${toNum(b2.qty) === 0 ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"}`}>
-                                                {toNum(b2.qty)} pcs
+                                                {toNum(b2.qty)} {viewingProduct.unitOfMeasure || 'pcs'}
                                               </span>
                                               <div className={`text-[11px] ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
                                                 Sell: ₱{(b2.price ?? 0).toFixed ? b2.price.toFixed(2) : Number(b2.price || 0).toFixed(2)} · Buy: ₱{(b2.costPrice ?? 0).toFixed ? b2.costPrice.toFixed(2) : Number(b2.costPrice || 0).toFixed(2)}
@@ -401,7 +401,7 @@ const ViewProductModal = ({
                                           variantQty <= (viewingProduct.reorderNumber || 10) ? "bg-yellow-100 text-yellow-700" :
                                             "bg-green-100 text-green-700"
                                           }`}>
-                                          {variantQty} pcs
+                                          {variantQty} {viewingProduct.unitOfMeasure || 'pcs'}
                                         </span>
                                       </td>
                                     )}
@@ -427,7 +427,7 @@ const ViewProductModal = ({
                                         {b1 ? (
                                           <div className="space-y-0.5">
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${toNum(b1.qty) === 0 ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
-                                              {toNum(b1.qty)} pcs
+                                              {toNum(b1.qty)} {viewingProduct.unitOfMeasure || 'pcs'}
                                             </span>
                                             <div className={`text-[11px] ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
                                               Sell: ₱{(b1.price ?? 0).toFixed ? b1.price.toFixed(2) : Number(b1.price || 0).toFixed(2)} · Buy: ₱{(b1.costPrice ?? 0).toFixed ? b1.costPrice.toFixed(2) : Number(b1.costPrice || 0).toFixed(2)}
@@ -441,7 +441,7 @@ const ViewProductModal = ({
                                         {b2 ? (
                                           <div className="space-y-0.5">
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${toNum(b2.qty) === 0 ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"}`}>
-                                              {toNum(b2.qty)} pcs
+                                              {toNum(b2.qty)} {viewingProduct.unitOfMeasure || 'pcs'}
                                             </span>
                                             <div className={`text-[11px] ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
                                               Sell: ₱{(b2.price ?? 0).toFixed ? b2.price.toFixed(2) : Number(b2.price || 0).toFixed(2)} · Buy: ₱{(b2.costPrice ?? 0).toFixed ? b2.costPrice.toFixed(2) : Number(b2.costPrice || 0).toFixed(2)}
@@ -458,7 +458,7 @@ const ViewProductModal = ({
                                         stock <= (viewingProduct.reorderNumber || 10) ? "bg-yellow-100 text-yellow-700" :
                                           "bg-green-100 text-green-700"
                                         }`}>
-                                        {stock} pcs
+                                        {stock} {viewingProduct.unitOfMeasure || 'pcs'}
                                       </span>
                                     </td>
                                   )}
@@ -484,7 +484,7 @@ const ViewProductModal = ({
                       totalStock <= (viewingProduct.reorderNumber || 10) ? "bg-yellow-100 text-yellow-700" :
                         "bg-green-100 text-green-700"
                       }`}>
-                      {totalStock} pcs
+                      {totalStock} {viewingProduct.unitOfMeasure || 'pcs'}
                     </span>
                   </span>
                 }
