@@ -1312,7 +1312,7 @@ const AddProductModal = ({
                               )}
                               {/* Dropdown list */}
                               {showSizeDropdown && (
-                                <div className={`absolute z-50 w-full mt-1 max-h-56 overflow-y-auto border rounded-lg shadow-lg ${theme === "dark" ? "bg-[#2A2724] border-gray-600" : "bg-white border-gray-200"}`}>
+                                <div className={`absolute z-50 w-full mt-1 max-h-40 overflow-y-auto border rounded-lg shadow-lg ${theme === "dark" ? "bg-[#2A2724] border-gray-600" : "bg-white border-gray-200"}`}>
                                   {(() => {
                                     const category = newProduct.category;
                                     const subCategory = newProduct.subCategory || "";
