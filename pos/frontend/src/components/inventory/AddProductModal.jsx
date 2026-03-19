@@ -1329,7 +1329,7 @@ const AddProductModal = ({
                                         default: sizes = ["Small", "Medium", "Large", "Free Size"];
                                       }
                                     } else if (["Tops", "Bottoms", "Dresses", "Outerwear"].includes(subCategory)) {
-                                      sizes = ["S", "M", "L", "Free Size"];
+                                      sizes = ["XS", "S", "M", "L", "XL", "XXL", "Free Size"];
                                     } else if (category === "Shoes") { sizes = ["5", "6", "7", "8", "9", "10", "11", "12"]; }
                                     else if (category === "Accessories" || category === "Makeup") { sizes = ["Free Size"]; }
                                     else { sizes = ["Free Size"]; }
