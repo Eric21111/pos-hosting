@@ -1573,23 +1573,34 @@ const AddProductModal = ({
                       {/* Variant combo list */}
                       {hasAnyCombos && (
                         <div className={`rounded-xl border overflow-hidden ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
-                          {combos.map(({ variant: v, size: s }, idx) => {
-                            const price = v && s ? (variantPrices[s]?.[v] ?? newProduct.itemPrice ?? "") : s ? (newProduct.sizePrices?.[s] ?? newProduct.itemPrice ?? "") : (newProduct.itemPrice ?? "");
-                            const qty = v && s ? (newProduct.variantQuantities?.[s]?.[v] ?? "") : s ? (newProduct.sizeQuantities?.[s] ?? "") : (newProduct.currentStock ?? "");
-                            return (
-                              <div key={idx} className={`flex items-center justify-between px-4 py-2.5 ${idx > 0 ? (theme === "dark" ? "border-t border-gray-700" : "border-t border-gray-100") : ""}`}>
-                                <div className="flex items-center gap-1.5">
-                                  {s && <span className={`inline-block px-2.5 py-0.5 text-[11px] rounded-full font-medium ${theme === "dark" ? "bg-[#09A046]/15 text-[#09A046]" : "bg-[#09A046]/10 text-[#09A046]"}`}>{s}</span>}
-                                  {v && s && <span className={`text-xs ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>×</span>}
-                                  {v && <span className={`inline-block px-2.5 py-0.5 text-[11px] rounded-full font-medium ${theme === "dark" ? "bg-pink-500/15 text-pink-400" : "bg-pink-100 text-pink-700"}`}>{v}</span>}
+                          {/* Header */}
+                          <div className={`grid grid-cols-[1fr_auto_auto_auto] gap-2 px-4 py-2 text-[10px] font-bold uppercase tracking-wider ${theme === "dark" ? "bg-[#2A2724] text-gray-400 border-b border-gray-700" : "bg-gray-100 text-gray-500 border-b border-gray-200"}`}>
+                            <span>Variant Combination</span>
+                            <span className="w-20 text-right">Cost Price</span>
+                            <span className="w-20 text-right">Selling Price</span>
+                            <span className="w-14 text-right">Qty</span>
+                          </div>
+                          {/* Scrollable rows */}
+                          <div className="max-h-52 overflow-y-auto">
+                            {combos.map(({ variant: v, size: s }, idx) => {
+                              const sell = v && s ? (variantPrices[s]?.[v] ?? newProduct.itemPrice ?? "") : s ? (newProduct.sizePrices?.[s] ?? newProduct.itemPrice ?? "") : (newProduct.itemPrice ?? "");
+                              const cost = v && s ? (variantCostPrices[s]?.[v] ?? newProduct.costPrice ?? "") : s ? (newProduct.sizeCostPrices?.[s] ?? newProduct.costPrice ?? "") : (newProduct.costPrice ?? "");
+                              const qty = v && s ? (newProduct.variantQuantities?.[s]?.[v] ?? "") : s ? (newProduct.sizeQuantities?.[s] ?? "") : (newProduct.currentStock ?? "");
+                              const uom = newProduct.unitOfMeasure || "pcs";
+                              return (
+                                <div key={idx} className={`grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center px-4 py-2.5 ${idx > 0 ? (theme === "dark" ? "border-t border-gray-700" : "border-t border-gray-100") : ""}`}>
+                                  <div className="flex items-center gap-1.5">
+                                    {s && <span className={`inline-block px-2.5 py-0.5 text-[11px] rounded-full font-medium ${theme === "dark" ? "bg-[#09A046]/15 text-[#09A046]" : "bg-[#09A046]/10 text-[#09A046]"}`}>{s}</span>}
+                                    {v && s && <span className={`text-xs ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>×</span>}
+                                    {v && <span className={`inline-block px-2.5 py-0.5 text-[11px] rounded-full font-medium ${theme === "dark" ? "bg-pink-500/15 text-pink-400" : "bg-pink-100 text-pink-700"}`}>{v}</span>}
+                                  </div>
+                                  <span className={`w-20 text-right text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>{cost ? `${cost}` : "—"}</span>
+                                  <span className={`w-20 text-right text-sm font-semibold text-[#09A046]`}>{sell ? `${sell}` : "—"}</span>
+                                  <span className={`w-14 text-right text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>{qty ? `${qty} ${uom}` : "—"}</span>
                                 </div>
-                                <div className="flex items-center gap-4 text-sm">
-                                  <span className={`font-semibold ${theme === "dark" ? "text-[#09A046]" : "text-[#09A046]"}`}>{price ? `${price} PHP` : "—"}</span>
-                                  <span className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>{qty ? `${qty} ${newProduct.unitOfMeasure || "pcs"}` : "—"}</span>
-                                </div>
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
+                          </div>
                         </div>
                       )}
                     </div>
