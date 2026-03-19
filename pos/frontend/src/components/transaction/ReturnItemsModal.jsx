@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaTimes, FaExclamationTriangle, FaMinus, FaPlus, FaLock } from 'react-icons/fa';
+import { FaTimes, FaExclamationTriangle, FaMinus, FaPlus, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A';
@@ -29,6 +29,7 @@ const ReturnItemsModal = ({ isOpen, onClose, transaction, onConfirm }) => {
   const [error, setError] = useState('');
   const [showPinModal, setShowPinModal] = useState(false);
   const [pin, setPin] = useState(['', '', '', '', '', '']);
+  const [showPin, setShowPin] = useState(false);
   const [pinError, setPinError] = useState('');
   const [verifyingPin, setVerifyingPin] = useState(false);
   const [approverName, setApproverName] = useState('');
@@ -51,6 +52,7 @@ const ReturnItemsModal = ({ isOpen, onClose, transaction, onConfirm }) => {
       setError('');
       setShowPinModal(false);
       setPin(['', '', '', '', '', '']);
+      setShowPin(false);
       setPinError('');
       setApproverName('');
     }
@@ -458,12 +460,21 @@ const ReturnItemsModal = ({ isOpen, onClose, transaction, onConfirm }) => {
                   <p className="text-sm text-gray-500">Enter Owner/Manager PIN to approve return</p>
                 </div>
               </div>
-              <button
-              onClick={() => setShowPinModal(false)}
-              className="text-gray-400 hover:text-gray-600">
-              
-                <FaTimes className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPin((v) => !v)}
+                  className="text-gray-400 hover:text-gray-600 transition"
+                  aria-label={showPin ? 'Hide PIN' : 'Show PIN'}>
+                  {showPin ? <FaEyeSlash className="w-5 h-5" /> : <FaEye className="w-5 h-5" />}
+                </button>
+                <button
+                onClick={() => setShowPinModal(false)}
+                className="text-gray-400 hover:text-gray-600">
+                
+                  <FaTimes className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <div className="flex justify-center gap-2 mb-6">
@@ -471,7 +482,8 @@ const ReturnItemsModal = ({ isOpen, onClose, transaction, onConfirm }) => {
             <input
               key={index}
               ref={(el) => pinInputRefs.current[index] = el}
-              type="password"
+              type={showPin ? 'text' : 'password'}
+              inputMode="numeric"
               maxLength={1}
               value={digit}
               onChange={(e) => handlePinChange(index, e.target.value)}
