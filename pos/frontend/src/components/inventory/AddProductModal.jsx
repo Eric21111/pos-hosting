@@ -1171,7 +1171,7 @@ const AddProductModal = ({
                           <input type="text" value={optionGroup1Name} onChange={(e) => setOptionGroup1Name(e.target.value)} placeholder="e.g. Color"
                             className={`w-48 px-3 py-2 text-sm border-b-2 border-t-0 border-l-0 border-r-0 bg-transparent focus:outline-none focus:border-[#09A046] mb-3 font-medium ${theme === "dark" ? "border-gray-600 text-white placeholder-gray-500" : "border-gray-300 text-gray-800 placeholder-gray-400"}`} />
 
-                          <div className="relative flex items-start gap-3">
+                          <div className="relative flex items-start gap-3 mb-3">
                             <div className="flex-1 relative">
                               <div onClick={() => setShowVariantDropdown(!showVariantDropdown)}
                                 className={`w-full px-3 py-2.5 text-sm border rounded-lg cursor-pointer flex items-center justify-between ${theme === "dark" ? "bg-[#2A2724] border-gray-600 text-white hover:border-[#AD7F65]" : "bg-white border-gray-300 hover:border-[#AD7F65]"}`}>
@@ -1191,14 +1191,6 @@ const AddProductModal = ({
                                       {selectedVariants.includes(color) && <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
                                     </div>
                                   ))}
-                                  <div className={`px-3 py-2 border-t ${theme === "dark" ? "border-gray-600" : "border-gray-200"}`} onClick={(e) => e.stopPropagation()}>
-                                    <div className="flex gap-2">
-                                      <input type="text" value={customColorInput} onChange={(e) => setCustomColorInput(e.target.value)} onKeyDown={handleCustomColorKeyDown} placeholder={`Add custom ${optionGroup1Name.toLowerCase() || 'option'}...`}
-                                        className={`flex-1 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-gray-50 border-gray-300"}`} />
-                                      <button type="button" onClick={addCustomColor} disabled={!customColorInput.trim()}
-                                        className={`px-3 py-1 text-sm rounded font-medium transition-colors ${customColorInput.trim() ? "bg-[#AD7F65] text-white hover:bg-[#8B6553]" : (theme === "dark" ? "bg-gray-700 text-gray-500 cursor-not-allowed" : "bg-gray-200 text-gray-400 cursor-not-allowed")}`}>Add</button>
-                                    </div>
-                                  </div>
                                 </div>
                               )}
                               {showVariantDropdown && <div className="fixed inset-0 z-40" onClick={() => setShowVariantDropdown(false)} />}
@@ -1212,9 +1204,10 @@ const AddProductModal = ({
                                   <button type="button" onClick={(e) => { e.stopPropagation(); removeVariant(variant); }} className="hover:text-red-500 transition-colors">×</button>
                                 </span>
                               ))}
-                              {selectedVariants.length === 0 && (
-                                <span className={`text-xs italic ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Add +</span>
-                              )}
+                              <input type="text" value={customColorInput} onChange={(e) => setCustomColorInput(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCustomColor(); } }}
+                                placeholder="Add"
+                                className={`w-16 px-2 py-1 text-xs border-2 border-dashed rounded-full focus:outline-none focus:border-[#AD7F65] text-center ${theme === "dark" ? "bg-transparent border-gray-600 text-white placeholder-gray-500" : "bg-transparent border-gray-300 text-gray-700 placeholder-gray-400"}`} />
                             </div>
                           </div>
                         </div>
@@ -1228,7 +1221,7 @@ const AddProductModal = ({
                           <input type="text" value={optionGroup2Name} onChange={(e) => setOptionGroup2Name(e.target.value)} placeholder="e.g. Size"
                             className={`w-48 px-3 py-2 text-sm border-b-2 border-t-0 border-l-0 border-r-0 bg-transparent focus:outline-none focus:border-[#09A046] mb-3 font-medium ${theme === "dark" ? "border-gray-600 text-white placeholder-gray-500" : "border-gray-300 text-gray-800 placeholder-gray-400"}`} />
 
-                          <div className="relative flex items-start gap-3">
+                          <div className="relative flex items-start gap-3 mb-3">
                             <div className="flex-1 relative">
                               <div onClick={() => setShowSizeDropdown(!showSizeDropdown)}
                                 className={`w-full px-3 py-2.5 text-sm border rounded-lg cursor-pointer flex items-center justify-between ${theme === "dark" ? "bg-[#2A2724] border-gray-600 text-white hover:border-[#AD7F65]" : "bg-white border-gray-300 hover:border-[#AD7F65]"}`}>
@@ -1276,24 +1269,12 @@ const AddProductModal = ({
                                       </div>
                                     ));
                                   })()}
-                                  <div className={`px-3 py-2 border-t ${theme === "dark" ? "border-gray-600" : "border-gray-200"}`} onClick={(e) => e.stopPropagation()}>
-                                    <div className="flex gap-2">
-                                      <input type="text" value={customSizeValue} onChange={(e) => setCustomSizeValue(e.target.value)}
-                                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); const trimmed = customSizeValue.trim(); if (trimmed && !customSizes.includes(trimmed)) { setCustomSizes(prev => [...prev, trimmed]); handleSizeToggle(trimmed); setCustomSizeValue(""); } } }}
-                                        placeholder={`Add custom ${optionGroup2Name.toLowerCase() || 'option'}...`}
-                                        className={`flex-1 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-gray-50 border-gray-300"}`} />
-                                      <button type="button"
-                                        onClick={() => { const trimmed = customSizeValue.trim(); if (trimmed && !customSizes.includes(trimmed)) { setCustomSizes(prev => [...prev, trimmed]); handleSizeToggle(trimmed); setCustomSizeValue(""); } }}
-                                        disabled={!customSizeValue.trim()}
-                                        className={`px-3 py-1 text-sm rounded font-medium transition-colors ${customSizeValue.trim() ? "bg-[#AD7F65] text-white hover:bg-[#8B6553]" : (theme === "dark" ? "bg-gray-700 text-gray-500 cursor-not-allowed" : "bg-gray-200 text-gray-400 cursor-not-allowed")}`}>Add</button>
-                                    </div>
-                                  </div>
                                 </div>
                               )}
                               {showSizeDropdown && <div className="fixed inset-0 z-40" onClick={() => setShowSizeDropdown(false)} />}
                             </div>
 
-                            {/* Selected tags inline */}
+                            {/* Selected tags + inline custom input */}
                             <div className="flex flex-wrap gap-1.5 flex-1 min-h-[38px] items-center">
                               {(newProduct.selectedSizes || []).map((size) => (
                                 <span key={size} className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-full ${theme === "dark" ? "bg-[#AD7F65]/20 text-[#AD7F65] border border-[#AD7F65]/30" : "bg-[#AD7F65]/10 text-[#AD7F65] border border-[#AD7F65]/20"}`}>
@@ -1301,9 +1282,10 @@ const AddProductModal = ({
                                   <button type="button" onClick={(e) => { e.stopPropagation(); handleSizeToggle(size); }} className="hover:text-red-500 transition-colors">×</button>
                                 </span>
                               ))}
-                              {(newProduct.selectedSizes?.length || 0) === 0 && (
-                                <span className={`text-xs italic ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Add +</span>
-                              )}
+                              <input type="text" value={customSizeValue} onChange={(e) => setCustomSizeValue(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); const trimmed = customSizeValue.trim(); if (trimmed && !customSizes.includes(trimmed)) { setCustomSizes(prev => [...prev, trimmed]); handleSizeToggle(trimmed); setCustomSizeValue(""); } } }}
+                                placeholder="Add"
+                                className={`w-16 px-2 py-1 text-xs border-2 border-dashed rounded-full focus:outline-none focus:border-[#AD7F65] text-center ${theme === "dark" ? "bg-transparent border-gray-600 text-white placeholder-gray-500" : "bg-transparent border-gray-300 text-gray-700 placeholder-gray-400"}`} />
                             </div>
                           </div>
                         </div>
