@@ -117,6 +117,7 @@ const AddProductModal = ({
   const [fillAllQty, setFillAllQty] = useState("");
 
   const [currentStep, setCurrentStep] = useState(1);
+  const [reviewImgIdx, setReviewImgIdx] = useState(0);
   const STEPS = [
     { id: 1, label: "Basic Info" },
     { id: 2, label: "Variants" },
@@ -1448,7 +1449,7 @@ const AddProductModal = ({
 
                 {/* ── Step 4: Batch ── */}
                 {currentStep === 4 && (
-                  <div className="space-y-5 pt-4">
+                  <div className="space-y-5 pt-10">
                     {/* Reorder Level */}
                     <div className="flex items-start justify-between gap-6">
                       <div className="flex-1">
@@ -1492,84 +1493,108 @@ const AddProductModal = ({
                 )}
 
                 {/* ── Step 5: Review ── */}
-                {currentStep === 5 && (
-                  <div className="space-y-4">
-                    <h3 className={`text-base font-semibold mb-3 ${theme === "dark" ? "text-white" : "text-gray-800"}`}>Review Product</h3>
-                    <div className={`rounded-xl border p-5 space-y-4 ${theme === "dark" ? "bg-[#1E1B18] border-gray-700" : "bg-gray-50 border-gray-200"}`}>
-                      <div className="grid grid-cols-2 gap-6">
-                        <div className="space-y-3">
-                          <div>
-                            <p className={`text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Product Name</p>
-                            <p className={`text-sm font-semibold mt-0.5 ${theme === "dark" ? "text-white" : "text-gray-800"}`}>{newProduct.itemName || "—"}</p>
-                          </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <p className={`text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Category</p>
-                              <p className={`text-sm mt-0.5 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>{newProduct.category || "—"}</p>
-                            </div>
-                            <div>
-                              <p className={`text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Brand</p>
-                              <p className={`text-sm mt-0.5 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>{newProduct.brandName || "Default"}</p>
-                            </div>
-                            <div>
-                              <p className={`text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Unit of Measure</p>
-                              <p className={`text-sm mt-0.5 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>{newProduct.unitOfMeasure || "pcs"}</p>
-                            </div>
-                          </div>
-                          {selectedVariants.length > 0 && (
-                            <div>
-                              <p className={`text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Variants</p>
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {selectedVariants.map((v) => (
-                                  <span key={v} className="inline-block px-2 py-0.5 text-xs rounded-full bg-[#AD7F65]/10 text-[#AD7F65] border border-[#AD7F65]/20">{v}</span>
+                {currentStep === 5 && (() => {
+                  const combos = [];
+                  const rvariants = selectedVariants.length > 0 ? selectedVariants : [null];
+                  const rsizes = (newProduct.selectedSizes?.length > 0) ? newProduct.selectedSizes : [null];
+                  rvariants.forEach(v => { rsizes.forEach(s => { combos.push({ variant: v, size: s }); }); });
+                  const hasAnyCombos = hasVariants && combos.length > 0 && (combos[0].variant || combos[0].size);
+                  const totalSkus = hasAnyCombos ? combos.length : 1;
+                  const variantType = hasVariants ? `${optionGroup1Name || "Color"}${newProduct.selectedSizes?.length > 0 ? ` x ${optionGroup2Name || "Size"}` : ""}` : "None";
+                  let totalStock = 0;
+                  if (hasAnyCombos) {
+                    combos.forEach(({ variant: v, size: s }) => {
+                      if (v && s) totalStock += parseInt(newProduct.variantQuantities?.[s]?.[v]) || 0;
+                      else if (s) totalStock += parseInt(newProduct.sizeQuantities?.[s]) || 0;
+                      else totalStock += parseInt(newProduct.currentStock) || 0;
+                    });
+                  } else { totalStock = parseInt(newProduct.currentStock) || 0; }
+
+                  return (
+                    <div className="space-y-4 pt-2">
+                      {/* Top card: image + info grid */}
+                      <div className={`flex gap-4 rounded-xl border p-4 ${theme === "dark" ? "bg-[#1E1B18] border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+                        {/* Product image slideshow */}
+                        <div className="w-32 h-32 rounded-xl overflow-hidden flex-shrink-0 relative group">
+                          {productImages.length > 0 ? (<>
+                            <img src={productImages[reviewImgIdx] || productImages[0]} alt="Product" className="w-full h-full object-cover" />
+                            {productImages.length > 1 && (<>
+                              <button type="button" onClick={() => setReviewImgIdx(i => (i - 1 + productImages.length) % productImages.length)}
+                                className="absolute left-0.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/40 text-white flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity">‹</button>
+                              <button type="button" onClick={() => setReviewImgIdx(i => (i + 1) % productImages.length)}
+                                className="absolute right-0.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/40 text-white flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity">›</button>
+                              <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
+                                {productImages.map((_, i) => (
+                                  <span key={i} className={`w-1.5 h-1.5 rounded-full transition-colors ${i === reviewImgIdx ? "bg-white" : "bg-white/40"}`} />
                                 ))}
                               </div>
-                            </div>
-                          )}
-                          {newProduct.selectedSizes?.length > 0 && (
-                            <div>
-                              <p className={`text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Sizes</p>
-                              <p className={`text-sm mt-0.5 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>{newProduct.selectedSizes.join(", ")}</p>
-                            </div>
-                          )}
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <p className={`text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Cost Price</p>
-                              <p className={`text-sm mt-0.5 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>{newProduct.costPrice ? `₱${newProduct.costPrice}` : "—"}</p>
-                            </div>
-                            <div>
-                              <p className={`text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Selling Price</p>
-                              <p className={`text-sm mt-0.5 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>{newProduct.itemPrice ? `₱${newProduct.itemPrice}` : "—"}</p>
-                            </div>
-                          </div>
-                          <div>
-                            <p className={`text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Display in Terminal</p>
-                            <p className={`text-sm mt-0.5 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>{newProduct.displayInTerminal !== false ? "Yes" : "No"}</p>
-                          </div>
-                        </div>
-                        {/* Image preview */}
-                        <div className="flex flex-col items-center justify-start gap-2">
-                          {productImages.length > 0 ? (
-                            <div className="grid grid-cols-3 gap-2 w-full">
-                              {productImages.map((img, idx) => (
-                                <div key={idx} className={`relative rounded-lg overflow-hidden border ${idx === 0 ? 'ring-2 ring-[#AD7F65]' : ''} ${theme === 'dark' ? 'border-gray-600' : 'border-gray-200'}`} style={{ aspectRatio: '1' }}>
-                                  <img src={img} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
-                                  {idx === 0 && <span className="absolute top-1 left-1 bg-[#AD7F65] text-white text-[10px] px-1.5 py-0.5 rounded-full font-medium">Main</span>}
-                                </div>
-                              ))}
-                            </div>
-                          ) : newProduct.itemImage && newProduct.itemImage.trim() !== "" ? (
-                            <img src={newProduct.itemImage} alt="Preview" className="max-h-48 object-contain rounded-lg border border-gray-200" />
+                            </>)}
+                          </>) : newProduct.itemImage && newProduct.itemImage.trim() !== "" ? (
+                            <img src={newProduct.itemImage} alt="Product" className="w-full h-full object-cover" />
                           ) : (
-                            <div className={`w-full h-40 rounded-lg flex items-center justify-center ${theme === "dark" ? "bg-[#2A2724]" : "bg-gray-200"}`}>
-                              <span className="text-gray-400 text-sm">No image</span>
+                            <div className={`w-full h-full flex items-center justify-center ${theme === "dark" ? "bg-[#2A2724]" : "bg-gray-200"}`}>
+                              <span className="text-gray-400 text-xs">No image</span>
                             </div>
                           )}
+                        </div>
+                        {/* Info grid */}
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-lg font-bold leading-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>{newProduct.itemName || "—"}</p>
+                          <p className={`text-[10px] uppercase tracking-wider mb-3 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Product Name</p>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                            <div>
+                              <p className={`text-sm font-semibold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>{newProduct.category || "—"}</p>
+                              <p className={`text-[10px] uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Category</p>
+                            </div>
+                            <div>
+                              <p className={`text-sm font-semibold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>{newProduct.subCategory || "—"}</p>
+                              <p className={`text-[10px] uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Subcategory</p>
+                            </div>
+                            <div>
+                              <p className={`text-sm font-semibold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>{variantType}</p>
+                              <p className={`text-[10px] uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Variant Type</p>
+                            </div>
+                            <div>
+                              <p className={`text-sm font-semibold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>{totalSkus}</p>
+                              <p className={`text-[10px] uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Total SKUs</p>
+                            </div>
+                            <div>
+                              <p className={`text-sm font-semibold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>{newProduct.batchNumber || "—"}</p>
+                              <p className={`text-[10px] uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Batch Number</p>
+                            </div>
+                            <div>
+                              <p className={`text-sm font-semibold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>{totalStock}</p>
+                              <p className={`text-[10px] uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Total Stock</p>
+                            </div>
+                          </div>
                         </div>
                       </div>
+
+                      {/* Variant combo list */}
+                      {hasAnyCombos && (
+                        <div className={`rounded-xl border overflow-hidden ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
+                          {combos.map(({ variant: v, size: s }, idx) => {
+                            const price = v && s ? (variantPrices[s]?.[v] ?? newProduct.itemPrice ?? "") : s ? (newProduct.sizePrices?.[s] ?? newProduct.itemPrice ?? "") : (newProduct.itemPrice ?? "");
+                            const qty = v && s ? (newProduct.variantQuantities?.[s]?.[v] ?? "") : s ? (newProduct.sizeQuantities?.[s] ?? "") : (newProduct.currentStock ?? "");
+                            return (
+                              <div key={idx} className={`flex items-center justify-between px-4 py-2.5 ${idx > 0 ? (theme === "dark" ? "border-t border-gray-700" : "border-t border-gray-100") : ""}`}>
+                                <div className="flex items-center gap-1.5">
+                                  {s && <span className={`inline-block px-2.5 py-0.5 text-[11px] rounded-full font-medium ${theme === "dark" ? "bg-[#09A046]/15 text-[#09A046]" : "bg-[#09A046]/10 text-[#09A046]"}`}>{s}</span>}
+                                  {v && s && <span className={`text-xs ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>×</span>}
+                                  {v && <span className={`inline-block px-2.5 py-0.5 text-[11px] rounded-full font-medium ${theme === "dark" ? "bg-pink-500/15 text-pink-400" : "bg-pink-100 text-pink-700"}`}>{v}</span>}
+                                </div>
+                                <div className="flex items-center gap-4 text-sm">
+                                  <span className={`font-semibold ${theme === "dark" ? "text-[#09A046]" : "text-[#09A046]"}`}>{price ? `${price} PHP` : "—"}</span>
+                                  <span className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>{qty ? `${qty} ${newProduct.unitOfMeasure || "pcs"}` : "—"}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
               </>
             )}
 
@@ -1595,7 +1620,7 @@ const AddProductModal = ({
                 <button key="btn-submit" type="submit" disabled={loading}
                   className="px-10 py-2.5 text-sm font-semibold rounded-xl text-white transition-all shadow-md hover:opacity-90 disabled:opacity-50"
                   style={{ background: "linear-gradient(135deg, #10B981 0%, #059669 100%)" }}>
-                  {loading ? "Adding..." : "Save Product"}
+                  {loading ? "Adding..." : "Add Product"}
                 </button>
               )}
             </div>
