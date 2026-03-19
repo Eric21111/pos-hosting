@@ -112,6 +112,9 @@ const AddProductModal = ({
   const [differentPricesPerVariant, setDifferentPricesPerVariant] = useState({});
   const [variantPrices, setVariantPrices] = useState({});
   const [variantCostPrices, setVariantCostPrices] = useState({});
+  const [fillAllCost, setFillAllCost] = useState("");
+  const [fillAllPrice, setFillAllPrice] = useState("");
+  const [fillAllQty, setFillAllQty] = useState("");
 
   const [currentStep, setCurrentStep] = useState(1);
   const STEPS = [
@@ -168,24 +171,12 @@ const AddProductModal = ({
         if (hasVariants && selectedVariants.length === 0) return false;
         return true;
       case 3:
-        if (hasVariants && newProduct.selectedSizes?.length > 0) {
-          const totalStock = getTotalStockFromInputs();
-          if (totalStock <= 0) return false;
-        } else {
-          if (!newProduct.currentStock || parseInt(newProduct.currentStock) <= 0) return false;
+        if (hasVariants && (selectedVariants.length > 0 || newProduct.selectedSizes?.length > 0)) {
+          return true;
         }
-
-        if (!newProduct.differentPricesPerSize && !Object.values(differentPricesPerVariant).some(v => v)) {
-
-          if (!newProduct.itemPrice || parseFloat(newProduct.itemPrice) <= 0) return false;
-          if (!newProduct.costPrice || parseFloat(newProduct.costPrice) <= 0) return false;
-        } else if (newProduct.differentPricesPerSize && selectedVariants.length === 0) {
-
-          for (const size of newProduct.selectedSizes || []) {
-            if (!newProduct.sizePrices?.[size] || parseFloat(newProduct.sizePrices[size]) <= 0) return false;
-            if (!newProduct.sizeCostPrices?.[size] || parseFloat(newProduct.sizeCostPrices[size]) <= 0) return false;
-          }
-        }
+        if (!newProduct.itemPrice || parseFloat(newProduct.itemPrice) <= 0) return false;
+        if (!newProduct.costPrice || parseFloat(newProduct.costPrice) <= 0) return false;
+        if (!newProduct.currentStock || parseInt(newProduct.currentStock) <= 0) return false;
         return true;
       case 4:
         return true;
@@ -1294,345 +1285,154 @@ const AddProductModal = ({
                   </div>
                 )}
 
-                {/* ── Step 3: Batch & Stock ── */}
+                {/* ── Step 3: Stock and Price ── */}
                 {currentStep === 3 && (
                   <div className="space-y-5">
-                    <h3 className={`text-base font-semibold mb-3 ${theme === "dark" ? "text-white" : "text-gray-800"}`}>Pricing & Stock</h3>
+                    {(() => {
+                      const combos = [];
+                      const variants = selectedVariants.length > 0 ? selectedVariants : [null];
+                      const sizes = (newProduct.selectedSizes?.length > 0) ? newProduct.selectedSizes : [null];
+                      variants.forEach(v => { sizes.forEach(s => { combos.push({ variant: v, size: s, key: `${v || ''}-${s || ''}` }); }); });
+                      const hasAnyCombos = hasVariants && combos.length > 0 && (combos[0].variant || combos[0].size);
 
-                    {/* Stock quantities */}
-                    {hasVariants && newProduct.selectedSizes?.length > 0 ? (
-                      <div className={`p-3 rounded-lg border ${theme === "dark" ? "bg-[#1E1B18] border-gray-700" : "bg-gray-50 border-gray-200"}`}>
-                        <label className={`block text-xs font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
-                          {newProduct.differentVariantsPerSize || selectedVariants.length > 0 ? "Quantity per Variant per Size:" : "Quantity per Size:"}
-                        </label>
+                      const handleFillAll = () => {
+                        if (!hasAnyCombos) return;
+                        const cost = fillAllCost; const price = fillAllPrice; const qty = fillAllQty;
+                        combos.forEach(({ variant: v, size: s }) => {
+                          if (v && s) {
+                            if (cost) handleVariantCostPriceChange(s, v, cost);
+                            if (price) handleVariantPriceChange(s, v, price);
+                            if (qty) {
+                              setVariantQuantities(prev => {
+                                const updated = { ...prev, [s]: { ...(prev[s] || {}), [v]: parseInt(qty) || 0 } };
+                                setNewProduct(p => ({ ...p, variantQuantities: updated }));
+                                return updated;
+                              });
+                            }
+                          } else if (s && !v) {
+                            if (cost) setNewProduct(p => ({ ...p, sizeCostPrices: { ...(p.sizeCostPrices || {}), [s]: cost } }));
+                            if (price) handleSizePriceChange(s, price);
+                            if (qty) handleSizeQuantityChange(s, qty);
+                          } else if (v && !s) {
+                            if (cost) setNewProduct(p => ({ ...p, costPrice: cost }));
+                            if (price) setNewProduct(p => ({ ...p, itemPrice: price }));
+                            if (qty) setNewProduct(p => ({ ...p, currentStock: qty }));
+                          }
+                        });
+                      };
 
-                        {/* If there are variants (global or per-size), capture per-variant quantities */}
-                        {(newProduct.differentVariantsPerSize || selectedVariants.length > 0) ? (
-                          <div className="space-y-4">
-                            {newProduct.selectedSizes.map((size) => {
-                              const variants = getVariantsForSize(size);
-                              return (
-                                <div key={size} className={`p-3 rounded-lg ${theme === "dark" ? "bg-[#2A2724]" : "bg-white"}`}>
-                                  <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-200" : "text-gray-800"}`}>
-                                    {size}
-                                  </label>
-
-                                  {variants.length === 0 ? (
-                                    <p className={`text-xs ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
-                                      No variants selected for this size. Go back to Step 2 and add/select variants, or turn off per-size variants.
-                                    </p>
-                                  ) : (
-                                    <div className="grid grid-cols-2 gap-2">
-                                      {variants.map((variant) => (
-                                        <div key={`${size}-${variant}`}>
-                                          <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                                            {variant}
-                                          </label>
-                                          <input
-                                            type="number"
-                                            min="0"
-                                            value={newProduct.variantQuantities?.[size]?.[variant] ?? ""}
-                                            onChange={(e) => {
-                                              const value = e.target.value;
-                                              setVariantQuantities((prev) => {
-                                                const updated = {
-                                                  ...prev,
-                                                  [size]: {
-                                                    ...(prev[size] || {}),
-                                                    [variant]: parseInt(value) || 0
-                                                  }
-                                                };
-                                                setNewProduct((p) => ({ ...p, variantQuantities: updated }));
-                                                return updated;
-                                              });
-                                            }}
-                                            placeholder="Qty"
-                                            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500" : "bg-white border-gray-300 text-gray-900"}`}
-                                          />
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
+                      return hasAnyCombos ? (
+                        <>
+                          {/* Fill All row */}
+                          <div className={`flex items-end gap-2 p-3 rounded-xl border ${theme === "dark" ? "bg-[#1E1B18] border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+                            <div className="flex-1">
+                              <label className={`block text-[10px] font-bold uppercase tracking-wide mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>Cost Price ₱</label>
+                              <input type="number" step="0.01" min="0" value={fillAllCost} onChange={(e) => setFillAllCost(e.target.value)} placeholder="₱"
+                                className={`w-full px-2 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#09A046] ${theme === "dark" ? "bg-[#2A2724] border-gray-600 text-white" : "bg-white border-gray-300"}`} />
+                            </div>
+                            <div className="flex-1">
+                              <label className={`block text-[10px] font-bold uppercase tracking-wide mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>Selling Price ₱</label>
+                              <input type="number" step="0.01" min="0" value={fillAllPrice} onChange={(e) => setFillAllPrice(e.target.value)} placeholder="₱"
+                                className={`w-full px-2 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#09A046] ${theme === "dark" ? "bg-[#2A2724] border-gray-600 text-white" : "bg-white border-gray-300"}`} />
+                            </div>
+                            <div className="flex-1">
+                              <label className={`block text-[10px] font-bold uppercase tracking-wide mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>Qty</label>
+                              <input type="number" min="0" value={fillAllQty} onChange={(e) => setFillAllQty(e.target.value)} placeholder="0"
+                                className={`w-full px-2 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#09A046] ${theme === "dark" ? "bg-[#2A2724] border-gray-600 text-white" : "bg-white border-gray-300"}`} />
+                            </div>
+                            <button type="button" onClick={handleFillAll} disabled={!fillAllCost && !fillAllPrice && !fillAllQty}
+                              className={`px-4 py-2 text-xs font-semibold rounded-lg whitespace-nowrap transition-colors ${(fillAllCost || fillAllPrice || fillAllQty) ? "bg-[#09A046] text-white hover:bg-[#078a3b]" : (theme === "dark" ? "bg-gray-700 text-gray-500 cursor-not-allowed" : "bg-gray-200 text-gray-400 cursor-not-allowed")}`}>Fill all Prices</button>
                           </div>
-                        ) : (
-                          <div className="grid grid-cols-2 gap-3">
-                            {newProduct.selectedSizes.map((size) => (
-                              <div key={size}>
-                                <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                                  {size}
-                                </label>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={newProduct.sizeQuantities?.[size] ?? ""}
-                                  onChange={(e) => handleSizeQuantityChange(size, e.target.value)}
-                                  placeholder="Qty"
-                                  className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500" : "bg-white border-gray-300 text-gray-900"}`}
-                                />
+
+                          {/* Combo table */}
+                          <div className={`rounded-xl border overflow-hidden ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
+                            {/* Header */}
+                            <div className={`grid grid-cols-[1.5fr_1fr_1fr_0.8fr] gap-0 text-[10px] font-bold uppercase tracking-wider ${theme === "dark" ? "bg-[#2A2724] text-gray-400" : "bg-gray-100 text-gray-500"}`}>
+                              <div className="px-3 py-2.5">Variant Combo</div>
+                              <div className="px-3 py-2.5">Cost Price ₱</div>
+                              <div className="px-3 py-2.5">Selling Price ₱</div>
+                              <div className="px-3 py-2.5">Qty</div>
+                            </div>
+                            {/* Rows */}
+                            {combos.map(({ variant: v, size: s, key }) => (
+                              <div key={key} className={`grid grid-cols-[1.5fr_1fr_1fr_0.8fr] gap-0 items-center border-t ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
+                                <div className="px-3 py-2 flex flex-wrap gap-1">
+                                  {s && <span className={`inline-block px-2 py-0.5 text-[11px] rounded-full font-medium ${theme === "dark" ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-700"}`}>{s}</span>}
+                                  {v && <span className={`inline-block px-2 py-0.5 text-[11px] rounded-full font-medium ${theme === "dark" ? "bg-pink-500/20 text-pink-400" : "bg-pink-100 text-pink-700"}`}>{v}</span>}
+                                </div>
+                                <div className="px-2 py-1.5">
+                                  <input type="number" step="0.01" min="0"
+                                    value={v && s ? (variantCostPrices[s]?.[v] ?? "") : s ? (newProduct.sizeCostPrices?.[s] ?? "") : (newProduct.costPrice ?? "")}
+                                    onChange={(e) => {
+                                      if (v && s) handleVariantCostPriceChange(s, v, e.target.value);
+                                      else if (s) setNewProduct(p => ({ ...p, sizeCostPrices: { ...(p.sizeCostPrices || {}), [s]: e.target.value } }));
+                                      else setNewProduct(p => ({ ...p, costPrice: e.target.value }));
+                                    }}
+                                    placeholder="₱"
+                                    className={`w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#09A046] ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-white border-gray-300"}`} />
+                                </div>
+                                <div className="px-2 py-1.5">
+                                  <input type="number" step="0.01" min="0"
+                                    value={v && s ? (variantPrices[s]?.[v] ?? "") : s ? (newProduct.sizePrices?.[s] ?? "") : (newProduct.itemPrice ?? "")}
+                                    onChange={(e) => {
+                                      if (v && s) handleVariantPriceChange(s, v, e.target.value);
+                                      else if (s) handleSizePriceChange(s, e.target.value);
+                                      else setNewProduct(p => ({ ...p, itemPrice: e.target.value }));
+                                    }}
+                                    placeholder="₱"
+                                    className={`w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#09A046] ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-white border-gray-300"}`} />
+                                </div>
+                                <div className="px-2 py-1.5">
+                                  <input type="number" min="0"
+                                    value={v && s ? (newProduct.variantQuantities?.[s]?.[v] ?? "") : s ? (newProduct.sizeQuantities?.[s] ?? "") : (newProduct.currentStock ?? "")}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      if (v && s) {
+                                        setVariantQuantities(prev => {
+                                          const updated = { ...prev, [s]: { ...(prev[s] || {}), [v]: parseInt(val) || 0 } };
+                                          setNewProduct(p => ({ ...p, variantQuantities: updated }));
+                                          return updated;
+                                        });
+                                      } else if (s) { handleSizeQuantityChange(s, val); }
+                                      else { setNewProduct(p => ({ ...p, currentStock: val })); }
+                                    }}
+                                    placeholder="0"
+                                    className={`w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#09A046] ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-white border-gray-300"}`} />
+                                </div>
                               </div>
                             ))}
                           </div>
-                        )}
-
-                        <p className={`text-xs mt-2 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
-                          Total stock to add: {getTotalStockFromInputs()}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className={`p-3 rounded-lg border ${theme === "dark" ? "bg-[#1E1B18] border-gray-700" : "bg-gray-50 border-gray-200"}`}>
-                        <label className={`block text-xs font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
-                          Total Quantity:
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={newProduct.currentStock || ""}
-                          onChange={handleInputChange}
-                          name="currentStock"
-                          placeholder="Qty"
-                          className={`w-full max-w-xs px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500" : "bg-white border-gray-300 text-gray-900"}`}
-                        />
-                      </div>
-                    )}
-
-                    {/* Reorder Level */}
-                    <div>
-                      <label className={`block text-xs font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
-                        Low Stock Alert (Reorder Level)
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        name="reorderNumber"
-                        value={newProduct.reorderNumber || ""}
-                        onChange={handleInputChange}
-                        placeholder="e.g., 10"
-                        className={`w-full max-w-xs px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500" : "bg-white border-gray-300 text-gray-900"}`}
-                      />
-                      <p className={`text-[10px] mt-1 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
-                        Get notified when stock size or variant falls below this number (Optional).
-                      </p>
-                    </div>
-
-                    {/* Per-size pricing options */}
-                    {hasVariants && newProduct.selectedSizes?.length > 0 && (
-                      <>
-                        <div className="mt-3 mb-3">
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" checked={newProduct.differentPricesPerSize || false}
-                              onChange={(e) => {
-                                setNewProduct((prev) => {
-                                  const newSizePrices = {}; const newSizeCostPrices = {};
-                                  if (e.target.checked) { prev.selectedSizes.forEach((size) => { newSizePrices[size] = prev.itemPrice || ""; newSizeCostPrices[size] = prev.costPrice || ""; }); }
-                                  return { ...prev, differentPricesPerSize: e.target.checked, sizePrices: e.target.checked ? newSizePrices : {}, sizeCostPrices: e.target.checked ? newSizeCostPrices : {} };
-                                });
-                              }} className="w-4 h-4 text-[#AD7F65] border-gray-300 rounded focus:ring-[#AD7F65]" />
-                            <span className="text-sm text-gray-700">Different prices each size?</span>
-                          </label>
-                        </div>
-
-                        {/* Variant pricing per size */}
-                        {selectedVariants.length > 0 && (
-                          <div className={`space-y-2 mt-3 p-3 rounded-lg ${theme === "dark" ? "bg-[#1E1B18]" : "bg-gray-50"}`}>
-                            <label className={`block text-xs font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Pricing per Variant per Size:</label>
-                            <div className="space-y-4">
-                              {newProduct.selectedSizes.map((size) => (
-                                <div key={size} className={`p-3 rounded-lg border ${theme === "dark" ? "bg-[#2A2724] border-gray-600" : "bg-white border-gray-200"}`}>
-                                  <div className="flex items-center justify-between mb-2">
-                                    <label className="block text-sm font-medium text-gray-700">{size}</label>
-                                  </div>
-                                  {!differentPricesPerVariant[size] && (newProduct.differentPricesPerSize || Object.values(differentPricesPerVariant).some((v) => v)) && (
-                                    <div className="grid grid-cols-2 gap-2 mb-3">
-                                      <div>
-                                        <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Purchase Price</label>
-                                        <div className="flex items-center gap-1">
-                                          <span className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>₱</span>
-                                          <input type="number" min="0" step="0.01" value={newProduct.sizeCostPrices?.[size] || ""}
-                                            onChange={(e) => { setNewProduct((prev) => ({ ...prev, sizeCostPrices: { ...(prev.sizeCostPrices || {}), [size]: e.target.value } })); }}
-                                            placeholder="Cost" className={`flex-1 px-2 py-1.5 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-gray-50 border-gray-300"}`} />
-                                        </div>
-                                      </div>
-                                      <div>
-                                        <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Selling Price</label>
-                                        <div className="flex items-center gap-1">
-                                          <span className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>₱</span>
-                                          <input type="number" min="0" step="0.01" value={newProduct.sizePrices?.[size] || ""} onChange={(e) => handleSizePriceChange(size, e.target.value)}
-                                            placeholder="Price" className={`flex-1 px-2 py-1.5 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-gray-50 border-gray-300"}`} />
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-                                  <label className="flex items-center gap-2 cursor-pointer mb-3">
-                                    <input type="checkbox" checked={differentPricesPerVariant[size] || false}
-                                      onChange={(e) => {
-                                        setDifferentPricesPerVariant((prev) => ({ ...prev, [size]: e.target.checked }));
-                                        if (e.target.checked) {
-                                          const defaultPrice = parseFloat(newProduct.sizePrices?.[size]) || parseFloat(newProduct.itemPrice) || 0;
-                                          const defaultCostPrice = parseFloat(newProduct.sizeCostPrices?.[size]) || parseFloat(newProduct.costPrice) || 0;
-                                          const initialPrices = {}; const initialCostPrices = {};
-                                          selectedVariants.forEach((v) => { initialPrices[v] = defaultPrice; initialCostPrices[v] = defaultCostPrice; });
-                                          setVariantPrices((prev) => ({ ...prev, [size]: initialPrices }));
-                                          setVariantCostPrices((prev) => ({ ...prev, [size]: initialCostPrices }));
-                                        }
-                                      }} className="w-4 h-4 text-[#AD7F65] border-gray-300 rounded focus:ring-[#AD7F65]" />
-                                    <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Different prices each variant?</span>
-                                  </label>
-                                  <div className={differentPricesPerVariant[size] ? "space-y-2" : "grid grid-cols-3 gap-2"}>
-                                    {selectedVariants.map((variant) => (
-                                      <div key={variant} className={differentPricesPerVariant[size] ? "flex items-center gap-2 flex-wrap" : "flex items-center gap-1"}>
-                                        <span className={`text-xs px-2 py-1 rounded-full shrink-0 ${theme === "dark" ? "bg-[#AD7F65]/20 text-[#AD7F65]" : "bg-[#AD7F65]/10 text-[#AD7F65]"}`} style={{ minWidth: '50px', textAlign: 'center' }}>{variant}</span>
-                                        {differentPricesPerVariant[size] && (
-                                          <>
-                                            <div className="flex items-center gap-1">
-                                              <span className={`text-[10px] ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Purchase:</span>
-                                              <input type="number" min="0" step="0.01" value={variantCostPrices[size]?.[variant] || ""} onChange={(e) => handleVariantCostPriceChange(size, variant, e.target.value)}
-                                                placeholder="₱" className={`w-20 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-gray-50 border-gray-300"}`} />
-                                            </div>
-                                            <div className="flex items-center gap-1">
-                                              <span className={`text-[10px] ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Selling:</span>
-                                              <input type="number" min="0" step="0.01" value={variantPrices[size]?.[variant] || ""} onChange={(e) => handleVariantPriceChange(size, variant, e.target.value)}
-                                                placeholder="₱" className={`w-20 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#AD7F65] ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-gray-50 border-gray-300"}`} />
-                                            </div>
-                                          </>
-                                        )}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              ))}
+                        </>
+                      ) : (
+                        /* No variants — simple pricing + qty */
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className={`block text-xs font-bold uppercase tracking-wide mb-1.5 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Cost Price ₱</label>
+                              <input type="number" step="0.01" name="costPrice" value={newProduct.costPrice} onChange={handleInputChange} placeholder="Enter cost price"
+                                className={`w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#09A046] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-white border-gray-300"}`} />
                             </div>
-                          </div>
-                        )}
-
-                        {/* Different variants per size */}
-                        {newProduct.differentVariantsPerSize && (
-                          <div className={`space-y-2 mt-3 p-3 rounded-lg ${theme === "dark" ? "bg-[#1E1B18]" : "bg-gray-50"}`}>
-                            <label className={`block text-xs font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Variant per Size:</label>
-                            <div className="space-y-4">
-                              {newProduct.selectedSizes.map((size) => {
-                                const hasMultipleVariants = multipleVariantsPerSize[size] || false;
-                                const variants = sizeMultiVariants[size] || [];
-                                const singleVariant = newProduct.sizeVariants?.[size] || "";
-                                return (
-                                  <div key={size} className={`p-3 rounded-lg border ${theme === "dark" ? "bg-[#2A2724] border-gray-600" : "bg-white border-gray-200"}`}>
-                                    <label className={`block text-xs font-medium mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>{size}</label>
-                                    <label className="flex items-center gap-2 cursor-pointer mb-2">
-                                      <input type="checkbox" checked={hasMultipleVariants}
-                                        onChange={(e) => {
-                                          setMultipleVariantsPerSize((prev) => ({ ...prev, [size]: e.target.checked }));
-                                          if (e.target.checked) { setSizeMultiVariants((prev) => ({ ...prev, [size]: singleVariant ? [singleVariant] : [] })); }
-                                          else { setSizeMultiVariants((prev) => { const newState = { ...prev }; delete newState[size]; return newState; }); }
-                                        }} className="w-4 h-4 text-[#AD7F65] border-gray-300 rounded focus:ring-[#AD7F65]" />
-                                      <span className="text-xs text-gray-600">Different variant in this size?</span>
-                                    </label>
-                                    {!hasMultipleVariants ? (
-                                      <select value={singleVariant} onChange={(e) => { setNewProduct((prev) => ({ ...prev, sizeVariants: { ...prev.sizeVariants, [size]: e.target.value } })); }}
-                                        className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-gray-50 border-gray-300"}`}>
-                                        <option value="" className={theme === "dark" ? "bg-[#2A2724]" : ""}>Select a color</option>
-                                        {COMMON_COLORS.filter((c) => c !== "Custom").map((color) => (<option key={color} value={color} className={theme === "dark" ? "bg-[#2A2724]" : ""}>{color}</option>))}
-                                      </select>
-                                    ) : (
-                                      <div className="space-y-2">
-                                        <div className="flex flex-wrap gap-2 min-h-[30px]">
-                                          {variants.map((v, index) => (
-                                            <span key={index} className="inline-flex items-center gap-1 bg-[#AD7F65] text-white text-xs px-3 py-1 rounded-full">
-                                              {v}
-                                              <button type="button" onClick={() => { setSizeMultiVariants((prev) => ({ ...prev, [size]: variants.filter((_, i) => i !== index) })); }} className="hover:opacity-80">
-                                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
-                                              </button>
-                                            </span>
-                                          ))}
-                                        </div>
-                                        <select value="" onChange={(e) => { if (e.target.value && !variants.includes(e.target.value)) { setSizeMultiVariants((prev) => ({ ...prev, [size]: [...(prev[size] || []), e.target.value] })); } }}
-                                          className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-gray-50 border-gray-300"}`}>
-                                          <option value="" className={theme === "dark" ? "bg-[#2A2724]" : ""}>+ Add variant</option>
-                                          {COMMON_COLORS.filter((c) => c !== "Custom" && !variants.includes(c)).map((color) => (<option key={color} value={color} className={theme === "dark" ? "bg-[#2A2724]" : ""}>{color}</option>))}
-                                        </select>
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
+                            <div>
+                              <label className={`block text-xs font-bold uppercase tracking-wide mb-1.5 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Selling Price ₱</label>
+                              <input type="number" step="0.01" name="itemPrice" value={newProduct.itemPrice} onChange={handleInputChange} required placeholder="Enter selling price"
+                                className={`w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#09A046] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-white border-gray-300"}`} />
                             </div>
-                          </div>
-                        )}
-
-                        {/* Per-size pricing (no variants) */}
-                        {newProduct.differentPricesPerSize && selectedVariants.length === 0 && (
-                          <div className={`space-y-2 mt-3 p-3 rounded-lg ${theme === "dark" ? "bg-[#1E1B18]" : "bg-gray-50"}`}>
-                            <label className={`block text-xs font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Pricing per Size:</label>
-                            <div className="space-y-3">
-                              {newProduct.selectedSizes.map((size) => (
-                                <div key={size} className="grid grid-cols-2 gap-3">
-                                  <div>
-                                    <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>{size} Purchase Price</label>
-                                    <input type="number" step="0.01" min="0" value={newProduct.sizeCostPrices?.[size] || ""}
-                                      onChange={(e) => { setNewProduct((prev) => ({ ...prev, sizeCostPrices: { ...prev.sizeCostPrices, [size]: e.target.value } })); }}
-                                      placeholder="Enter cost price" className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#2A2724] border-gray-600 text-white" : "bg-white border-gray-300"}`} />
-                                  </div>
-                                  <div>
-                                    <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>{size} Selling Price</label>
-                                    <input type="number" step="0.01" min="0" value={newProduct.sizePrices?.[size] || ""} onChange={(e) => handleSizePriceChange(size, e.target.value)}
-                                      placeholder="Enter selling price" className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#2A2724] border-gray-600 text-white" : "bg-white border-gray-300"}`} />
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    )}
-
-                    {/* Global pricing */}
-                    {!newProduct.differentPricesPerSize && !Object.values(differentPricesPerVariant).some((v) => v) && (
-                      <div>
-                        <h3 className="text-base font-semibold mb-3">Pricing</h3>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Purchase Price</label>
-                            <input type="number" step="0.01" name="costPrice" value={newProduct.costPrice} onChange={handleInputChange} placeholder="Enter cost price"
-                              className={`w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-white border-gray-300"}`} />
                           </div>
                           <div>
-                            <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Selling Price</label>
-                            <input type="number" step="0.01" name="itemPrice" value={newProduct.itemPrice} onChange={handleInputChange} required={!newProduct.differentPricesPerSize} placeholder="Enter selling price"
-                              className={`w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-white border-gray-300"}`} />
+                            <label className={`block text-xs font-bold uppercase tracking-wide mb-1.5 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Quantity</label>
+                            <input type="number" min="0" name="currentStock" value={newProduct.currentStock || ""} onChange={handleInputChange} placeholder="Enter quantity"
+                              className={`w-full max-w-xs px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#09A046] focus:border-transparent ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-white border-gray-300"}`} />
                           </div>
                         </div>
-                      </div>
-                    )}
-
-                    {/* Expiration Date (Optional) */}
-                    <div>
-                      <h3 className="text-base font-semibold mb-3">Expiration</h3>
-                      <div className="grid grid-cols-2 gap-3 max-w-md">
-                        <div>
-                          <label className={`block text-xs mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                            Expiration Date <span className="text-gray-400">(optional)</span>
-                          </label>
-                          <input
-                            type="date"
-                            name="expirationDate"
-                            value={newProduct.expirationDate || ""}
-                            onChange={handleInputChange}
-                            className={`w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${theme === "dark"
-                              ? "bg-[#1E1B18] border-gray-600 text-white placeholder-gray-400"
-                              : "bg-white border-gray-300 placeholder-gray-400"}`}
-                          />
-                        </div>
-                      </div>
-                    </div>
+                      );
+                    })()}
 
                     {/* Display Settings */}
-                    <div>
-                      <h3 className="text-base font-semibold mb-3">Display Settings</h3>
+                    <div className={`mt-4 pt-4 border-t ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
                       <label className="flex items-center gap-3 cursor-pointer">
                         <div className="relative">
                           <input type="checkbox" name="displayInTerminal" checked={newProduct.displayInTerminal !== false} onChange={handleInputChange} className="sr-only" />
-                          <div className={`w-14 h-7 rounded-full transition-colors duration-200 ${newProduct.displayInTerminal !== false ? "bg-[#AD7F65]" : "bg-gray-300"}`}>
+                          <div className={`w-14 h-7 rounded-full transition-colors duration-200 ${newProduct.displayInTerminal !== false ? "bg-[#09A046]" : "bg-gray-300"}`}>
                             <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 ${newProduct.displayInTerminal !== false ? "translate-x-7" : "translate-x-1"} mt-0.5`}></div>
                           </div>
                         </div>
