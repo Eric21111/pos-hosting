@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from "react";
 import { FaMinus, FaPlus, FaTimes } from "react-icons/fa";
 import { MdCategory, MdShoppingBag } from "react-icons/md";
 import { useTheme } from "../../context/ThemeContext";
@@ -11,12 +12,14 @@ const ProductDetailsModal = ({
   onDecrement,
   onIncrement,
   onAdd,
+  onSetQuantity,
   selectedSize,
   onSelectSize,
   selectedVariant,
   onSelectVariant
 }) => {
   const { theme } = useTheme();
+  const VARIANT_ONLY_SIZE_KEY = "__VARIANT_ONLY__";
 
   if (!isOpen || !product) return null;
 
@@ -201,18 +204,18 @@ const ProductDetailsModal = ({
 
 
   const getDisplayPrice = () => {
-    if (selectedSize && selectedVariant && hasVariants()) {
-      const variantPrice = getVariantPriceInSize(selectedSize, selectedVariant);
+    if (effectiveSelectedSize && selectedVariant && hasVariants()) {
+      const variantPrice = getVariantPriceInSize(effectiveSelectedSize, selectedVariant);
       if (variantPrice !== null) {
         return variantPrice;
       }
     }
     if (
-      selectedSize &&
+      effectiveSelectedSize &&
       product.sizes &&
       typeof product.sizes === "object" &&
-      product.sizes[selectedSize]) {
-      const sizeData = product.sizes[selectedSize];
+      product.sizes[effectiveSelectedSize]) {
+      const sizeData = product.sizes[effectiveSelectedSize];
       const sizePrice = getSizePrice(sizeData);
       if (sizePrice !== null) {
         return sizePrice;
@@ -221,9 +224,94 @@ const ProductDetailsModal = ({
     return product.itemPrice || 0;
   };
 
+  const getAllSellingPrices = () => {
+    if (!product?.sizes || typeof product.sizes !== "object") return [];
+    const prices = [];
+    const keys = Object.keys(product.sizes);
+
+    keys.forEach((sizeKey) => {
+      const sizeData = product.sizes[sizeKey];
+      if (!sizeData || typeof sizeData !== "object") return;
+
+      // If variantPrices exist, prefer them.
+      if (sizeData.variantPrices && typeof sizeData.variantPrices === "object") {
+        Object.values(sizeData.variantPrices).forEach((p) => {
+          const n = parseFloat(p);
+          if (Number.isFinite(n)) prices.push(n);
+        });
+        return;
+      }
+
+      // Fallback: if this size has variants, use its shared size price.
+      const variants = getSizeVariants(sizeData);
+      if (variants && sizeData.price !== undefined) {
+        Object.keys(variants).forEach(() => {
+          const n = parseFloat(sizeData.price);
+          if (Number.isFinite(n)) prices.push(n);
+        });
+      }
+    });
+
+    return prices;
+  };
+
+  const getSellingPricesForVariant = (variant) => {
+    if (!product?.sizes || typeof product.sizes !== "object") return [];
+    const prices = [];
+    const keys = Object.keys(product.sizes);
+
+    keys.forEach((sizeKey) => {
+      const sizeData = product.sizes[sizeKey];
+      if (!sizeData || typeof sizeData !== "object") return;
+      if (sizeData.variantPrices && typeof sizeData.variantPrices === "object" && sizeData.variantPrices[variant] !== undefined) {
+        const n = parseFloat(sizeData.variantPrices[variant]);
+        if (Number.isFinite(n)) prices.push(n);
+        return;
+      }
+
+      // Fallback: if variant exists under this size but variantPrices isn't set, use size price.
+      const variants = getSizeVariants(sizeData);
+      if (variants && variants[variant] !== undefined && sizeData.price !== undefined) {
+        const n = parseFloat(sizeData.price);
+        if (Number.isFinite(n)) prices.push(n);
+      }
+    });
+
+    return prices;
+  };
+
+  const formatPriceRangeText = (vals) => {
+    const nums = (vals || []).map((v) => parseFloat(v)).filter((n) => Number.isFinite(n));
+    if (nums.length === 0) return `PHP 0.00`;
+    const min = Math.min(...nums);
+    const max = Math.max(...nums);
+    if (min === max) return `PHP ${min.toFixed(2)}`;
+    return `PHP ${min.toFixed(2)} - ${max.toFixed(2)}`;
+  };
+
+  const getSellingPriceText = () => {
+    if (!productHasVariants) return `PHP ${Number(product.itemPrice || 0).toFixed(2)}`;
+
+    if (!selectedVariant) {
+      return formatPriceRangeText(getAllSellingPrices());
+    }
+
+    // If we effectively have a size (including variant-only), show exact price.
+    if (effectiveSelectedSize) {
+      const exact = getVariantPriceInSize(effectiveSelectedSize, selectedVariant);
+      if (exact !== null && exact !== undefined) {
+        const n = parseFloat(exact);
+        if (Number.isFinite(n)) return `PHP ${n.toFixed(2)}`;
+      }
+    }
+
+    // Otherwise show price range across sizes for this variant.
+    return formatPriceRangeText(getSellingPricesForVariant(selectedVariant));
+  };
+
   const getDisplaySku = () => {
     if (!hasVariants()) return product.sku || "N/A";
-    return generateDynamicSku(product.sku, selectedVariant, selectedSize);
+    return generateDynamicSku(product.sku, selectedVariant, effectiveSelectedSize);
   };
 
 
@@ -241,22 +329,46 @@ const ProductDetailsModal = ({
   const productHasVariants = hasVariants();
   const allVariants = productHasVariants ? getAllVariants() : [];
 
+  const productImages = Array.isArray(product?.productImages) && product.productImages.length > 0
+    ? product.productImages
+    : (product?.itemImage ? [product.itemImage] : []);
+
+  const [productImgIdx, setProductImgIdx] = useState(0);
+  useEffect(() => {
+    setProductImgIdx(0);
+  }, [product?._id]);
+
+  const sizeKeys = product?.sizes && typeof product.sizes === "object" ? Object.keys(product.sizes) : [];
+  const hasRealV2 = sizeKeys.some((k) => k && k !== VARIANT_ONLY_SIZE_KEY);
+  const isVariantOnlyProduct = sizeKeys.length > 0 && sizeKeys.every((k) => k === VARIANT_ONLY_SIZE_KEY);
+  const effectiveSelectedSize = selectedSize || (isVariantOnlyProduct ? VARIANT_ONLY_SIZE_KEY : "");
+
+  // If this product has only variant-level stock (no real V2 sizes),
+  // auto-select the synthetic size key so Add-to-Cart still sends the correct SKU.
+  useEffect(() => {
+    if (!isVariantOnlyProduct) return;
+    if (!selectedVariant) return;
+    if (!onSelectSize) return;
+    if (selectedSize === VARIANT_ONLY_SIZE_KEY) return;
+    onSelectSize(VARIANT_ONLY_SIZE_KEY);
+  }, [isVariantOnlyProduct, selectedVariant, selectedSize, onSelectSize]);
+
 
   const availableSizes = productHasVariants ?
-    selectedVariant ? getAvailableSizesForVariant(selectedVariant) : [] :
-    product.sizes && typeof product.sizes === "object" ?
-      Object.keys(product.sizes) :
-      [];
+    selectedVariant
+      ? getAvailableSizesForVariant(selectedVariant).filter((s) => (hasRealV2 ? true : s !== VARIANT_ONLY_SIZE_KEY))
+      : [] :
+    product.sizes && typeof product.sizes === "object" ? Object.keys(product.sizes) : [];
 
 
   const getAvailableStock = () => {
-    if (product.sizes && typeof product.sizes === "object" && selectedSize) {
+    if (product.sizes && typeof product.sizes === "object" && effectiveSelectedSize) {
 
       if (hasSizeVariants() && selectedVariant) {
-        return getVariantQuantityInSize(selectedSize, selectedVariant);
+        return getVariantQuantityInSize(effectiveSelectedSize, selectedVariant);
       }
 
-      return getSizeQuantity(product.sizes[selectedSize]);
+      return getSizeQuantity(product.sizes[effectiveSelectedSize]);
     }
     return product.currentStock || 0;
   };
@@ -270,16 +382,16 @@ const ProductDetailsModal = ({
       product.sizes &&
       typeof product.sizes === "object" &&
       Object.keys(product.sizes).length > 0) {
-      if (!selectedSize) return true;
+      if (!effectiveSelectedSize) return true;
 
 
       let sizeStock;
       if (hasSizeVariants() && selectedVariant) {
 
-        sizeStock = getVariantQuantityInSize(selectedSize, selectedVariant);
+        sizeStock = getVariantQuantityInSize(effectiveSelectedSize, selectedVariant);
       } else {
 
-        sizeStock = getSizeQuantity(product.sizes[selectedSize]);
+        sizeStock = getSizeQuantity(product.sizes[effectiveSelectedSize]);
       }
 
       if (sizeStock <= 0 || productQuantity > sizeStock) return true;
@@ -340,19 +452,49 @@ const ProductDetailsModal = ({
           <div className="flex gap-6">
             { }
             <div
-              className={`w-64 h-64 rounded-xl overflow-hidden flex-shrink-0 ${theme === "dark" ? "bg-[#2A2724]" : "bg-gray-100"}`}>
+              className={`relative w-64 h-64 rounded-xl overflow-hidden flex-shrink-0 ${theme === "dark" ? "bg-[#2A2724]" : "bg-gray-100"}`}>
 
-              {product.itemImage && product.itemImage.trim() !== "" ?
-                <img
-                  src={product.itemImage}
-                  alt={product.itemName}
-                  className="w-full h-full object-cover" /> :
+              {productImages.length > 0 && productImages[productImgIdx] ? (
+                <>
+                  <img
+                    src={productImages[productImgIdx]}
+                    alt={product.itemName}
+                    className="w-full h-full object-cover"
+                  />
 
+                  {productImages.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setProductImgIdx((i) => (i - 1 + productImages.length) % productImages.length)}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center">
+                        ‹
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setProductImgIdx((i) => (i + 1) % productImages.length)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center">
+                        ›
+                      </button>
 
+                      <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
+                        {productImages.map((_, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setProductImgIdx(idx)}
+                            className={`w-2 h-2 rounded-full ${idx === productImgIdx ? "bg-white" : "bg-white/40"}`}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
+              ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <MdCategory className="text-6xl text-gray-400" />
                 </div>
-              }
+              )}
             </div>
 
             { }
@@ -400,8 +542,8 @@ const ProductDetailsModal = ({
 
                     Price
                   </p>
-                  <p className="font-bold text-[#AD7F65] text-lg">
-                    PHP {getDisplayPrice().toFixed(2)}
+                  <p className="font-bold text-[#09A046] text-lg">
+                    {getSellingPriceText()}
                   </p>
                 </div>
                 { }
@@ -441,11 +583,11 @@ const ProductDetailsModal = ({
                       <button
                         key={variant}
                         onClick={() => onSelectVariant(variant)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border-2 ${selectedVariant === variant ?
-                          "bg-[#AD7F65] text-white border-[#AD7F65]" :
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border-2 bg-transparent ${selectedVariant === variant ?
+                          "border-[#09A046] text-[#09A046] border-opacity-100" :
                           theme === "dark" ?
-                            "bg-[#2A2724] text-gray-300 hover:bg-gray-600 border-[#4A4037] hover:border-[#AD7F65]" :
-                            "bg-gray-50 text-gray-700 hover:bg-gray-100 border-gray-200 hover:border-[#AD7F65]"}`
+                            "text-gray-300 border-gray-600 hover:border-[#09A046]" :
+                            "text-gray-700 border-gray-200 hover:border-[#09A046]"}`
                         }>
 
                         {variant}
@@ -481,20 +623,20 @@ const ProductDetailsModal = ({
                             onClick={() => !isOutOfStock && onSelectSize(size)}
                             disabled={isOutOfStock}
                             className={`flex flex-col items-center px-4 py-2 rounded-lg text-xs font-medium transition-all border-2 ${selectedSize === size ?
-                              "bg-[#AD7F65] text-white border-[#AD7F65]" :
+                              "bg-transparent text-[#09A046] border-[#09A046]" :
                               isOutOfStock ?
                                 theme === "dark" ?
-                                  "bg-gray-700 text-gray-500 cursor-not-allowed border-gray-700" :
-                                  "bg-gray-100 text-gray-300 cursor-not-allowed border-gray-100" :
+                                  "bg-transparent text-gray-500 cursor-not-allowed border-gray-700" :
+                                  "bg-transparent text-gray-300 cursor-not-allowed border-gray-200" :
                                 theme === "dark" ?
-                                  "bg-[#2A2724] text-gray-300 hover:bg-gray-600 border-[#4A4037] hover:border-[#AD7F65]" :
-                                  "bg-gray-50 text-gray-700 hover:bg-gray-100 border-gray-200 hover:border-[#AD7F65]"}`
+                                  "bg-transparent text-gray-300 border-[#4A4037] hover:border-[#09A046]" :
+                                  "bg-transparent text-gray-700 border-gray-200 hover:border-[#09A046]"}`
                             }>
 
                             <span className="font-bold text-sm">{size}</span>
                             <span
                               className={`text-[10px] mt-0.5 ${selectedSize === size ?
-                                "text-white/80" :
+                                "text-[#09A046]/80" :
                                 isOutOfStock ?
                                   theme === "dark" ?
                                     "text-gray-600" :
@@ -549,20 +691,20 @@ const ProductDetailsModal = ({
                             onClick={() => !isOutOfStock && onSelectSize(size)}
                             disabled={isOutOfStock}
                             className={`flex flex-col items-center px-4 py-2 rounded-lg text-xs font-medium transition-all border-2 ${selectedSize === size ?
-                              "bg-[#AD7F65] text-white border-[#AD7F65]" :
+                              "bg-transparent text-[#09A046] border-[#09A046]" :
                               isOutOfStock ?
                                 theme === "dark" ?
-                                  "bg-gray-700 text-gray-500 cursor-not-allowed border-gray-700" :
-                                  "bg-gray-100 text-gray-300 cursor-not-allowed border-gray-100" :
+                                  "bg-transparent text-gray-500 cursor-not-allowed border-gray-700" :
+                                  "bg-transparent text-gray-300 cursor-not-allowed border-gray-200" :
                                 theme === "dark" ?
-                                  "bg-[#2A2724] text-gray-300 hover:bg-gray-600 border-[#4A4037] hover:border-[#AD7F65]" :
-                                  "bg-gray-50 text-gray-700 hover:bg-gray-100 border-gray-200 hover:border-[#AD7F65]"}`
+                                  "bg-transparent text-gray-300 border-[#4A4037] hover:border-[#09A046]" :
+                                  "bg-transparent text-gray-700 border-gray-200 hover:border-[#09A046]"}`
                             }>
 
                             <span className="font-bold text-sm">{size}</span>
                             <span
                               className={`text-[10px] mt-0.5 ${selectedSize === size ?
-                                "text-white/80" :
+                                "text-[#09A046]/80" :
                                 isOutOfStock ?
                                   theme === "dark" ?
                                     "text-gray-600" :
@@ -603,8 +745,8 @@ const ProductDetailsModal = ({
                     Quantity
                   </p>
                   <div
-                    className={`flex items-center gap-2 mt-1 ${productHasVariants && (!selectedVariant || !selectedSize) ||
-                      !productHasVariants && availableSizes.length > 0 && !selectedSize ?
+                    className={`flex items-center gap-2 mt-1 ${productHasVariants && (!selectedVariant || !effectiveSelectedSize) ||
+                      !productHasVariants && availableSizes.length > 0 && !effectiveSelectedSize ?
                       "opacity-40 pointer-events-none" :
                       ""}`
                     }>
@@ -613,42 +755,48 @@ const ProductDetailsModal = ({
                       onClick={onDecrement}
                       disabled={
                         isDecrementDisabled() ||
-                        productHasVariants && (!selectedVariant || !selectedSize) ||
-                        !productHasVariants && availableSizes.length > 0 && !selectedSize
+                        productHasVariants && (!selectedVariant || !effectiveSelectedSize) ||
+                        !productHasVariants && availableSizes.length > 0 && !effectiveSelectedSize
                       }
                       className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${isDecrementDisabled() ||
-                        productHasVariants && (!selectedVariant || !selectedSize) ||
-                        !productHasVariants && availableSizes.length > 0 && !selectedSize ?
+                        productHasVariants && (!selectedVariant || !effectiveSelectedSize) ||
+                        !productHasVariants && availableSizes.length > 0 && !effectiveSelectedSize ?
                         theme === "dark" ?
                           "bg-gray-700 text-gray-500 cursor-not-allowed" :
                           "bg-gray-200 text-gray-400 cursor-not-allowed" :
-                        "bg-[#AD7F65] text-white hover:bg-[#8B5F45]"}`
+                        "bg-transparent text-[#09A046] border-2 border-[#09A046] hover:bg-transparent"}`
                       }>
 
-                      <FaMinus className="text-xs" />
+                      <FaMinus className="text-xs text-[#09A046]" />
                     </button>
-                    <span
-                      className={`w-8 text-center font-semibold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>
-
-                      {productQuantity}
-                    </span>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      value={productQuantity}
+                      onChange={(e) => {
+                        const n = parseInt(e.target.value, 10);
+                        if (Number.isFinite(n) && n > 0) onSetQuantity?.(n);
+                      }}
+                      className={`w-10 text-center font-semibold px-2 py-1 rounded-lg border ${theme === "dark" ? "bg-[#2A2724] border-gray-700 text-white" : "bg-white border-gray-200 text-gray-800"}`}
+                    />
                     <button
                       onClick={onIncrement}
                       disabled={
                         isIncrementDisabled() ||
-                        productHasVariants && (!selectedVariant || !selectedSize) ||
-                        !productHasVariants && availableSizes.length > 0 && !selectedSize
+                        productHasVariants && (!selectedVariant || !effectiveSelectedSize) ||
+                        !productHasVariants && availableSizes.length > 0 && !effectiveSelectedSize
                       }
                       className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${isIncrementDisabled() ||
-                        productHasVariants && (!selectedVariant || !selectedSize) ||
-                        !productHasVariants && availableSizes.length > 0 && !selectedSize ?
+                        productHasVariants && (!selectedVariant || !effectiveSelectedSize) ||
+                        !productHasVariants && availableSizes.length > 0 && !effectiveSelectedSize ?
                         theme === "dark" ?
                           "bg-gray-700 text-gray-500 cursor-not-allowed" :
                           "bg-gray-200 text-gray-400 cursor-not-allowed" :
-                        "bg-[#AD7F65] text-white hover:bg-[#8B5F45]"}`
+                        "bg-transparent text-[#09A046] border-2 border-[#09A046] hover:bg-transparent"}`
                       }>
 
-                      <FaPlus className="text-xs" />
+                      <FaPlus className="text-xs text-[#09A046]" />
                     </button>
                   </div>
                 </div>
@@ -659,11 +807,11 @@ const ProductDetailsModal = ({
                     Stock
                   </p>
                   {productHasVariants ?
-                    selectedVariant && selectedSize ?
+                    selectedVariant && effectiveSelectedSize ?
                       <p
                         className={`font-medium mt-1 ${theme === "dark" ? "text-gray-200" : "text-gray-800"}`}>
 
-                        {getVariantQuantityInSize(selectedSize, selectedVariant)} pcs
+                        {getVariantQuantityInSize(effectiveSelectedSize, selectedVariant)} pcs
                       </p> :
                       !selectedVariant ?
                         <p
@@ -679,11 +827,11 @@ const ProductDetailsModal = ({
                         </p> :
 
                     availableSizes.length > 0 ?
-                      selectedSize ?
+                      effectiveSelectedSize ?
                         <p
                           className={`font-medium mt-1 ${theme === "dark" ? "text-gray-200" : "text-gray-800"}`}>
 
-                          {getSizeQuantity(product.sizes[selectedSize])} pcs
+                          {getSizeQuantity(product.sizes[effectiveSelectedSize])} pcs
                         </p> :
 
                         <p

@@ -473,6 +473,49 @@ const Terminal = () => {
     });
   };
 
+  const setProductQuantityTo = (productId, nextQty) => {
+    const product = products.find((p) => p._id === productId);
+    if (!product) return;
+
+    const selectedSize = productSizes[productId];
+    const selectedVariant = productVariants[productId] || "";
+
+    const getVariantQty = (variantData) => {
+      if (typeof variantData === "number") return variantData;
+      if (typeof variantData === "object" && variantData !== null) {
+        return variantData.quantity || 0;
+      }
+      return 0;
+    };
+
+    let availableStock = 0;
+    if (product.sizes && typeof product.sizes === "object" && selectedSize) {
+      const sizeData = product.sizes[selectedSize];
+      if (
+        typeof sizeData === "object" &&
+        sizeData !== null &&
+        sizeData.variants &&
+        selectedVariant
+      ) {
+        const variantData = sizeData.variants[selectedVariant];
+        availableStock = getVariantQty(variantData);
+      } else if (
+        typeof sizeData === "object" &&
+        sizeData !== null &&
+        sizeData.quantity !== undefined
+      ) {
+        availableStock = sizeData.quantity;
+      } else if (typeof sizeData === "number") {
+        availableStock = sizeData;
+      }
+    } else {
+      availableStock = product.currentStock || 0;
+    }
+
+    const clamped = Math.max(1, Math.min(parseInt(nextQty, 10) || 1, availableStock || product.currentStock || 1));
+    setProductQuantities((prev) => ({ ...prev, [productId]: clamped }));
+  };
+
   const handleVariantSelection = (productId, variant) => {
 
     setProductVariants({ ...productVariants, [productId]: variant });
@@ -1979,6 +2022,9 @@ const Terminal = () => {
           selectedProduct && updateProductQuantity(selectedProduct._id, 1)
         }
         onAdd={() => selectedProduct && addToCartFromExpanded(selectedProduct)}
+        onSetQuantity={(qty) =>
+          selectedProduct && setProductQuantityTo(selectedProduct._id, qty)
+        }
         selectedSize={selectedProduct ? productSizes[selectedProduct._id] : ""}
         onSelectSize={(size) =>
           selectedProduct && handleSizeSelection(selectedProduct._id, size)
