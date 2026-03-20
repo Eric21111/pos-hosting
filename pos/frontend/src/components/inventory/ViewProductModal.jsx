@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useTheme } from "../../context/ThemeContext";
 import { generateDynamicSku } from "../../utils/skuUtils";
 
+const VARIANT_ONLY_SIZE_KEY = "__VARIANT_ONLY__";
+
 const ViewProductModal = ({
   showViewModal,
   setShowViewModal,
@@ -55,12 +57,13 @@ const ViewProductModal = ({
       typeof viewingProduct.sizes === "object" &&
       Object.keys(viewingProduct.sizes).length > 0 ?
       Object.values(viewingProduct.sizes).reduce((sum, sizeData) => {
-        if (typeof sizeData === "object" && sizeData !== null && sizeData.variants && typeof sizeData.variants === "object" && Object.keys(sizeData.variants).length > 0) {
+        if (typeof sizeData === "object" && sizeData !== null && sizeData.variants && typeof sizeData.variants === "object") {
           const vSum = Object.values(sizeData.variants).reduce((s, v) => {
-            const q = typeof v === "number" ? v : (v && typeof v === "object" ? (v.quantity ?? 0) : 0);
-            return s + (parseInt(q, 10) || 0);
+            if (typeof v === "number") return s + (parseInt(v, 10) || 0);
+            if (v && typeof v === "object" && v.quantity !== undefined) return s + (parseInt(v.quantity, 10) || 0);
+            return s;
           }, 0);
-          return sum + vSum;
+          if (vSum > 0) return sum + vSum;
         }
         const qty =
           typeof sizeData === "object" &&
@@ -70,7 +73,7 @@ const ViewProductModal = ({
             typeof sizeData === "number" ?
               sizeData :
               0;
-        return sum + (parseInt(qty, 10) || 0);
+        return sum + qty;
       }, 0) :
       viewingProduct.currentStock || 0;
 
@@ -354,8 +357,9 @@ const ViewProductModal = ({
                             const variants = sizeData && typeof sizeData === 'object' && sizeData.variants ? sizeData.variants : null;
                             const variantPrices = sizeData && typeof sizeData === 'object' && sizeData.variantPrices ? sizeData.variantPrices : null;
 
-                            // Format Size for SKU
-                            const sizeInitial = size === "Free Size" ? "FS" : size.substring(0, 2).toUpperCase();
+                            const sizeInitial =
+                              size === VARIANT_ONLY_SIZE_KEY ? "VO" :
+                              size === "Free Size" ? "FS" : size.substring(0, 2).toUpperCase();
 
                             if ((variants && Object.keys(variants).length > 0) || (variantPrices && Object.keys(variantPrices).length > 0)) {
                               const variantKeys = variants && Object.keys(variants).length > 0 ? Object.keys(variants) : (variantPrices ? Object.keys(variantPrices) : []);
@@ -374,7 +378,7 @@ const ViewProductModal = ({
                                   <tr key={`${size}-${variantName}`} className={`transition-colors ${theme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-50"}`}>
                                     <td className={`px-4 py-3 font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-900"}`}>{dynamicSku}</td>
                                     <td className={`px-4 py-3 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                                      {variantName} / {size}
+                                      {size === VARIANT_ONLY_SIZE_KEY ? variantName : `${variantName} / ${size}`}
                                     </td>
                                     {showBatchView ? (
                                       <>
