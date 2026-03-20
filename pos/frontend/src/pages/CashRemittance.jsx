@@ -326,7 +326,7 @@ const CashRemittance = () => {
     }
 
     return (
-        <div className="p-6 max-w-[1600px] mx-auto animate-fade-in pb-24" style={{ fontFamily: "'Poppins', sans-serif" }}>
+        <div className="p-8 min-h-screen animate-fade-in pb-24" style={{ fontFamily: "'Poppins', sans-serif" }}>
             <Header pageName="Cash Remittance" showBorder={false} profileBackground="" />
             {/* ═══════ ROW 1: KPIs (left) | Opening Float (right) ═══════ */}
             <div className="flex gap-6 items-start mb-6 mt-4">
