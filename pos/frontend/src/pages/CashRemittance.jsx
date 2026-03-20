@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../context/AuthContext";
 import { API_ENDPOINTS } from "../config/api";
+import Header from "../components/shared/header";
 import {
     FaMoneyBillWave, FaSearch, FaFileInvoiceDollar, FaCheckCircle,
     FaExclamationTriangle, FaChartLine, FaHandHoldingUsd,
@@ -326,8 +327,9 @@ const CashRemittance = () => {
 
     return (
         <div className="p-6 max-w-[1600px] mx-auto animate-fade-in pb-24" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            <Header pageName="Cash Remittance" showBorder={false} profileBackground="" />
             {/* ═══════ ROW 1: KPIs (left) | Opening Float (right) ═══════ */}
-            <div className="flex gap-6 items-start mb-6">
+            <div className="flex gap-6 items-start mb-6 mt-4">
                 {/* Left: 4 KPI Cards */}
                 <div className="flex-1 grid grid-cols-4 gap-3 min-w-0">
                     <KpiCard
