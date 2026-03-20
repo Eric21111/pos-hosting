@@ -21,8 +21,8 @@ import {
   FaUndoAlt
 } from
   "react-icons/fa";
-import CompletedIcon from "../assets/completed.svg";
 import TotalTransactionIcon from "../assets/total-transaction.svg";
+import TransactionKpiIcon from "../assets/icons/transaction.svg";
 import Header from "../components/shared/header";
 import PrintReceiptModal from "../components/transaction/PrintReceiptModal";
 import RemittanceModal from "../components/transaction/RemittanceModal";
@@ -59,6 +59,15 @@ const formatCurrency = (value = 0) =>
     style: "currency",
     currency: "PHP"
   }).format(value);
+
+const formatCurrencyCompact = (value = 0) => {
+  const n = parseFloat(value) || 0;
+  const abs = Math.abs(n).toLocaleString("en-PH", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+  return n < 0 ? `-₱${abs}` : `₱${abs}`;
+};
 
 
 
@@ -475,24 +484,30 @@ const Transaction = () => {
     selectedTransactionIds.includes(id)
   );
 
-  const stats = useMemo(() => {
-
-    const nonVoidedTransactions = transactions.filter(
-      (trx) => trx.status !== "Voided"
+  const kpis = useMemo(() => {
+    const nonVoided = (transactions || []).filter((trx) => trx.status !== "Voided");
+    const completed = nonVoided.filter((trx) => trx.status === "Completed");
+    const totalSales = completed.reduce(
+      (sum, trx) => sum + (parseFloat(trx.totalAmount) || 0),
+      0
     );
-    const totals = {
-      total: nonVoidedTransactions.length,
-      Completed: 0,
-      Returned: 0,
-      "Partially Returned": 0,
-      Voided: 0
-    };
 
-    nonVoidedTransactions.forEach((trx) => {
-      totals[trx.status] = (totals[trx.status] || 0) + 1;
-    });
+    const transactionTotal = nonVoided.filter((trx) => [
+      "Completed",
+      "Returned",
+      "Partially Returned"
+    ].includes(trx.status)).length;
 
-    return totals;
+    const returnedItems = nonVoided.reduce((sum, trx) => {
+      const items = Array.isArray(trx.items) ? trx.items : [];
+      const returnedCount = items.filter((item) => {
+        const rs = item?.returnStatus;
+        return rs === "Returned" || rs === "Partially Returned";
+      }).length;
+      return sum + returnedCount;
+    }, 0);
+
+    return { totalSales, transactionTotal, returnedItems };
   }, [transactions]);
 
   useEffect(() => {
@@ -1044,7 +1059,7 @@ const Transaction = () => {
 
       <>
         <Header
-          pageName="POS Transactions"
+          pageName="Sales & Transactions"
           showBorder={false}
           profileBackground="" />
 
@@ -1053,82 +1068,77 @@ const Transaction = () => {
           <div className="flex gap-4 flex-wrap">
             {[
               {
-                label: "Total Transactions",
-                count: stats.total,
-                borderColor: "#3B82F6",
-                textColor: "#3B82F6",
-                iconBg: "#DBEAFE",
-                icon:
+                label: "Total Sales",
+                value: formatCurrencyCompact(kpis.totalSales),
+                barGradient: "linear-gradient(180deg, #2563EB 0%, #60A5FA 100%)",
+                textColor: "#1D4ED8",
+                iconBgClass: "bg-blue-100",
+                icon: (
                   <img
                     src={TotalTransactionIcon}
-                    alt="Total Transactions"
-                    className="w-10 h-10" />
-
-
+                    alt="Total Sales"
+                    className="w-10 h-10"
+                  />
+                )
               },
               {
-                label: "Completed",
-                count: stats.Completed || 0,
-                borderColor: "#22C55E",
-                textColor: "#22C55E",
-                iconBg: "#DCFCE7",
-                icon:
+                label: "Transaction Total",
+                value: kpis.transactionTotal,
+                barGradient: "linear-gradient(180deg, #22C55E 0%, #4ADE80 100%)",
+                textColor: "#16A34A",
+                iconBgClass: "bg-green-100",
+                icon: (
                   <img
-                    src={CompletedIcon}
-                    alt="Completed"
-                    className="w-10 h-10" />
-
-
+                    src={TransactionKpiIcon}
+                    alt="Transactions"
+                    className="w-9 h-9"
+                  />
+                )
               },
               {
                 label: "Returned",
-                count: stats.Returned || 0,
-                borderColor: "#F97316",
-                textColor: "#F97316",
-                iconBg: "#FFEDD5",
-                icon: <FaUndoAlt />
-              }].
-              map((card) =>
-                <motion.div
-                  key={card.label}
-                  whileHover={{ y: -4 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={`rounded-2xl shadow-md flex items-center justify-between px-5 py-4 relative overflow-hidden text-left ${theme === "dark" ? "bg-[#2A2724]" : "bg-white"}`
-                  }
-                  style={{ minWidth: "200px" }}>
+                value: kpis.returnedItems,
+                barGradient: "linear-gradient(180deg, #D97706 0%, #F59E0B 100%)",
+                textColor: "#C2410C",
+                iconBgClass: "bg-orange-100",
+                icon: <FaUndoAlt className="text-xl" />
+              }
+            ].map((card) => (
+              <motion.div
+                key={card.label}
+                whileHover={{ y: -4 }}
+                whileTap={{ scale: 0.98 }}
+                className={`rounded-2xl shadow-md flex items-center justify-between px-5 py-4 relative overflow-hidden text-left ${theme === "dark" ? "bg-[#2A2724]" : "bg-white"}`}
+                style={{ minWidth: "240px" }}
+              >
+                <div
+                  className="absolute left-0 top-0 bottom-0 w-2"
+                  style={{ backgroundImage: card.barGradient }}
+                />
 
-                  <div
-                    className="absolute left-0 top-0 bottom-0 w-2"
-                    style={{ backgroundColor: card.borderColor }} />
+                <div className="ml-2">
+                  <motion.p
+                    key={card.value}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-2xl lg:text-3xl font-extrabold"
+                    style={{ color: card.textColor }}
+                  >
+                    {card.value}
+                  </motion.p>
+                  <p className="text-xs mt-0.5" style={{ color: card.textColor }}>
+                    {card.label}
+                  </p>
+                </div>
 
-                  <div className="ml-2">
-                    <motion.p
-                      key={card.count}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-3xl font-bold"
-                      style={{ color: card.textColor }}>
-
-                      {card.count}
-                    </motion.p>
-                    <p
-                      className="text-xs mt-0.5"
-                      style={{ color: card.textColor }}>
-
-                      {card.label}
-                    </p>
-                  </div>
-                  <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center text-2xl"
-                    style={{
-                      backgroundColor: card.iconBg,
-                      color: card.textColor
-                    }}>
-
-                    {card.icon}
-                  </div>
-                </motion.div>
-              )}
+                <div
+                  className={`w-14 h-14 rounded-full flex items-center justify-center ${card.iconBgClass}`}
+                  style={{ color: card.textColor }}
+                >
+                  {card.icon}
+                </div>
+              </motion.div>
+            ))}
 
             {/* Ready to Remit Card */}
             <motion.div
@@ -1166,50 +1176,6 @@ const Transaction = () => {
             </motion.div>
           </div>
 
-          <div className="flex gap-4 items-start">
-            <button
-              onClick={handleExportButtonClick}
-              className={`rounded-2xl shadow-md flex flex-col items-center justify-center px-5 py-4 transition-colors ${isExportSelectionMode ?
-                "border border-[#AD7F65] bg-[#AD7F65]/5" :
-                theme === "dark" ?
-                  "bg-[#2A2724] hover:bg-[#352F2A]" :
-                  "bg-white hover:bg-gray-50"}`
-              }
-              style={{ minWidth: "100px" }}>
-
-              <svg
-                className={`w-8 h-8 mb-1 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24">
-
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-
-              </svg>
-              <div
-                className={`text-xs font-medium ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
-
-                {isExportSelectionMode ? "Export Selected" : "Export"}
-              </div>
-            </button>
-            {isExportSelectionMode &&
-              <button
-                onClick={handleCancelExportSelection}
-                className={`rounded-2xl shadow-md px-4 py-2 text-xs font-medium border transition-colors ${theme === "dark" ?
-                  "bg-[#2A2724] border-gray-600 text-gray-400 hover:bg-[#352F2A]" :
-                  "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"}`
-                }>
-
-                Cancel
-              </button>
-            }
-
-
-          </div>
         </div>
 
         <div className="flex-1 min-h-0 overflow-hidden flex flex-col lg:flex-row gap-6">
@@ -1285,6 +1251,48 @@ const Transaction = () => {
                   } />
 
               </div>
+
+              <div className="flex items-center gap-3">
+              <button
+                onClick={handleExportButtonClick}
+                className={`rounded-xl shadow-md flex items-center justify-center gap-2 px-4 py-2.5 transition-colors ${isExportSelectionMode ?
+                  "border border-[#AD7F65] bg-[#AD7F65]/5" :
+                  theme === "dark" ?
+                    "bg-[#2A2724] hover:bg-[#352F2A]" :
+                    "bg-white hover:bg-gray-50"
+                  }`}
+                style={{ minWidth: "120px" }}
+              >
+                <svg
+                  className={`w-5 h-5 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <span className={`text-xs font-medium ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
+                  {isExportSelectionMode ? "Export Selected" : "Export"}
+                </span>
+              </button>
+
+              {isExportSelectionMode && (
+                <button
+                  onClick={handleCancelExportSelection}
+                  className={`rounded-xl shadow-md px-3 py-2 text-xs font-medium border transition-colors ${theme === "dark" ?
+                    "bg-[#2A2724] border-gray-600 text-gray-400 hover:bg-[#352F2A]" :
+                    "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
             </div>
 
             <div className="relative overflow-x-auto overflow-y-auto flex-1 min-h-0">
