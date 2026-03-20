@@ -39,13 +39,16 @@ const KpiCard = ({
     icon: Icon,
     label,
     value,
-    barColor = "bg-blue-500",
+    barGradient = "linear-gradient(180deg, #2563EB 0%, #3B82F6 100%)",
     iconBg = "bg-blue-50",
     iconColor = "text-blue-500",
     textColor = "text-blue-500"
 }) => (
-    <div className="relative bg-white rounded-2xl shadow-sm border border-gray-100 p-4 min-w-0 overflow-hidden">
-        <div className={`absolute left-0 top-0 bottom-0 w-2 ${barColor}`} />
+    <div className="relative bg-white rounded-2xl shadow-sm border border-gray-100 p-5 min-w-0 min-h-[88px] overflow-hidden">
+        <div
+            className="absolute left-0 top-0 bottom-0 w-2"
+            style={{ backgroundImage: barGradient }}
+        />
         <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
                 <p className="text-2xl lg:text-3xl font-black text-gray-800 truncate tracking-tight">{value}</p>
@@ -349,7 +352,7 @@ const CashRemittance = () => {
                         icon={FaChartLine}
                         label="Total Net Sales"
                         value={formatCurrency(kpis.totalNetSales)}
-                        barColor="bg-blue-500"
+                        barGradient="linear-gradient(180deg, #2563EB 0%, #3B82F6 100%)"
                         iconBg="bg-blue-50"
                         iconColor="text-blue-500"
                         textColor="text-blue-500"
@@ -358,7 +361,7 @@ const CashRemittance = () => {
                         icon={FaHandHoldingUsd}
                         label="Total Remitted"
                         value={formatCurrency(kpis.totalRemitted)}
-                        barColor="bg-green-500"
+                        barGradient="linear-gradient(180deg, #0EA5A4 0%, #22C55E 100%)"
                         iconBg="bg-green-50"
                         iconColor="text-green-500"
                         textColor="text-green-500"
@@ -367,7 +370,7 @@ const CashRemittance = () => {
                         icon={FaBalanceScale}
                         label="Total Variance"
                         value={`${kpis.totalVariance > 0 ? '+' : ''}${formatCurrency(kpis.totalVariance)}`}
-                        barColor="bg-amber-500"
+                        barGradient="linear-gradient(180deg, #D97706 0%, #F59E0B 100%)"
                         iconBg="bg-amber-50"
                         iconColor="text-amber-500"
                         textColor="text-amber-500"
@@ -376,7 +379,7 @@ const CashRemittance = () => {
                         icon={FaClock}
                         label="Unremitted"
                         value={formatCurrency(kpis.unremittedCash)}
-                        barColor="bg-red-500"
+                        barGradient="linear-gradient(180deg, #B91C1C 0%, #EF4444 100%)"
                         iconBg="bg-red-50"
                         iconColor="text-red-500"
                         textColor="text-red-500"
