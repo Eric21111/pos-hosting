@@ -1064,8 +1064,8 @@ const Transaction = () => {
           profileBackground="" />
 
 
-        <div className="flex gap-4 flex-wrap mb-6 mt-4 justify-between">
-          <div className="flex gap-4 flex-wrap">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 mt-4 w-full">
+          <div className="contents">
             {[
               {
                 label: "Total Sales",
@@ -1082,7 +1082,7 @@ const Transaction = () => {
                 )
               },
               {
-                label: "Transaction Total",
+                label: "Transactions",
                 value: kpis.transactionTotal,
                 barGradient: "linear-gradient(180deg, #22C55E 0%, #4ADE80 100%)",
                 textColor: "#16A34A",
@@ -1108,8 +1108,7 @@ const Transaction = () => {
                 key={card.label}
                 whileHover={{ y: -4 }}
                 whileTap={{ scale: 0.98 }}
-                className={`rounded-2xl shadow-md flex items-center justify-between px-5 py-4 relative overflow-hidden text-left ${theme === "dark" ? "bg-[#2A2724]" : "bg-white"}`}
-                style={{ minWidth: "240px" }}
+                className={`rounded-2xl shadow-md flex items-center justify-between px-5 py-4 relative overflow-hidden text-left w-full min-h-[92px] ${theme === "dark" ? "bg-[#2A2724]" : "bg-white"}`}
               >
                 <div
                   className="absolute left-0 top-0 bottom-0 w-2"
@@ -1144,9 +1143,7 @@ const Transaction = () => {
             <motion.div
               whileHover={{ y: -4 }}
               whileTap={{ scale: 0.98 }}
-              className={`rounded-2xl shadow-md flex items-center justify-between px-5 py-4 relative overflow-hidden cursor-pointer ${theme === "dark" ? "bg-[#1a2332]" : "bg-[#E8F0FE]"
-                }`}
-              style={{ minWidth: "260px" }}
+              className={`rounded-2xl shadow-md flex items-center justify-between px-5 py-4 relative overflow-hidden cursor-pointer ${theme === "dark" ? "bg-[#1a2332]" : "bg-[#E8F0FE]"} w-full min-h-[92px]`}
               onClick={() => setShowRemittanceModal(true)}
             >
               <div>
