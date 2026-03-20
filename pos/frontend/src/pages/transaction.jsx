@@ -1040,7 +1040,7 @@ const Transaction = () => {
 
   return (
     <div
-      className={`p-6 min-h-screen ${theme === "dark" ? "bg-[#1E1B18]" : "bg-[#FFFFFF]"}`}>
+      className={`p-6 h-screen overflow-hidden flex flex-col ${theme === "dark" ? "bg-[#1E1B18]" : "bg-[#FFFFFF]"}`}>
 
       <>
         <Header
@@ -1212,9 +1212,9 @@ const Transaction = () => {
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col lg:flex-row gap-6">
           <div
-            className={`flex-1 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] p-6 border ${theme === "dark" ?
+            className={`flex-1 min-h-0 flex flex-col rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] p-6 border overflow-hidden ${theme === "dark" ?
               "bg-[#2A2724] border-[#4A4037]" :
               "bg-white border-white/80"}`
             }>
@@ -1287,7 +1287,7 @@ const Transaction = () => {
               </div>
             </div>
 
-            <div className="relative overflow-x-auto">
+            <div className="relative overflow-x-auto overflow-y-auto flex-1 min-h-0">
               <table className="w-full text-sm text-left">
                 <thead className="sticky top-0">
                   <tr
