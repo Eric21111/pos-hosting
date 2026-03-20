@@ -198,8 +198,8 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
             initPrices[size] = {};
             Object.entries(sd.variants).forEach(([variant, vData]) => {
               initChecked[`${size}|${variant}`] = true;
-              const cost = typeof vData === 'object' ? (vData.costPrice || sd.variantCostPrices?.[variant] || sd.costPrice || product.costPrice || 0) : (product.costPrice || 0);
-              const sell = typeof vData === 'object' ? (vData.price || sd.variantPrices?.[variant] || sd.price || product.itemPrice || 0) : (product.itemPrice || 0);
+              const cost = typeof vData === 'object' ? (vData.costPrice || sd.variantCostPrices?.[variant] || sd.costPrice || product.costPrice || 0) : (sd.variantCostPrices?.[variant] || sd.costPrice || product.costPrice || 0);
+              const sell = typeof vData === 'object' ? (vData.price || sd.variantPrices?.[variant] || sd.price || product.itemPrice || 0) : (sd.variantPrices?.[variant] || sd.price || product.itemPrice || 0);
               initPrices[size][variant] = { price: sell, costPrice: cost };
             });
           }
