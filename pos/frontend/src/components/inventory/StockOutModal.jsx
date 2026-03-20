@@ -170,7 +170,7 @@ const StockOutModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
         </div>
 
         {/* Body */}
-        <div className="px-6 pb-6 overflow-y-auto" style={{ maxHeight: "calc(100vh - 200px)" }}>
+        <div className="px-6 pb-4">
           <div className="space-y-5">
 
             {/* Product Name + Batch Number */}
@@ -205,7 +205,7 @@ const StockOutModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
               )}
             </div>
 
-            {/* Variant selection */}
+            {/* Variant selection chips */}
             {hasVariants && selectedBatch && batchCombos.length > 0 && (
               <div className={`rounded-xl border p-4 ${isDark ? "border-gray-700 bg-[#2A2724]" : "border-gray-200 bg-gray-50"}`}>
                 <p className={`text-xs font-bold uppercase tracking-wide mb-3 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Select Variants to Remove</p>
@@ -233,35 +233,53 @@ const StockOutModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
               </div>
             )}
 
-            {/* Qty inputs for selected combos */}
+            {/* Qty inputs — scrollable table */}
             {hasVariants && selectedCombos.length > 0 && (
-              <div className={`rounded-xl border p-4 ${isDark ? "border-gray-700 bg-[#2A2724]" : "border-gray-200 bg-gray-50"}`}>
-                <div className="flex flex-wrap gap-4">
-                  {selectedCombos.map(key => {
-                    const combo = batchCombos.find(c => comboKey(c.size, c.variant) === key);
-                    if (!combo) return null;
-                    const [size, variant] = key.split("|");
-                    const maxQty = combo.qty;
-                    const val = comboQuantities[key] || "";
-                    return (
-                      <div key={key} className="flex items-center gap-2">
-                        {size !== VARIANT_ONLY_SIZE_KEY && (
-                          <span className={`inline-block px-2.5 py-0.5 text-[11px] rounded-full font-medium border border-dashed ${isDark ? "border-blue-400/40 text-blue-400" : "border-blue-300 text-blue-700"}`}>{size}</span>
-                        )}
-                        <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>×</span>
-                        <span className={`inline-block px-2.5 py-0.5 text-[11px] rounded-full font-medium border border-dashed ${isDark ? "border-pink-400/40 text-pink-400" : "border-pink-300 text-pink-700"}`}>{variant}</span>
-                        <input
-                          type="number"
-                          min="0"
-                          max={maxQty}
-                          value={val}
-                          onChange={(e) => handleQtyChange(key, e.target.value)}
-                          placeholder="qty"
-                          className={`w-20 px-2 py-1.5 text-sm text-center border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 ${isDark ? "bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500" : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"}`}
-                        />
-                      </div>
-                    );
-                  })}
+              <div className={`rounded-xl border overflow-hidden ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                <div className="overflow-y-auto" style={{ maxHeight: "220px" }}>
+                  <table className="w-full text-xs">
+                    <thead className={`sticky top-0 z-10 ${isDark ? "bg-[#2A2724]" : "bg-gray-50"}`}>
+                      <tr className={`border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                        <th className={`px-4 py-2 text-left font-bold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>Variant</th>
+                        <th className={`px-4 py-2 text-center font-bold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>Stock</th>
+                        <th className={`px-4 py-2 text-center font-bold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>Qty Out</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedCombos.map(key => {
+                        const combo = batchCombos.find(c => comboKey(c.size, c.variant) === key);
+                        if (!combo) return null;
+                        const [size, variant] = key.split("|");
+                        const maxQty = combo.qty;
+                        const val = comboQuantities[key] || "";
+                        return (
+                          <tr key={key} className={`border-b last:border-b-0 ${isDark ? "border-gray-700/50" : "border-gray-100"}`}>
+                            <td className="px-4 py-2.5">
+                              <div className="flex items-center gap-1.5">
+                                {size !== VARIANT_ONLY_SIZE_KEY && (
+                                  <span className={`inline-block px-2.5 py-0.5 text-[11px] rounded-full font-medium border border-dashed ${isDark ? "border-blue-400/40 text-blue-400" : "border-blue-300 text-blue-700"}`}>{size}</span>
+                                )}
+                                {size !== VARIANT_ONLY_SIZE_KEY && <span className={`text-[10px] ${isDark ? "text-gray-500" : "text-gray-400"}`}>×</span>}
+                                <span className={`inline-block px-2.5 py-0.5 text-[11px] rounded-full font-medium border border-dashed ${isDark ? "border-pink-400/40 text-pink-400" : "border-pink-300 text-pink-700"}`}>{variant}</span>
+                              </div>
+                            </td>
+                            <td className={`px-4 py-2.5 text-center font-medium ${isDark ? "text-gray-300" : "text-gray-600"}`}>{maxQty}</td>
+                            <td className="px-4 py-2.5 text-center">
+                              <input
+                                type="number"
+                                min="0"
+                                max={maxQty}
+                                value={val}
+                                onChange={(e) => handleQtyChange(key, e.target.value)}
+                                placeholder="0"
+                                className={`w-20 mx-auto px-2 py-1.5 text-sm text-center border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 ${isDark ? "bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500" : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"}`}
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
