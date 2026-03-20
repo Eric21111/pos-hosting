@@ -50,6 +50,9 @@ const AddProductModal = ({
   onBrandAdd
 }) => {
   const { theme } = useTheme();
+  // Used when user only selects Option Group 1 (variants) but does not select Option Group 2 (sizes).
+  // Keeps per-variant inputs independent instead of falling back to a shared global product price/qty.
+  const VARIANT_ONLY_KEY = "__VARIANT_ONLY__";
 
   const categoryStructure = {
     "Apparel - Men": ["Tops", "Bottoms", "Outerwear"],
@@ -1293,7 +1296,7 @@ const AddProductModal = ({
                     {(() => {
                       const combos = [];
                       const variants = selectedVariants.length > 0 ? selectedVariants : [null];
-                      const sizes = (newProduct.selectedSizes?.length > 0) ? newProduct.selectedSizes : [null];
+                      const sizes = (newProduct.selectedSizes?.length > 0) ? newProduct.selectedSizes : [VARIANT_ONLY_KEY];
                       variants.forEach(v => { sizes.forEach(s => { combos.push({ variant: v, size: s, key: `${v || ''}-${s || ''}` }); }); });
                       const hasAnyCombos = hasVariants && combos.length > 0 && (combos[0].variant || combos[0].size);
 
@@ -1359,7 +1362,7 @@ const AddProductModal = ({
                             {combos.map(({ variant: v, size: s, key }) => (
                               <div key={key} className={`grid grid-cols-[1.5fr_1fr_1fr_0.8fr] gap-0 items-center border-t ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
                                 <div className="px-3 py-2 flex flex-wrap gap-1">
-                                  {s && <span className={`inline-block px-2 py-0.5 text-[11px] rounded-full font-medium ${theme === "dark" ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-700"}`}>{s}</span>}
+                                  {s && s !== VARIANT_ONLY_KEY && <span className={`inline-block px-2 py-0.5 text-[11px] rounded-full font-medium ${theme === "dark" ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-700"}`}>{s}</span>}
                                   {v && <span className={`inline-block px-2 py-0.5 text-[11px] rounded-full font-medium ${theme === "dark" ? "bg-pink-500/20 text-pink-400" : "bg-pink-100 text-pink-700"}`}>{v}</span>}
                                 </div>
                                 <div className="px-2 py-1.5">
@@ -1496,7 +1499,7 @@ const AddProductModal = ({
                 {currentStep === 5 && (() => {
                   const combos = [];
                   const rvariants = selectedVariants.length > 0 ? selectedVariants : [null];
-                  const rsizes = (newProduct.selectedSizes?.length > 0) ? newProduct.selectedSizes : [null];
+                  const rsizes = (newProduct.selectedSizes?.length > 0) ? newProduct.selectedSizes : [VARIANT_ONLY_KEY];
                   rvariants.forEach(v => { rsizes.forEach(s => { combos.push({ variant: v, size: s }); }); });
                   const hasAnyCombos = hasVariants && combos.length > 0 && (combos[0].variant || combos[0].size);
                   const totalSkus = hasAnyCombos ? combos.length : 1;
@@ -1590,7 +1593,7 @@ const AddProductModal = ({
                               return (
                                 <div key={idx} className={`grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center px-4 py-2.5 ${idx > 0 ? (theme === "dark" ? "border-t border-gray-700" : "border-t border-gray-100") : ""}`}>
                                   <div className="flex items-center gap-1.5">
-                                    {s && <span className={`inline-block px-2.5 py-0.5 text-[11px] rounded-full font-medium ${theme === "dark" ? "bg-[#09A046]/15 text-[#09A046]" : "bg-[#09A046]/10 text-[#09A046]"}`}>{s}</span>}
+                                    {s && s !== VARIANT_ONLY_KEY && <span className={`inline-block px-2.5 py-0.5 text-[11px] rounded-full font-medium ${theme === "dark" ? "bg-[#09A046]/15 text-[#09A046]" : "bg-[#09A046]/10 text-[#09A046]"}`}>{s}</span>}
                                     {v && s && <span className={`text-xs ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>×</span>}
                                     {v && <span className={`inline-block px-2.5 py-0.5 text-[11px] rounded-full font-medium ${theme === "dark" ? "bg-pink-500/15 text-pink-400" : "bg-pink-100 text-pink-700"}`}>{v}</span>}
                                   </div>
