@@ -33,15 +33,28 @@ const formatAbs = (val) =>
     `₱${Math.abs(val || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 // ─── KPI Card ────────────────────────────────────────────────
-const KpiCard = ({ icon: Icon, label, value, iconBg, iconColor, textColor }) => (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 min-w-0 flex flex-col justify-center">
-        <div className="flex items-center justify-between mb-2">
-            <p className="text-3xl font-black text-gray-800 truncate tracking-tight">{value}</p>
-            <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ml-2 ${iconBg || 'bg-blue-50'}`}>
-                <Icon className={`text-xl ${iconColor || 'text-blue-500'}`} />
+// Matches the compact KPI style used across the app screenshots:
+// left colored bar + value/label stacked + icon in a soft-colored circle.
+const KpiCard = ({
+    icon: Icon,
+    label,
+    value,
+    barColor = "bg-blue-500",
+    iconBg = "bg-blue-50",
+    iconColor = "text-blue-500",
+    textColor = "text-blue-500"
+}) => (
+    <div className="relative bg-white rounded-2xl shadow-sm border border-gray-100 p-4 min-w-0 overflow-hidden">
+        <div className={`absolute left-0 top-0 bottom-0 w-2 ${barColor}`} />
+        <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
+                <p className="text-2xl lg:text-3xl font-black text-gray-800 truncate tracking-tight">{value}</p>
+                <p className={`text-xs lg:text-sm font-bold truncate ${textColor}`}>{label}</p>
+            </div>
+            <div className={`w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center flex-shrink-0`}>
+                <Icon className={`text-xl ${iconColor}`} />
             </div>
         </div>
-        <p className={`text-sm font-bold truncate ${textColor || 'text-blue-500'}`}>{label}</p>
     </div>
 );
 
@@ -336,6 +349,7 @@ const CashRemittance = () => {
                         icon={FaChartLine}
                         label="Total Net Sales"
                         value={formatCurrency(kpis.totalNetSales)}
+                        barColor="bg-blue-500"
                         iconBg="bg-blue-50"
                         iconColor="text-blue-500"
                         textColor="text-blue-500"
@@ -344,6 +358,7 @@ const CashRemittance = () => {
                         icon={FaHandHoldingUsd}
                         label="Total Remitted"
                         value={formatCurrency(kpis.totalRemitted)}
+                        barColor="bg-green-500"
                         iconBg="bg-green-50"
                         iconColor="text-green-500"
                         textColor="text-green-500"
@@ -352,6 +367,7 @@ const CashRemittance = () => {
                         icon={FaBalanceScale}
                         label="Total Variance"
                         value={`${kpis.totalVariance > 0 ? '+' : ''}${formatCurrency(kpis.totalVariance)}`}
+                        barColor="bg-amber-500"
                         iconBg="bg-amber-50"
                         iconColor="text-amber-500"
                         textColor="text-amber-500"
@@ -360,6 +376,7 @@ const CashRemittance = () => {
                         icon={FaClock}
                         label="Unremitted"
                         value={formatCurrency(kpis.unremittedCash)}
+                        barColor="bg-red-500"
                         iconBg="bg-red-50"
                         iconColor="text-red-500"
                         textColor="text-red-500"
