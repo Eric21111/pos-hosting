@@ -171,7 +171,10 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading, brandPartn
       const now = new Date();
       const y = now.getFullYear();
       const m = String(now.getMonth() + 1).padStart(2, '0');
-      setBatchCode(`B${y}${m} – 001`);
+      const d = String(now.getDate()).padStart(2, '0');
+      const h = String(now.getHours()).padStart(2, '0');
+      const min = String(now.getMinutes()).padStart(2, '0');
+      setBatchCode(`B${y}${m}${d}-${h}${min}`);
       setBatchExpirationDate("");
       setReason("Restock");
       setOtherReason("");
@@ -567,8 +570,7 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading, brandPartn
     return true;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = () => {
     if (currentStep !== 3) return;
 
     if (reason === "Other" && !otherReason.trim()) {
@@ -711,7 +713,7 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading, brandPartn
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <div>
           <div className="flex" style={{ maxHeight: "calc(100vh - 150px)" }}>
             <div className="w-full p-6 flex flex-col justify-between overflow-y-auto" style={{ maxHeight: "calc(100vh - 150px)" }}>
               <div className="space-y-6">
@@ -1638,7 +1640,7 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading, brandPartn
                     Continue
                   </button>
                 ) : (
-                  <button type="submit" disabled={loading}
+                  <button type="button" disabled={loading} onClick={handleSubmit}
                     className="px-8 py-2.5 text-sm font-semibold rounded-xl text-white transition-all shadow-md hover:opacity-90 disabled:opacity-50"
                     style={{ background: "#09A046" }}>
                     {loading ? "Adding..." : "Stock In"}
@@ -1647,7 +1649,7 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading, brandPartn
               </div>
             </div>
           </div>
-        </form>
+        </div>
       </div>
     </div>);
 
