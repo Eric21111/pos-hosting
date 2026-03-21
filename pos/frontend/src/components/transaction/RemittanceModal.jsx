@@ -346,29 +346,34 @@ const RemittanceModal = ({ isOpen, onClose, employeeId, employeeName }) => {
                                                 </div>
                                             </div>
 
-                                            <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-6">
-                                                <p className="text-xs text-blue-700">
-                                                    💡 This is your machine reading. You will now count the physical cash in your
-                                                    drawer and remit the difference after deducting your opening float of{" "}
-                                                    {formatCurrency(openingFloat)}.
-                                                </p>
-                                            </div>
-
                                             {summary.alreadyRemittedToday ? (
-                                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-2">
-                                                    <p className="text-sm font-semibold text-amber-800">
+                                                <div className="bg-black/60 backdrop-blur-sm border border-white/20 rounded-xl p-4 mb-3">
+                                                    <p className="text-sm font-semibold text-red-300">
                                                         You already remitted today.
                                                     </p>
-                                                    <p className="text-xs text-amber-700 mt-1">
-                                                        Amount remitted: {formatCurrency(summary.remittedAmountToday || 0)}
+                                                    <p className="text-xs text-gray-200 mt-1">
+                                                        Exact amount remitted:
+                                                    </p>
+                                                    <p className="text-lg font-extrabold text-white mt-1">
+                                                        {formatCurrency(summary.remittedAmountToday || 0)}
                                                     </p>
                                                     {summary.remittedAtToday && (
-                                                        <p className="text-xs text-amber-700 mt-1">
-                                                            Submitted at: {new Date(summary.remittedAtToday).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                                                        <p className="text-[11px] text-gray-300 mt-2">
+                                                            Submitted at {new Date(summary.remittedAtToday).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
                                                         </p>
                                                     )}
                                                 </div>
                                             ) : (
+                                                <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-6">
+                                                    <p className="text-xs text-blue-700">
+                                                        💡 This is your machine reading. You will now count the physical cash in your
+                                                        drawer and remit the difference after deducting your opening float of{" "}
+                                                        {formatCurrency(openingFloat)}.
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {!summary.alreadyRemittedToday && (
                                                 <button
                                                     onClick={() => setStep(2)}
                                                     className="w-full bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold py-3 rounded-xl transition-colors cursor-pointer"
