@@ -30,6 +30,13 @@ exports.getRemittanceSummary = async (req, res) => {
             checkedOutAt: { $gte: startOfDay, $lt: endOfDay }
         }).lean();
 
+        const existingTodayRemittance = await Remittance.findOne({
+            employeeId,
+            submittedAt: { $gte: startOfDay, $lt: endOfDay }
+        })
+            .sort({ submittedAt: -1 })
+            .lean();
+
         const grossSales = completedTransactions.reduce((sum, t) => sum + (t.totalAmount || 0), 0);
         const returns = returnTransactions.reduce((sum, t) => sum + Math.abs(t.totalAmount || 0), 0);
         const netSales = grossSales - returns;
@@ -42,7 +49,10 @@ exports.getRemittanceSummary = async (req, res) => {
                 grossSales,
                 returns,
                 netSales,
-                noOfSales
+                noOfSales,
+                alreadyRemittedToday: !!existingTodayRemittance,
+                remittedAmountToday: existingTodayRemittance?.cashToRemit || 0,
+                remittedAtToday: existingTodayRemittance?.submittedAt || null
             }
         });
     } catch (error) {

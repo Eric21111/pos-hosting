@@ -77,6 +77,9 @@ const RemittanceModal = ({ isOpen, onClose, employeeId, employeeName }) => {
         returns: 0,
         netSales: 0,
         noOfSales: 0,
+        alreadyRemittedToday: false,
+        remittedAmountToday: 0,
+        remittedAtToday: null,
     });
     const [denominations, setDenominations] = useState(
         DENOMINATIONS.reduce((acc, d) => ({ ...acc, [d.key]: 0 }), {})
@@ -145,6 +148,11 @@ const RemittanceModal = ({ isOpen, onClose, employeeId, employeeName }) => {
     };
 
     const handleSubmit = async () => {
+        if (summary.alreadyRemittedToday) {
+            alert(`You already remitted today.\nAmount remitted: ${formatCurrency(summary.remittedAmountToday || 0)}`);
+            return;
+        }
+
         setSubmitting(true);
         try {
             const res = await fetch(API_ENDPOINTS.remittances, {
@@ -346,12 +354,28 @@ const RemittanceModal = ({ isOpen, onClose, employeeId, employeeName }) => {
                                                 </p>
                                             </div>
 
-                                            <button
-                                                onClick={() => setStep(2)}
-                                                className="w-full bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold py-3 rounded-xl transition-colors cursor-pointer"
-                                            >
-                                                Proceed
-                                            </button>
+                                            {summary.alreadyRemittedToday ? (
+                                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-2">
+                                                    <p className="text-sm font-semibold text-amber-800">
+                                                        You already remitted today.
+                                                    </p>
+                                                    <p className="text-xs text-amber-700 mt-1">
+                                                        Amount remitted: {formatCurrency(summary.remittedAmountToday || 0)}
+                                                    </p>
+                                                    {summary.remittedAtToday && (
+                                                        <p className="text-xs text-amber-700 mt-1">
+                                                            Submitted at: {new Date(summary.remittedAtToday).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    onClick={() => setStep(2)}
+                                                    className="w-full bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold py-3 rounded-xl transition-colors cursor-pointer"
+                                                >
+                                                    Proceed
+                                                </button>
+                                            )}
                                         </>
                                     )}
                                 </div>
