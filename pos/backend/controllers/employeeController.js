@@ -96,6 +96,7 @@ exports.createEmployee = async (req, res) => {
   try {
     const {
       firstName,
+      middleInitial,
       lastName,
       name,
       contactNo,
@@ -134,8 +135,15 @@ exports.createEmployee = async (req, res) => {
     // Don't hash PIN here - the model's pre-save hook will handle it
     const employeeData = {
       firstName: firstName || '',
+      middleInitial: middleInitial || '',
       lastName: lastName || '',
-      name: name || `${firstName || ''} ${lastName || ''}`.trim(),
+      name:
+        name ||
+        [firstName || '', middleInitial || '', lastName || '']
+          .map((p) => String(p).trim())
+          .filter(Boolean)
+          .join(' ')
+          .trim(),
       contactNo: contactNo || '',
       email,
       role,
@@ -613,6 +621,7 @@ exports.searchEmployees = async (req, res) => {
       $or: [
         { name: { $regex: query, $options: 'i' } },
         { firstName: { $regex: query, $options: 'i' } },
+        { middleInitial: { $regex: query, $options: 'i' } },
         { lastName: { $regex: query, $options: 'i' } },
         { email: { $regex: query, $options: 'i' } },
         { role: { $regex: query, $options: 'i' } }

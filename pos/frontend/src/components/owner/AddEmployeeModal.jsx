@@ -12,6 +12,13 @@ new Date().toLocaleDateString('en-US', {
 
 const getTodayISO = () => new Date().toISOString().split('T')[0];
 
+const buildEmployeeName = (firstName, middleInitial, lastName) => {
+  const parts = [firstName, middleInitial, lastName]
+    .map((p) => String(p ?? '').trim())
+    .filter(Boolean);
+  return parts.join(' ').trim();
+};
+
 const ROLE_ACCESS_RECOMMENDATIONS = {
   Cashier: {
     posTerminal: true,
@@ -42,6 +49,7 @@ const ROLE_ACCESS_RECOMMENDATIONS = {
 const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded, onEmployeeCreated }) => {
   const [formData, setFormData] = useState({
     firstName: '',
+    middleInitial: '',
     lastName: '',
     contactNo: '',
     email: '',
@@ -77,6 +85,7 @@ const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded, onEmployeeCreated 
     if (!isOpen) {
       setFormData({
         firstName: '',
+        middleInitial: '',
         lastName: '',
         contactNo: '',
         email: '',
@@ -116,9 +125,13 @@ const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded, onEmployeeCreated 
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    const normalizedValue =
+      name === 'middleInitial'
+        ? value.replace(/[^a-zA-Z]/g, '').slice(0, 1).toUpperCase()
+        : value;
     setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: normalizedValue
     }));
 
     if (name === 'role') {
@@ -238,8 +251,13 @@ const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded, onEmployeeCreated 
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          name: `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim(),
+          name: buildEmployeeName(
+            formData.firstName.trim(),
+            formData.middleInitial,
+            formData.lastName.trim()
+          ),
           firstName: formData.firstName.trim(),
+          middleInitial: formData.middleInitial,
           lastName: formData.lastName.trim(),
           contactNo: formData.contactNo,
           email: formData.email,
@@ -256,11 +274,15 @@ const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded, onEmployeeCreated 
       const data = await response.json();
 
       if (data.success) {
-        const employeeName = `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim();
-
+        const employeeName = buildEmployeeName(
+          formData.firstName.trim(),
+          formData.middleInitial,
+          formData.lastName.trim()
+        );
 
         setFormData({
           firstName: '',
+          middleInitial: '',
           lastName: '',
           contactNo: '',
           email: '',
@@ -370,6 +392,19 @@ const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded, onEmployeeCreated 
                 
               </div>
               <div>
+                <label className="text-sm text-gray-500 mb-1 block">Middle Initial</label>
+                <input
+                  type="text"
+                  name="middleInitial"
+                  value={formData.middleInitial}
+                  onChange={handleInputChange}
+                  placeholder="A"
+                  maxLength={1}
+                  inputMode="text"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-[#AD7F65] text-sm" />
+                
+              </div>
+              <div className="col-span-2">
                 <label className="text-sm text-gray-500 mb-1 block">Last Name</label>
                 <input
                   type="text"

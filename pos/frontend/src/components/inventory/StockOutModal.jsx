@@ -28,65 +28,84 @@ const StockOutModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
     const getVariantQty = (vData) => {
       if (typeof vData === "number") return parseInt(vData, 10) || 0;
       if (vData && typeof vData === "object") {
-        const qty =
-          vData.qty ??
-          vData.quantity ??
-          0;
+        const qty = vData.qty ?? vData.quantity ?? 0;
         return parseInt(qty, 10) || 0;
       }
       return 0;
     };
 
-    const batchMap = {};
-    const fallbackCombosMap = {}; // key: `${size}|${variant}` -> { size, variant, qty }
+    const maxBatchDepth = (() => {
+      let max = 0;
+      Object.entries(product.sizes).forEach(([_, sd]) => {
+        if (!sd || typeof sd !== "object" || !sd?.variants) return;
+        Object.values(sd.variants).forEach((vData) => {
+          const batches = typeof vData === "object" && Array.isArray(vData.batches) ? vData.batches : [];
+          max = Math.max(max, batches.length);
+        });
+      });
+      return max;
+    })();
+
+    if (maxBatchDepth <= 0) {
+      // Fallback: if there are no `batches[]` arrays, show batch 1 from the opening qty.
+      const openingBatchCode = product?.batchNumber || product?.openingBatchNumber || "B1";
+      const combos = {};
+      Object.entries(product.sizes).forEach(([size, sd]) => {
+        if (!sd || typeof sd !== "object" || !sd?.variants) return;
+        Object.entries(sd.variants).forEach(([variant, vData]) => {
+          const qty = getVariantQty(vData);
+          if (qty > 0) combos[`${size}|${variant}`] = { size, variant, qty };
+        });
+      });
+      const comboArr = Object.values(combos);
+      const totalQty = comboArr.reduce((sum, c) => sum + (c.qty || 0), 0);
+      if (totalQty <= 0) return [];
+      return [{ slotIndex: 0, code: openingBatchCode, totalQty, combos }];
+    }
+
+    // Build dropdown based on batch slot index (FIFO slot), not on `batchCode` grouping.
+    const slots = Array.from({ length: maxBatchDepth }, (_, slotIndex) => ({
+      slotIndex,
+      code: "",
+      totalQty: 0,
+      combos: {},
+    }));
+
     Object.entries(product.sizes).forEach(([size, sd]) => {
-      if (typeof sd !== "object" || !sd?.variants) return;
+      if (!sd || typeof sd !== "object" || !sd?.variants) return;
       Object.entries(sd.variants).forEach(([variant, vData]) => {
         const batches = typeof vData === "object" && Array.isArray(vData.batches) ? vData.batches : [];
 
-        // Track opening batch qty from whatever variant quantity is stored.
-        const fallbackQty = getVariantQty(vData);
-        if (fallbackQty > 0) {
-          const key = `${size}|${variant}`;
-          if (!fallbackCombosMap[key]) fallbackCombosMap[key] = { size, variant, qty: 0 };
-          fallbackCombosMap[key].qty += fallbackQty;
-        }
+        // If a variant doesn't have batch entries yet, treat its stored qty as slot 1 (index 0).
+        const fallbackQty = slotIndexForFallback => (slotIndexForFallback === 0 ? getVariantQty(vData) : 0);
 
-        batches.forEach(b => {
-          const code = b.batchCode || "Default";
-          if (!batchMap[code]) batchMap[code] = { code, totalQty: 0, combos: {} };
+        for (let slotIndex = 0; slotIndex < maxBatchDepth; slotIndex++) {
+          const b = batches[slotIndex];
+          const qty = b ? (parseInt(b.qty, 10) || 0) : fallbackQty(slotIndex);
+          if (qty <= 0) continue;
+
+          const slot = slots[slotIndex];
           const key = `${size}|${variant}`;
-          if (!batchMap[code].combos[key]) batchMap[code].combos[key] = { size, variant, qty: 0 };
-          batchMap[code].combos[key].qty += (b.qty || 0);
-          batchMap[code].totalQty += (b.qty || 0);
-        });
+          if (!slot.combos[key]) slot.combos[key] = { size, variant, qty: 0 };
+          slot.combos[key].qty += qty;
+          slot.totalQty += qty;
+
+          // Take code from the first non-empty batch entry we find for that slot.
+          if (!slot.code) {
+            slot.code = b?.batchCode || (slotIndex === 0 ? (product?.batchNumber || product?.openingBatchNumber || "B1") : "");
+          }
+        }
       });
     });
 
-    const realBatches = Object.values(batchMap).filter(b => b.totalQty > 0);
-    if (realBatches.length > 0) return realBatches;
-
-    // Fallback: no "new batches" yet, but we still need a batch dropdown (opening batch / batch 1).
-    const openingBatchCode = product?.batchNumber || product?.openingBatchNumber || "B1";
-    const combosEntries = Object.entries(fallbackCombosMap).filter(([, c]) => c.qty > 0);
-    if (combosEntries.length === 0) return [];
-
-    const totalQty = combosEntries.reduce((sum, [, c]) => sum + (c.qty || 0), 0) || parseInt(product.currentStock, 10) || 0;
-    if (totalQty <= 0) return [];
-
-    const combos = {};
-    combosEntries.forEach(([key, combo]) => {
-      combos[key] = combo;
-    });
-
-    return [{ code: openingBatchCode, totalQty, combos }];
+    return slots.filter(s => s.totalQty > 0);
   }, [product, hasSizes, hasVariants]);
 
   const batchCombos = useMemo(() => {
     if (!selectedBatch) return [];
-    const batch = batchList.find(b => b.code === selectedBatch);
-    if (!batch) return [];
-    return Object.values(batch.combos).filter(c => c.qty > 0);
+    const slot = batchList.find(b => String(b.slotIndex) === selectedBatch);
+    if (!slot) return [];
+    return Object.values(slot.combos).filter(c => c.qty > 0);
   }, [selectedBatch, batchList]);
 
   useEffect(() => {
@@ -188,7 +207,7 @@ const StockOutModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
   const inputCls = `w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent appearance-none cursor-pointer ${isDark ? "bg-[#2A2724] border-gray-600 text-white" : "bg-white border-gray-300 text-gray-900"}`;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4 backdrop-blur-sm pointer-events-none">
+    <div className="fixed inset-0 flex items-center justify-center z-9999 p-4 backdrop-blur-sm pointer-events-none">
       <div
         className={`rounded-2xl w-full max-w-lg relative pointer-events-auto overflow-hidden ${isDark ? "bg-[#1E1B18]" : "bg-white"}`}
         style={{ boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.1)" }}
@@ -234,7 +253,9 @@ const StockOutModal = ({ isOpen, onClose, product, onConfirm, loading }) => {
                     >
                       <option value="" disabled style={{ color: '#9CA3AF' }}>Select Batch</option>
                       {batchList.map(b => (
-                        <option key={b.code} value={b.code}>{b.code} ({b.totalQty})</option>
+                        <option key={b.slotIndex} value={String(b.slotIndex)}>
+                          Batch {b.slotIndex + 1}{b.code ? ` (${b.code})` : ""} ({b.totalQty})
+                        </option>
                       ))}
                     </select>
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">

@@ -7,6 +7,11 @@ const employeeSchema = new mongoose.Schema({
     trim: true,
     required: true
   },
+  middleInitial: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   lastName: {
     type: String,
     trim: true,
@@ -126,20 +131,67 @@ employeeSchema.pre('save', async function (next) {
   }
 });
 
-// Ensure name/first/last stay in sync
+// Ensure name/first/middleInitial/last stay in sync
 employeeSchema.pre('validate', function (next) {
-  if ((!this.firstName || !this.lastName || this.isModified('name')) && this.name) {
-    const parts = this.name.trim().split(/\s+/);
-    if (!this.firstName || this.isModified('name')) {
-      this.firstName = parts[0] || '';
+  const normalizeMiddleInitial = (mi) => {
+    if (mi === undefined || mi === null) return '';
+    const t = String(mi).trim();
+    if (!t) return '';
+
+    // Allow `A` or `A.` (store as just `A`)
+    const match = t.match(/^([A-Za-z])\.?$/);
+    if (match) return match[1].toUpperCase();
+
+    // If user typed more than 1 letter, keep only the first alphabetic char.
+    const firstAlpha = t.replace(/[^A-Za-z]/g, '').slice(0, 1);
+    return firstAlpha ? firstAlpha.toUpperCase() : '';
+  };
+
+  // Backward compatibility: if only `name` was modified (legacy UI),
+  // parse it into { firstName, middleInitial, lastName }.
+  if (this.name && (this.isModified('name') || !this.firstName || !this.lastName)) {
+    const parts = this.name.trim().split(/\s+/).filter(Boolean);
+    const first = parts[0] || '';
+
+    let middle = '';
+    let last = '';
+
+    if (parts.length === 2) {
+      // `First Last`
+      last = parts[1] || '';
+    } else if (parts.length >= 3) {
+      // Prefer `First M Last...` when second token looks like an initial.
+      const maybeMiddleNorm = normalizeMiddleInitial(parts[1]);
+      if (maybeMiddleNorm) {
+        middle = maybeMiddleNorm;
+        last = parts.slice(2).join(' ') || '';
+      } else {
+        // Fallback: treat everything after first as lastName (legacy behavior).
+        last = parts.slice(1).join(' ') || '';
+      }
     }
-    if (!this.lastName || this.isModified('name')) {
-      this.lastName = parts.slice(1).join(' ') || '';
-    }
+
+    if (!this.firstName || this.isModified('name')) this.firstName = first;
+    if (!this.middleInitial || this.isModified('name')) this.middleInitial = middle;
+    if (!this.lastName || this.isModified('name')) this.lastName = last;
   }
 
-  if (this.isModified('firstName') || this.isModified('lastName') || !this.name) {
-    this.name = `${this.firstName || ''} ${this.lastName || ''}`.trim();
+  // Keep derived `name` synced from { firstName, middleInitial, lastName }.
+  if (
+    this.isModified('firstName') ||
+    this.isModified('middleInitial') ||
+    this.isModified('lastName') ||
+    !this.name
+  ) {
+    this.middleInitial = normalizeMiddleInitial(this.middleInitial);
+
+    const nameParts = [this.firstName || '']
+      .concat(this.middleInitial ? [this.middleInitial] : [])
+      .concat(this.lastName ? [this.lastName] : [])
+      .map((p) => String(p).trim())
+      .filter(Boolean);
+
+    this.name = nameParts.join(' ').trim();
   }
 
   next();
@@ -169,7 +221,7 @@ employeeSchema.index({ email: 1 }); // Already unique, but explicit index helps
 employeeSchema.index({ status: 1 });
 employeeSchema.index({ role: 1 });
 employeeSchema.index({ dateJoined: -1 });
-employeeSchema.index({ firstName: 'text', lastName: 'text', name: 'text', email: 'text' }); // Text search index
+employeeSchema.index({ firstName: 'text', middleInitial: 'text', lastName: 'text', name: 'text', email: 'text' }); // Text search index
 employeeSchema.index({ fastPinHash: 1 }); // Fast login lookup
 employeeSchema.index({ isOnline: 1 }); // Online employees dashboard lookup
 

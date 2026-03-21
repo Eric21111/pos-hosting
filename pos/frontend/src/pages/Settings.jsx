@@ -45,6 +45,7 @@ const Settings = () => {
   const [newPin, setNewPin] = useState(["", "", "", "", "", ""]);
   const [confirmPin, setConfirmPin] = useState(["", "", "", "", "", ""]);
   const [firstName, setFirstName] = useState("");
+  const [middleInitial, setMiddleInitial] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [contactNumber, setContactNumber] = useState("");
@@ -96,8 +97,14 @@ const Settings = () => {
       currentUser.lastName ||
       currentUser.name?.split(" ").slice(1).join(" ") ||
       "";
+      const fallbackMiddle =
+      currentUser.middleInitial ||
+      (currentUser.name?.split(" ").length >= 3
+        ? currentUser.name.split(" ")[1].replace(".", "")
+        : "");
 
       setFirstName(fallbackFirst);
+      setMiddleInitial(fallbackMiddle.replace(/[^a-zA-Z]/g, "").slice(0, 1).toUpperCase());
       setLastName(fallbackLast);
       setEmail(currentUser.email || "");
       setContactNumber(currentUser.contactNo || "");
@@ -408,6 +415,7 @@ const Settings = () => {
 
     const mergedProfile = {
       firstName: overrides.firstName ?? firstName,
+      middleInitial: overrides.middleInitial ?? middleInitial,
       lastName: overrides.lastName ?? lastName,
       email: overrides.email ?? email,
       contactNumber: overrides.contactNumber ?? contactNumber,
@@ -436,8 +444,13 @@ const Settings = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             firstName: mergedProfile.firstName.trim(),
+            middleInitial: mergedProfile.middleInitial,
             lastName: mergedProfile.lastName.trim(),
-            name: `${mergedProfile.firstName} ${mergedProfile.lastName}`.trim(),
+            name: [mergedProfile.firstName, mergedProfile.middleInitial, mergedProfile.lastName]
+              .map((p) => String(p ?? '').trim())
+              .filter(Boolean)
+              .join(' ')
+              .trim(),
             email: mergedProfile.email.trim().toLowerCase(),
             contactNo: mergedProfile.contactNumber.trim(),
             profileImage: mergedProfile.profileImage,
@@ -459,10 +472,15 @@ const Settings = () => {
           ...currentUser,
           ...apiUser,
           firstName: apiUser.firstName ?? mergedProfile.firstName.trim(),
+          middleInitial: apiUser.middleInitial ?? mergedProfile.middleInitial,
           lastName: apiUser.lastName ?? mergedProfile.lastName.trim(),
           name:
           apiUser.name ??
-          `${mergedProfile.firstName} ${mergedProfile.lastName}`.trim(),
+          [mergedProfile.firstName, mergedProfile.middleInitial, mergedProfile.lastName]
+            .map((p) => String(p ?? '').trim())
+            .filter(Boolean)
+            .join(' ')
+            .trim(),
           email: apiUser.email ?? mergedProfile.email.trim().toLowerCase(),
           contactNo: apiUser.contactNo ?? mergedProfile.contactNumber.trim(),
           profileImage: finalProfileImage,
@@ -576,9 +594,10 @@ const Settings = () => {
 
   const computedName = useMemo(() => {
     return (
-      [firstName, lastName].filter(Boolean).join(" ") || currentUser?.name || "");
-
-  }, [firstName, lastName, currentUser?.name]);
+      [firstName, middleInitial, lastName].filter(Boolean).join(" ") ||
+      currentUser?.name ||
+      "");
+  }, [firstName, middleInitial, lastName, currentUser?.name]);
 
   const handleClearArchives = async () => {
     setClearArchivesLoading(true);
@@ -1400,16 +1419,32 @@ const Settings = () => {
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500 mb-1 block">
-                  Last Name
+                  Middle Initial
                 </label>
                 <input
                 type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
+                  value={middleInitial}
+                  onChange={(e) =>
+                    setMiddleInitial(
+                      e.target.value.replace(/[^a-zA-Z]/g, '').slice(0, 1).toUpperCase()
+                    )
+                  }
                 className={`w-full text-base font-semibold border-b-2 border-gray-200 focus:border-[#AD7F65] focus:outline-none py-1 bg-transparent ${
                 theme === "dark" ? "text-white" : "text-gray-800"}`
                 } />
               
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500 mb-1 block">
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className={`w-full text-base font-semibold border-b-2 border-gray-200 focus:border-[#AD7F65] focus:outline-none py-1 bg-transparent ${
+                  theme === "dark" ? "text-white" : "text-gray-800"}`
+                  } />
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500 mb-1 block">
@@ -1447,7 +1482,7 @@ const Settings = () => {
                   {dateJoined || "N/A"}
                 </p>
               </div>
-              <div>
+              <div className="col-span-2">
                 <label className="text-sm font-medium text-gray-500 mb-1 block">
                   Position
                 </label>
