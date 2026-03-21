@@ -19,6 +19,14 @@ const ViewProductModal = ({
     return Number.isFinite(n) ? n : 0;
   };
 
+  const formatMoneyRange = (nums, fallbackStr) => {
+    const arr = (nums || []).filter((n) => typeof n === "number" && Number.isFinite(n));
+    if (arr.length === 0) return fallbackStr;
+    const lo = Math.min(...arr);
+    const hi = Math.max(...arr);
+    return lo !== hi ? `₱${lo.toFixed(2)} - ₱${hi.toFixed(2)}` : `₱${lo.toFixed(2)}`;
+  };
+
   const getBatchList = (data) => {
     if (!data || typeof data !== "object") return [];
     return Array.isArray(data.batches) ? data.batches : [];
@@ -140,6 +148,62 @@ const ViewProductModal = ({
     return sum;
   }, [viewingProduct, batchTab]);
 
+  /** Prices, variant labels, lot/exp for the selected batch slot (null when Totals) */
+  const selectedBatchInsights = useMemo(() => {
+    if (!viewingProduct?.sizes || typeof viewingProduct.sizes !== "object") return null;
+    if (batchTab === "totals" || typeof batchTab !== "number") return null;
+    const slot = batchTab;
+    const sellPrices = [];
+    const costs = [];
+    const variantsWithStock = [];
+    const variantsWithSlot = [];
+    const lotCodes = new Set();
+    const exps = new Set();
+
+    Object.entries(viewingProduct.sizes).forEach(([size, sizeData]) => {
+      if (!sizeData || typeof sizeData !== "object") return;
+      if (sizeData.variants && typeof sizeData.variants === "object") {
+        Object.entries(sizeData.variants).forEach(([vName, v]) => {
+          if (!v || typeof v !== "object") return;
+          const batches = Array.isArray(v.batches) ? v.batches : [];
+          const b = batches[slot];
+          if (!b) return;
+          const label = size === VARIANT_ONLY_SIZE_KEY ? vName : `${vName} / ${size}`;
+          variantsWithSlot.push(label);
+          if (toNum(b.qty) > 0) variantsWithStock.push(label);
+          const p = Number(b.price);
+          const c = Number(b.costPrice);
+          if (Number.isFinite(p)) sellPrices.push(p);
+          if (Number.isFinite(c)) costs.push(c);
+          if (b.batchCode) lotCodes.add(String(b.batchCode).trim());
+          if (b.expirationDate) exps.add(String(b.expirationDate).slice(0, 10));
+        });
+        return;
+      }
+      const batches = Array.isArray(sizeData.batches) ? sizeData.batches : [];
+      const b = batches[slot];
+      if (!b) return;
+      variantsWithSlot.push(size);
+      if (toNum(b.qty) > 0) variantsWithStock.push(size);
+      const p = Number(b.price);
+      const c = Number(b.costPrice);
+      if (Number.isFinite(p)) sellPrices.push(p);
+      if (Number.isFinite(c)) costs.push(c);
+      if (b.batchCode) lotCodes.add(String(b.batchCode).trim());
+      if (b.expirationDate) exps.add(String(b.expirationDate).slice(0, 10));
+    });
+
+    const uniq = (list) => [...new Set(list)];
+    return {
+      sellPrices,
+      costs,
+      variantsWithStock: uniq(variantsWithStock),
+      variantsWithSlot: uniq(variantsWithSlot),
+      lotCodes: [...lotCodes],
+      exps: [...exps].sort(),
+    };
+  }, [viewingProduct, batchTab]);
+
   // If the user opens a different product, reset back to totals view
   useEffect(() => {
     setBatchTab("totals");
@@ -177,6 +241,77 @@ const ViewProductModal = ({
   const tableFooterTotal = selectedBatchSlotTotal !== null ? selectedBatchSlotTotal : totalStock;
   const tableFooterLabel =
     selectedBatchSlotTotal !== null ? "Stock in this batch:" : "Total Options Stock:";
+
+  const collectAggregateSellPrices = () => {
+    const prices = [];
+    if (viewingProduct.sizes && typeof viewingProduct.sizes === "object") {
+      Object.values(viewingProduct.sizes).forEach((sizeData) => {
+        if (typeof sizeData === "object" && sizeData !== null) {
+          if (sizeData.variants && typeof sizeData.variants === "object") {
+            Object.entries(sizeData.variants).forEach(([vName, v]) => {
+              const vPrice = v?.price ?? sizeData.variantPrices?.[vName] ?? sizeData.price;
+              if (vPrice !== undefined && vPrice !== null) prices.push(Number(vPrice));
+            });
+          } else if (sizeData.variantPrices && typeof sizeData.variantPrices === "object") {
+            Object.values(sizeData.variantPrices).forEach((p) => {
+              if (p !== undefined && p !== null) prices.push(Number(p));
+            });
+          } else if (sizeData.price !== undefined && sizeData.price !== null) {
+            prices.push(Number(sizeData.price));
+          }
+        }
+      });
+    }
+    return prices;
+  };
+
+  const collectAggregateCosts = () => {
+    const costs = [];
+    if (viewingProduct.sizes && typeof viewingProduct.sizes === "object") {
+      Object.values(viewingProduct.sizes).forEach((sizeData) => {
+        if (typeof sizeData === "object" && sizeData !== null) {
+          if (sizeData.variants && typeof sizeData.variants === "object") {
+            Object.entries(sizeData.variants).forEach(([vName, v]) => {
+              const vCost = v?.costPrice ?? sizeData.variantCostPrices?.[vName] ?? sizeData.costPrice;
+              if (vCost !== undefined && vCost !== null) costs.push(Number(vCost));
+            });
+          } else if (sizeData.costPrice !== undefined && sizeData.costPrice !== null) {
+            costs.push(Number(sizeData.costPrice));
+          }
+        }
+      });
+    }
+    return costs;
+  };
+
+  const sellingPriceDisplay = selectedBatchInsights
+    ? formatMoneyRange(selectedBatchInsights.sellPrices, `₱${Number(viewingProduct.itemPrice ?? 0).toFixed(2)}`)
+    : formatMoneyRange(collectAggregateSellPrices(), `₱${Number(viewingProduct.itemPrice ?? 0).toFixed(2)}`);
+
+  const purchasePriceDisplay = selectedBatchInsights
+    ? formatMoneyRange(selectedBatchInsights.costs, `₱${Number(viewingProduct.costPrice ?? 0).toFixed(2)}`)
+    : formatMoneyRange(collectAggregateCosts(), `₱${Number(viewingProduct.costPrice ?? 0).toFixed(2)}`);
+
+  const overviewVariantDisplay = selectedBatchInsights
+    ? (selectedBatchInsights.variantsWithStock.length > 0
+      ? selectedBatchInsights.variantsWithStock.join(", ")
+      : selectedBatchInsights.variantsWithSlot.length > 0
+        ? selectedBatchInsights.variantsWithSlot.join(", ")
+        : "—")
+    : (viewingProduct.variant || "N/A");
+
+  const displayHeaderStock = selectedBatchSlotTotal !== null ? selectedBatchSlotTotal : totalStock;
+
+  const batchMetaLine = selectedBatchInsights
+    ? (() => {
+        const parts = [];
+        if (selectedBatchInsights.lotCodes.length === 1) parts.push(`Lot ${selectedBatchInsights.lotCodes[0]}`);
+        else if (selectedBatchInsights.lotCodes.length > 1) parts.push("Multiple lots");
+        if (selectedBatchInsights.exps.length === 1) parts.push(`Exp ${selectedBatchInsights.exps[0]}`);
+        else if (selectedBatchInsights.exps.length > 1) parts.push("Multiple expirations");
+        return parts.length ? parts.join(" · ") : null;
+      })()
+    : null;
 
   return (
     <div
@@ -229,6 +364,45 @@ const ViewProductModal = ({
         {/* Body */}
         <div className="p-6 overflow-y-auto flex-1">
           <div className="space-y-6">
+            {maxBatchDepth > 0 && (
+              <div
+                className={`rounded-xl border px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between ${theme === "dark" ? "border-gray-700 bg-[#2A2724]" : "border-gray-200 bg-gray-50"}`}
+              >
+                <div className={`text-[10px] font-semibold uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
+                  Stock view
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setBatchTab("totals")}
+                    className={`inline-flex items-center px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all duration-200 active:scale-[0.98] ${batchTab === "totals"
+                      ? "bg-[#AD7F65] text-white border-[#AD7F65] shadow-sm"
+                      : theme === "dark"
+                        ? "bg-[#1E1B18] text-gray-300 border-gray-600 hover:border-[#AD7F65]"
+                        : "bg-white text-gray-700 border-gray-200 hover:border-[#AD7F65]"
+                      }`}
+                  >
+                    Totals
+                  </button>
+                  {Array.from({ length: maxBatchDepth }, (_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setBatchTab(i)}
+                      className={`inline-flex items-center px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all duration-200 active:scale-[0.98] ${batchTab === i
+                        ? "bg-[#AD7F65] text-white border-[#AD7F65] shadow-sm"
+                        : theme === "dark"
+                          ? "bg-[#1E1B18] text-gray-300 border-gray-600 hover:border-[#AD7F65]"
+                          : "bg-white text-gray-700 border-gray-200 hover:border-[#AD7F65]"
+                        }`}
+                    >
+                      {i === 0 ? "Batch 1 (current stock)" : `Batch ${i + 1}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Top Row: Image | Overview + Pricing + Stats */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Left: Image */}
@@ -280,6 +454,19 @@ const ViewProductModal = ({
                         {viewingProduct.category} {viewingProduct.subCategory ? `> ${viewingProduct.subCategory}` : ""}
                         {viewingProduct.foodSubtype ? ` · ${viewingProduct.foodSubtype}` : ""}
                       </div>
+                      {selectedBatchInsights && (
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wide ${theme === "dark" ? "bg-[#AD7F65]/25 text-[#D4A88A]" : "bg-[#AD7F65]/15 text-[#76462B]"}`}
+                          >
+                            Batch {batchTab + 1}
+                            {batchTab === 0 ? " · current stock" : ""}
+                          </span>
+                          {batchMetaLine ? (
+                            <span className={`text-[11px] ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>{batchMetaLine}</span>
+                          ) : null}
+                        </div>
+                      )}
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <div className={`text-xs font-semibold ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>SKU</div>
@@ -295,8 +482,12 @@ const ViewProductModal = ({
                       <div className={`mt-1 text-sm font-semibold ${theme === "dark" ? "text-gray-200" : "text-gray-800"}`}>{viewingProduct.brandName || "N/A"}</div>
                     </div>
                     <div className={`rounded-xl border p-3 ${theme === "dark" ? "border-gray-700 bg-[#1E1B18]" : "border-gray-200 bg-gray-50"}`}>
-                      <div className={`text-[11px] font-semibold uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>Variant</div>
-                      <div className={`mt-1 text-sm font-semibold ${theme === "dark" ? "text-gray-200" : "text-gray-800"}`}>{viewingProduct.variant || "N/A"}</div>
+                      <div className={`text-[11px] font-semibold uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
+                        {selectedBatchInsights ? "Options (this batch)" : "Variant"}
+                      </div>
+                      <div className={`mt-1 text-sm font-semibold leading-snug ${theme === "dark" ? "text-gray-200" : "text-gray-800"}`}>
+                        {overviewVariantDisplay}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -304,65 +495,22 @@ const ViewProductModal = ({
                 {/* Pricing */}
                 <div className={`rounded-2xl border p-5 ${theme === "dark" ? "border-gray-700 bg-[#2A2724]" : "border-gray-200 bg-white"}`}>
                   <div className={`text-xs font-semibold uppercase tracking-wider ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>Pricing</div>
+                  {selectedBatchInsights ? (
+                    <div className={`mt-1 text-[10px] ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
+                      Sell and cost reflect this batch layer across all options (range if prices differ).
+                    </div>
+                  ) : null}
                   <div className="mt-4 grid grid-cols-2 gap-3">
                     <div className={`rounded-xl border p-4 ${theme === "dark" ? "border-gray-700 bg-[#1E1B18]" : "border-gray-200 bg-gray-50"}`}>
                       <div className={`text-[11px] font-semibold uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>Selling Price</div>
                       <div className={`mt-1 text-lg font-bold ${theme === "dark" ? "text-green-400" : "text-green-600"}`}>
-                        {(() => {
-                          const prices = [];
-                          if (viewingProduct.sizes && typeof viewingProduct.sizes === "object") {
-                            Object.values(viewingProduct.sizes).forEach((sizeData) => {
-                              if (typeof sizeData === "object" && sizeData !== null) {
-                                if (sizeData.variants && typeof sizeData.variants === "object") {
-                                  Object.entries(sizeData.variants).forEach(([vName, v]) => {
-                                    const vPrice = v?.price ?? sizeData.variantPrices?.[vName] ?? sizeData.price;
-                                    if (vPrice !== undefined && vPrice !== null) prices.push(Number(vPrice));
-                                  });
-                                } else if (sizeData.variantPrices && typeof sizeData.variantPrices === "object") {
-                                  Object.values(sizeData.variantPrices).forEach((p) => {
-                                    if (p !== undefined && p !== null) prices.push(Number(p));
-                                  });
-                                } else if (sizeData.price !== undefined && sizeData.price !== null) {
-                                  prices.push(Number(sizeData.price));
-                                }
-                              }
-                            });
-                          }
-                          if (prices.length > 0) {
-                            const minP = Math.min(...prices);
-                            const maxP = Math.max(...prices);
-                            return minP !== maxP ? `₱${minP.toFixed(2)} - ₱${maxP.toFixed(2)}` : `₱${minP.toFixed(2)}`;
-                          }
-                          return `₱${viewingProduct.itemPrice?.toFixed(2) || "0.00"}`;
-                        })()}
+                        {sellingPriceDisplay}
                       </div>
                     </div>
                     <div className={`rounded-xl border p-4 ${theme === "dark" ? "border-gray-700 bg-[#1E1B18]" : "border-gray-200 bg-gray-50"}`}>
                       <div className={`text-[11px] font-semibold uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>Purchase Price</div>
                       <div className={`mt-1 text-lg font-bold ${theme === "dark" ? "text-red-400" : "text-red-600"}`}>
-                        {(() => {
-                          const costs = [];
-                          if (viewingProduct.sizes && typeof viewingProduct.sizes === "object") {
-                            Object.values(viewingProduct.sizes).forEach((sizeData) => {
-                              if (typeof sizeData === "object" && sizeData !== null) {
-                                if (sizeData.variants && typeof sizeData.variants === "object") {
-                                  Object.entries(sizeData.variants).forEach(([vName, v]) => {
-                                    const vCost = v?.costPrice ?? sizeData.variantCostPrices?.[vName] ?? sizeData.costPrice;
-                                    if (vCost !== undefined && vCost !== null) costs.push(Number(vCost));
-                                  });
-                                } else if (sizeData.costPrice !== undefined && sizeData.costPrice !== null) {
-                                  costs.push(Number(sizeData.costPrice));
-                                }
-                              }
-                            });
-                          }
-                          if (costs.length > 0) {
-                            const minC = Math.min(...costs);
-                            const maxC = Math.max(...costs);
-                            return minC !== maxC ? `₱${minC.toFixed(2)} - ₱${maxC.toFixed(2)}` : `₱${minC.toFixed(2)}`;
-                          }
-                          return `₱${viewingProduct.costPrice?.toFixed(2) || "0.00"}`;
-                        })()}
+                        {purchasePriceDisplay}
                       </div>
                     </div>
                   </div>
@@ -371,11 +519,13 @@ const ViewProductModal = ({
                 {/* Total Stock / Reorder Level */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className={`rounded-xl border p-3 ${theme === "dark" ? "border-gray-700 bg-[#1E1B18]" : "border-gray-200 bg-gray-50"}`}>
-                    <div className={`text-[11px] font-semibold uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>Total Stock</div>
+                    <div className={`text-[11px] font-semibold uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
+                      {selectedBatchInsights ? "Stock (this batch)" : "Total Stock"}
+                    </div>
                     <div className="mt-1 flex items-center justify-between gap-2">
-                      <div className={`text-lg font-bold ${theme === "dark" ? "text-gray-200" : "text-gray-800"}`}>{totalStock}</div>
-                      <div className={`text-xs font-semibold px-2 py-0.5 rounded-full ${totalStock === 0 ? "bg-red-100 text-red-700" : totalStock <= (viewingProduct.reorderNumber || 10) ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"}`}>
-                        {totalStock === 0 ? "Out" : totalStock <= (viewingProduct.reorderNumber || 10) ? "Low" : "In Stock"}
+                      <div className={`text-lg font-bold ${theme === "dark" ? "text-gray-200" : "text-gray-800"}`}>{displayHeaderStock}</div>
+                      <div className={`text-xs font-semibold px-2 py-0.5 rounded-full ${displayHeaderStock === 0 ? "bg-red-100 text-red-700" : displayHeaderStock <= (viewingProduct.reorderNumber || 10) ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"}`}>
+                        {displayHeaderStock === 0 ? "Out" : displayHeaderStock <= (viewingProduct.reorderNumber || 10) ? "Low" : "In Stock"}
                       </div>
                     </div>
                   </div>
@@ -391,52 +541,19 @@ const ViewProductModal = ({
             {/* Stock Table — Full Width */}
             <div className={`rounded-2xl border ${theme === "dark" ? "border-gray-700 bg-[#2A2724]" : "border-gray-200 bg-white"}`}>
               <div
-                className="px-5 py-4 border-b flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                className="px-5 py-4 border-b flex flex-col gap-1"
                 style={{ borderColor: theme === "dark" ? "#374151" : "#E5E7EB" }}
               >
-                <div className="min-w-0">
-                  <div className={`text-xs font-semibold uppercase tracking-wider ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>Stock</div>
-                  <div className={`mt-0.5 text-xs ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
-                    {maxBatchDepth > 0
-                      ? showPerBatchColumn
-                        ? batchTab === 0
-                          ? "Showing oldest batch (FIFO) per option"
-                          : `Showing batch ${batchTab + 1} per option`
-                        : "Showing total + price per option"
-                      : "Showing total + price per option"}
-                  </div>
+                <div className={`text-xs font-semibold uppercase tracking-wider ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>Stock</div>
+                <div className={`text-xs ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
+                  {maxBatchDepth > 0
+                    ? showPerBatchColumn
+                      ? batchTab === 0
+                        ? "Table: oldest batch (FIFO) per option"
+                        : `Table: batch ${batchTab + 1} per option`
+                      : "Table: total + price per option"
+                    : "Table: total + price per option"}
                 </div>
-                {maxBatchDepth > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setBatchTab("totals")}
-                      className={`inline-flex items-center px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all duration-200 active:scale-[0.98] ${batchTab === "totals"
-                        ? "bg-[#AD7F65] text-white border-[#AD7F65] shadow-sm"
-                        : theme === "dark"
-                          ? "bg-[#1E1B18] text-gray-300 border-gray-600 hover:border-[#AD7F65]"
-                          : "bg-white text-gray-700 border-gray-200 hover:border-[#AD7F65]"
-                        }`}
-                    >
-                      Totals
-                    </button>
-                    {Array.from({ length: maxBatchDepth }, (_, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => setBatchTab(i)}
-                        className={`inline-flex items-center px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all duration-200 active:scale-[0.98] ${batchTab === i
-                          ? "bg-[#AD7F65] text-white border-[#AD7F65] shadow-sm"
-                          : theme === "dark"
-                            ? "bg-[#1E1B18] text-gray-300 border-gray-600 hover:border-[#AD7F65]"
-                            : "bg-white text-gray-700 border-gray-200 hover:border-[#AD7F65]"
-                          }`}
-                      >
-                        {i === 0 ? "Batch 1 (current stock)" : `Batch ${i + 1}`}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
 
               <div className="p-4">
@@ -482,8 +599,6 @@ const ViewProductModal = ({
                                 const variantData = variants?.[variantName];
                                 const variantQty = typeof variantData === 'number' ? variantData : (variantData && typeof variantData === 'object' ? variantData.quantity || 0 : 0);
                                 const batches = getBatchList(typeof variantData === "object" && variantData !== null ? variantData : null);
-                                const b1 = batches[0] || null;
-                                const b2 = batches[1] || null;
 
                                 // Format Variant for SKU
                                 const dynamicSku = generateDynamicSku(baseSku, variantName, size);
