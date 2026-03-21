@@ -76,6 +76,34 @@ exports.createRemittance = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Employee ID and name are required' });
         }
 
+        // Enforce one remittance per employee per day.
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
+        const existingToday = await Remittance.findOne({
+            employeeId,
+            submittedAt: { $gte: startOfDay, $lt: endOfDay }
+        })
+            .sort({ submittedAt: -1 })
+            .lean();
+
+        if (existingToday) {
+            return res.status(409).json({
+                success: false,
+                code: 'ALREADY_REMITTED_TODAY',
+                message: `You already remitted today. Amount remitted: ₱${(existingToday.cashToRemit || 0).toLocaleString('en-PH', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                })}`,
+                data: {
+                    amountRemitted: existingToday.cashToRemit || 0,
+                    submittedAt: existingToday.submittedAt,
+                    remittanceId: existingToday._id
+                }
+            });
+        }
+
         const remittance = await Remittance.create({
             employeeId,
             employeeName,

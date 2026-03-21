@@ -175,6 +175,17 @@ const RemittanceModal = ({ isOpen, onClose, employeeId, employeeName }) => {
                     setShowSlip(true);
                 }, 1000); // Shorter delay so it pops up faster
             } else {
+                if (data.code === "ALREADY_REMITTED_TODAY") {
+                    const amount = data?.data?.amountRemitted;
+                    const amountText = typeof amount === "number" ? formatCurrency(amount) : null;
+                    alert(
+                        amountText
+                            ? `You already remitted today.\nAmount remitted: ${amountText}`
+                            : (data.message || "You already remitted today.")
+                    );
+                    return;
+                }
+
                 alert("Failed to submit remittance: " + (data.message || "Unknown error"));
             }
         } catch (err) {
