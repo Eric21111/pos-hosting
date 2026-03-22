@@ -408,20 +408,23 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className={`rounded-xl p-4 shadow-sm border relative overflow-hidden group hover:shadow-md transition-shadow ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
-                <div className="absolute top-0 left-0 w-1 h-full bg-blue-400"></div>
-                <div className="flex flex-col h-full justify-between">
+              <div className={`rounded-xl p-5 min-h-[148px] shadow-sm border relative overflow-hidden group hover:shadow-md transition-shadow ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
+                <div
+                  className="absolute top-0 left-0 w-3 h-full rounded-l-xl"
+                  style={{ backgroundImage: "linear-gradient(180deg, #93C5FD 0%, #2563EB 100%)" }}
+                />
+                <div className="flex flex-col h-full min-h-[116px] justify-between">
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <p className={`text-sm font-bold text-blue-500`}>Total Sales</p>
-                      <p className="text-[10px] text-green-500 mt-0.5">+{metrics.growthRate}% vs last period</p>
+                      <p className={`text-sm font-extrabold text-blue-600`}>Total Sales</p>
+                      <p className="text-[10px] font-semibold text-green-600 mt-0.5">+{metrics.growthRate}% vs last period</p>
                     </div>
-                    <div className="bg-blue-50 p-2 rounded-full">
-                      <FaShoppingBag className="text-blue-400 text-sm" />
+                    <div className="bg-blue-50 p-2.5 rounded-full">
+                      <FaShoppingBag className="text-blue-400 text-base" />
                     </div>
                   </div>
-                  <div>
-                    <p className={`text-2xl font-extrabold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>
+                  <div className="pt-1">
+                    <p className={`text-3xl lg:text-4xl font-black tracking-tight leading-none ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                       {formatCurrency(metrics.totalSalesToday)}
                     </p>
                   </div>
@@ -429,20 +432,23 @@ const Dashboard = () => {
               </div>
 
               {/* Total Transactions */}
-              <div className={`rounded-xl p-4 shadow-sm border relative overflow-hidden hover:shadow-md transition-shadow ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
-                <div className="absolute top-0 left-0 w-1 h-full bg-purple-400"></div>
-                <div className="flex flex-col h-full justify-between">
+              <div className={`rounded-xl p-5 min-h-[148px] shadow-sm border relative overflow-hidden hover:shadow-md transition-shadow ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
+                <div
+                  className="absolute top-0 left-0 w-3 h-full rounded-l-xl"
+                  style={{ backgroundImage: "linear-gradient(180deg, #C4B5FD 0%, #7C3AED 100%)" }}
+                />
+                <div className="flex flex-col h-full min-h-[116px] justify-between">
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <p className={`text-sm font-bold text-purple-600`}>Total Transactions</p>
-                      <p className="text-[10px] text-green-500 mt-0.5">+12% vs last period</p>
+                      <p className={`text-sm font-extrabold text-purple-700`}>Total Transactions</p>
+                      <p className="text-[10px] font-semibold text-green-600 mt-0.5">+12% vs last period</p>
                     </div>
-                    <div className="bg-purple-50 p-2 rounded-full">
-                      <FaHandshake className="text-purple-400 text-sm" />
+                    <div className="bg-purple-50 p-2.5 rounded-full">
+                      <FaHandshake className="text-purple-400 text-base" />
                     </div>
                   </div>
-                  <div>
-                    <p className={`text-2xl font-extrabold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>
+                  <div className="pt-1">
+                    <p className={`text-3xl lg:text-4xl font-black tracking-tight leading-none ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                       {metrics.totalTransactions}
                     </p>
                   </div>
@@ -450,19 +456,22 @@ const Dashboard = () => {
               </div>
 
 
-              <div className={`rounded-xl p-4 shadow-sm border relative overflow-hidden hover:shadow-md transition-shadow ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
-                <div className="absolute top-0 left-0 w-1 h-full bg-green-400"></div>
-                <div className="flex flex-col h-full justify-between">
+              <div className={`rounded-xl p-5 min-h-[148px] shadow-sm border relative overflow-hidden hover:shadow-md transition-shadow ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
+                <div
+                  className="absolute top-0 left-0 w-3 h-full rounded-l-xl"
+                  style={{ backgroundImage: "linear-gradient(180deg, #86EFAC 0%, #16A34A 100%)" }}
+                />
+                <div className="flex flex-col h-full min-h-[116px] justify-between">
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <p className={`text-sm font-bold text-green-600`}>Average Growth Rate</p>
+                      <p className={`text-sm font-extrabold text-green-700`}>Average Growth Rate</p>
                     </div>
-                    <div className="bg-green-50 p-2 rounded-full">
-                      <FaChartLine className="text-green-500 text-sm" />
+                    <div className="bg-green-50 p-2.5 rounded-full">
+                      <FaChartLine className="text-green-500 text-base" />
                     </div>
                   </div>
-                  <div>
-                    <p className={`text-2xl font-extrabold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>
+                  <div className="pt-1">
+                    <p className={`text-3xl lg:text-4xl font-black tracking-tight leading-none ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                       {metrics.growthRate}%
                     </p>
                   </div>
@@ -470,19 +479,22 @@ const Dashboard = () => {
               </div>
 
 
-              <div className={`rounded-xl p-4 shadow-sm border relative overflow-hidden hover:shadow-md transition-shadow ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
-                <div className="absolute top-0 left-0 w-1 h-full bg-red-400"></div>
-                <div className="flex flex-col h-full justify-between">
+              <div className={`rounded-xl p-5 min-h-[148px] shadow-sm border relative overflow-hidden hover:shadow-md transition-shadow ${theme === "dark" ? "bg-[#2A2724] border-[#4A4037]" : "bg-white border-gray-100"}`}>
+                <div
+                  className="absolute top-0 left-0 w-3 h-full rounded-l-xl"
+                  style={{ backgroundImage: "linear-gradient(180deg, #FCA5A5 0%, #DC2626 100%)" }}
+                />
+                <div className="flex flex-col h-full min-h-[116px] justify-between">
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <p className={`text-sm font-bold text-red-500`}>Low Stock Items</p>
+                      <p className={`text-sm font-extrabold text-red-600`}>Low Stock Items</p>
                     </div>
-                    <div className="bg-red-50 p-2 rounded-full">
-                      <FaExclamationTriangle className="text-red-500 text-sm" />
+                    <div className="bg-red-50 p-2.5 rounded-full">
+                      <FaExclamationTriangle className="text-red-500 text-base" />
                     </div>
                   </div>
-                  <div className="flex items-center">
-                    <p className={`text-2xl font-extrabold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>
+                  <div className="flex items-center pt-1">
+                    <p className={`text-3xl lg:text-4xl font-black tracking-tight leading-none ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                       {metrics.lowStockItems}
                     </p>
                   </div>

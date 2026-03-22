@@ -35,6 +35,24 @@ const sumAllVariantQuantities = (variantQuantities) => {
   }, 0);
 };
 
+const hasAnyOpeningStockInForm = (np) => {
+  if (!np) return false;
+  const hasSizeQuantities =
+    np.selectedSizes?.length > 0 &&
+    Object.values(np.sizeQuantities || {}).some((qty) => parseInt(qty, 10) > 0);
+  const hasStock = parseInt(np.currentStock, 10) > 0;
+  const hasVariantQuantities =
+    np.variantQuantities &&
+    Object.keys(np.variantQuantities).length > 0 &&
+    Object.values(np.variantQuantities).some(
+      (sizeVariants) =>
+        sizeVariants &&
+        typeof sizeVariants === "object" &&
+        Object.values(sizeVariants).some((qty) => parseInt(qty, 10) > 0)
+    );
+  return hasSizeQuantities || hasVariantQuantities || hasStock;
+};
+
 const preferredExportFieldOrder = [
   "_id",
   "sku",
@@ -212,6 +230,10 @@ const Inventory = () => {
     }
   }, [newProduct, editingProduct, showAddModal]);
 
+  const addProductHasOpeningStock = useMemo(
+    () => hasAnyOpeningStockInForm(newProduct),
+    [newProduct]
+  );
 
   const categoryIconMap = {
     Tops: topIcon,
@@ -626,10 +648,6 @@ const Inventory = () => {
 
 
     if (!editingProduct) {
-      const hasSizeQuantities =
-        newProduct.selectedSizes?.length > 0 &&
-        Object.values(newProduct.sizeQuantities || {}).some((qty) => qty > 0);
-      const hasStock = parseInt(newProduct.currentStock) > 0;
       const hasVariantQuantities =
         newProduct.variantQuantities &&
         Object.keys(newProduct.variantQuantities).length > 0 &&
@@ -638,14 +656,6 @@ const Inventory = () => {
           typeof sizeVariants === "object" &&
           Object.values(sizeVariants).some((qty) => parseInt(qty) > 0)
         );
-
-      if (!hasSizeQuantities && !hasVariantQuantities && !hasStock) {
-        alert(
-          "Please either select sizes with quantities or provide a stock value."
-        );
-        return;
-      }
-
 
       const hasAnyVariantPricing = newProduct.selectedSizes?.some(
         (size) => newProduct.differentPricesPerVariant?.[size]
@@ -1861,7 +1871,7 @@ const Inventory = () => {
 
   return (
     <div
-      className={`p-8 min-h-screen ${theme === "dark" ? "bg-[#1E1B18]" : "bg-[#FFFFFF]"}`}>
+      className={`p-8 min-h-screen ${theme === "dark" ? "bg-[#1E1B18]" : "bg-[#F9FAFB]"}`}>
 
       <Header pageName="Product & Stocks" showBorder={false} />
 
@@ -2192,6 +2202,7 @@ const Inventory = () => {
         onClose={() => setShowConfirmModal(false)}
         onConfirm={confirmAddProduct}
         productName={newProduct.itemName}
+        noStockWarning={!addProductHasOpeningStock}
         onCategoryAdd={fetchCategories}
         onBrandAdd={fetchBrandPartners} />
 

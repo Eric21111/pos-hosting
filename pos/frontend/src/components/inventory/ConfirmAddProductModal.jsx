@@ -2,7 +2,7 @@ import React from 'react';
 import { FaTimes } from 'react-icons/fa';
 import { useTheme } from '../../context/ThemeContext';
 
-const ConfirmAddProductModal = ({ isOpen, onClose, onConfirm, productName }) => {
+const ConfirmAddProductModal = ({ isOpen, onClose, onConfirm, productName, noStockWarning }) => {
   const { theme } = useTheme();
 
   if (!isOpen) return null;
@@ -33,9 +33,16 @@ const ConfirmAddProductModal = ({ isOpen, onClose, onConfirm, productName }) => 
             Are you sure you want to add this item?
           </h3>
 
-          <p className={`text-sm text-center mb-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-            This action will be apply to the inventory.
-          </p>
+          <div className="mb-8">
+            <p className={`text-sm text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              This action will be apply to the inventory.
+            </p>
+            {noStockWarning && (
+              <p className="text-sm text-center mt-3 font-semibold text-amber-600 dark:text-amber-400">
+                No stock yet — use Stock In
+              </p>
+            )}
+          </div>
 
           <div className="flex gap-4">
             <button

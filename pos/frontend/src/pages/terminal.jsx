@@ -1834,7 +1834,7 @@ const Terminal = () => {
   return (
     <>
       <div
-        className={`relative flex flex-col h-screen ${theme === "dark" ? "bg-[#121212]" : "bg-[#FFFFFF]"}`}>
+        className={`relative flex flex-col h-screen ${theme === "dark" ? "bg-[#121212]" : "bg-[#F9FAFB]"}`}>
 
         <div
           className={`absolute top-0 left-0 right-[420px] px-6 py-4 z-40 transition-colors duration-300 flex flex-col gap-4 ${theme === "dark" ? "bg-[#121212]" : "bg-[#FFFFFF]"}`}

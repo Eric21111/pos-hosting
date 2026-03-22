@@ -178,9 +178,7 @@ const AddProductModal = ({
         if (selectedVariants.length > 0 || newProduct.selectedSizes?.length > 0) {
           return true;
         }
-          if (!newProduct.itemPrice || parseFloat(newProduct.itemPrice) <= 0) return false;
-          if (!newProduct.costPrice || parseFloat(newProduct.costPrice) <= 0) return false;
-        if (!newProduct.currentStock || parseInt(newProduct.currentStock) <= 0) return false;
+        if (!newProduct.itemPrice || parseFloat(newProduct.itemPrice) <= 0) return false;
         return true;
       case 4:
         return true;
