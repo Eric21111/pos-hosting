@@ -4,19 +4,20 @@ import { FaClipboardList, FaCoins, FaFileAlt, FaTimes, FaCheck } from "react-ico
 import { API_ENDPOINTS } from "../../config/api";
 import CashTurnOverSlipModal from "./CashTurnOverSlipModal";
 
+
 const DENOMINATIONS = [
-    { key: "p1000", label: "₱1000", value: 1000, color: "#22C55E" },
-    { key: "p500", label: "₱500", value: 500, color: "#F97316" },
-    { key: "p200", label: "₱200", value: 200, color: "#22C55E" },
-    { key: "p100", label: "₱100", value: 100, color: "#8B5CF6" },
-    { key: "p50", label: "₱50", value: 50, color: "#EAB308" },
-    { key: "p20", label: "₱20", value: 20, color: "#F97316" },
-    { key: "p10", label: "₱10", value: 10, color: "#6B7280" },
-    { key: "p5", label: "₱5", value: 5, color: "#6B7280" },
-    { key: "p1", label: "₱1", value: 1, color: "#6B7280" },
-    { key: "c25", label: "25¢", value: 0.25, color: "#9CA3AF" },
-    { key: "c10", label: "10¢", value: 0.10, color: "#9CA3AF" },
-    { key: "c5", label: "5¢", value: 0.05, color: "#9CA3AF" },
+    { key: "p1000", label: "₱1000", value: 1000, bg: "#DBEAFE", text: "#1E40AF" },
+    { key: "p500", label: "₱500", value: 500, bg: "#FEF9C3", text: "#CA8A04" },
+    { key: "p200", label: "₱200", value: 200, bg: "#DCFCE7", text: "#166534" },
+    { key: "p100", label: "₱100", value: 100, bg: "#EDE9FE", text: "#6B21A8" },
+    { key: "p50", label: "₱50", value: 50, bg: "#FCE7F3", text: "#BE185D" },
+    { key: "p20", label: "₱20", value: 20, bg: "#FFEDD5", text: "#C2410C" },
+    { key: "p10", label: "₱10", value: 10, bg: "#FAFAF9", text: "#171717" },
+    { key: "p5", label: "₱5", value: 5, bg: "#FAFAF9", text: "#171717" },
+    { key: "p1", label: "₱1", value: 1, bg: "#FAFAF9", text: "#171717" },
+    { key: "c25", label: "25¢", value: 0.25, bg: "#F3F4F6", text: "#111827" },
+    { key: "c10", label: "10¢", value: 0.10, bg: "#F3F4F6", text: "#111827" },
+    { key: "c5", label: "5¢", value: 0.05, bg: "#F3F4F6", text: "#111827" },
 ];
 
 const formatCurrency = (val) => {
@@ -393,8 +394,8 @@ const RemittanceModal = ({ isOpen, onClose, employeeId, employeeName }) => {
                                         {DENOMINATIONS.map((d) => (
                                             <div key={d.key} className="flex flex-col items-center">
                                                 <div
-                                                    className="w-full text-center text-xs font-bold py-1.5 rounded-lg text-white mb-1"
-                                                    style={{ backgroundColor: d.color }}
+                                                    className="w-full text-center text-xs font-bold py-1.5 rounded-lg mb-1 border border-black/5"
+                                                    style={{ backgroundColor: d.bg, color: d.text }}
                                                 >
                                                     {d.label}
                                                 </div>

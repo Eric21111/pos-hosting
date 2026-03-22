@@ -1060,7 +1060,7 @@ const Transaction = () => {
 
       <>
         <Header
-          pageName="Sales & Transactions"
+          pageName="Transactions"
           showBorder={false}
           profileBackground="" />
 
@@ -1072,7 +1072,7 @@ const Transaction = () => {
                 label: "Total Sales",
                 value: formatCurrencyCompact(kpis.totalSales),
                 barGradient: "linear-gradient(180deg, #2563EB 0%, #60A5FA 100%)",
-                textColor: "#1D4ED8",
+                textColor: "#2563EB",
                 iconBgClass: "bg-blue-100",
                 icon: (
                   <img
@@ -1086,7 +1086,7 @@ const Transaction = () => {
                 label: "Total Transactions",
                 value: kpis.transactionTotal,
                 barGradient: "linear-gradient(180deg, #22C55E 0%, #4ADE80 100%)",
-                textColor: "#16A34A",
+                textColor: "#22C55E",
                 iconBgClass: "bg-green-100",
                 icon: (
                   <img
@@ -1100,7 +1100,7 @@ const Transaction = () => {
                 label: "Returned",
                 value: kpis.returnedItems,
                 barGradient: "linear-gradient(180deg, #D97706 0%, #F59E0B 100%)",
-                textColor: "#C2410C",
+                textColor: "#F59E0B",
                 iconBgClass: "bg-orange-100",
                 icon: <FaUndoAlt className="text-xl" />
               }
