@@ -8,7 +8,7 @@ import {
     FaBalanceScale, FaClock, FaTimes, FaPrint, FaPlus,
     FaCalendarAlt, FaUser
 } from "react-icons/fa";
-//hi l
+
 const DENOMINATIONS = [
     { key: "p1000", label: "₱1,000", value: 1000 },
     { key: "p500", label: "₱500", value: 500 },
@@ -32,9 +32,7 @@ const formatCurrency = (val) => {
 const formatAbs = (val) =>
     `₱${Math.abs(val || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-// ─── KPI Card ────────────────────────────────────────────────
-// Matches the compact KPI style used across the app screenshots:
-// left colored bar + value/label stacked + icon in a soft-colored circle.
+
 const KpiCard = ({
     icon: Icon,
     label,
@@ -61,7 +59,7 @@ const KpiCard = ({
     </div>
 );
 
-// ─── Receipt Content (reusable for both empty & filled states) ───
+
 const ReceiptContent = ({ remit }) => {
     if (!remit) {
         return (

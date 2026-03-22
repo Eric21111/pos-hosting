@@ -1056,7 +1056,7 @@ const Transaction = () => {
 
   return (
     <div
-      className={`p-6 h-screen overflow-hidden flex flex-col ${theme === "dark" ? "bg-[#1E1B18]" : "bg-[#FFFFFF]"}`}>
+      className={`p-6 h-screen overflow-hidden flex flex-col ${theme === "dark" ? "bg-[#1E1B18]" : "bg-[#F9FAFB]"}`}>
 
       <>
         <Header
