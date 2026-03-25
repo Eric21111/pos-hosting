@@ -99,9 +99,9 @@ const TemporaryPinModal = ({ isOpen, onClose, employeeName, temporaryPin }) => {
 
           <button
             onClick={onClose}
-            className="w-full px-6 py-3 rounded-lg text-white font-medium transition-all"
+            className="w-full px-6 py-2.5 rounded-lg text-white font-medium transition-all"
             style={{
-              background: 'linear-gradient(to right, #C2A68C, #AD7F65, #76462B)'
+              background: '#1B89CD'
             }}>
             
             I've Saved the PIN

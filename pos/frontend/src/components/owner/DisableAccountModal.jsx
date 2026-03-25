@@ -59,17 +59,14 @@ const DisableAccountModal = ({ isOpen, onClose, onConfirm, employee, action }) =
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 rounded-lg bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition-all">
+              className="flex-1 px-4 py-2.5 rounded-lg bg-[#E6E6E6] text-gray-700 font-medium hover:opacity-90 transition-all">
               
               Cancel
             </button>
             <button
               onClick={onConfirm}
-              className={`flex-1 px-4 py-2.5 rounded-lg text-white font-medium transition-all ${
-              isDisabling ?
-              'bg-orange-600 hover:bg-orange-700' :
-              'bg-green-600 hover:bg-green-700'}`
-              }>
+              className="flex-1 px-4 py-2.5 rounded-lg text-white font-medium transition-all hover:opacity-90"
+              style={{ background: "linear-gradient(135deg, #AD7F65 0%, #76462B 100%)" }}>
               
               {isDisabling ? 'Disable' : 'Enable'}
             </button>

@@ -174,20 +174,21 @@ const ViewEmployeeModal = ({
             <>
                 <button
                 onClick={onResetPin}
-                className="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg font-bold text-sm hover:bg-blue-200 transition-colors">
+                className="px-4 py-2.5 bg-[#1B89CD] text-white rounded-lg font-bold text-sm hover:opacity-90 transition-colors">
                 
                   Reset PIN
                 </button>
                 <button
                 onClick={onEdit}
-                className="w-10 h-10 flex items-center justify-center bg-[#007AFF] text-white rounded-lg hover:bg-blue-600 transition-colors shadow-sm"
+                className="w-10 h-10 flex items-center justify-center bg-[#1B89CD] text-white rounded-lg hover:opacity-90 transition-colors shadow-sm"
                 title="Edit">
                 
                   <FaEdit className="w-4 h-4" />
                 </button>
                 <button
                 onClick={onToggleStatus}
-                className={`w-10 h-10 flex items-center justify-center rounded-lg text-white hover:opacity-90 transition-colors shadow-sm ${employee.status === "Active" ? "bg-[#FFA500]" : "bg-[#10B981]"}`}
+                style={{ background: "linear-gradient(135deg, #AD7F65 0%, #76462B 100%)" }}
+                className="w-10 h-10 flex items-center justify-center rounded-lg text-white hover:opacity-90 transition-colors shadow-sm"
                 title={employee.status === "Active" ? "Archive" : "Restore"}>
                 
                   {employee.status === "Active" ?
