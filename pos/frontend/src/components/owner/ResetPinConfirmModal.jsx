@@ -134,14 +134,14 @@ const ResetPinConfirmModal = ({ isOpen, onClose, onConfirm, employeeName }) => {
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 rounded-lg bg-[#E6E6E6] text-gray-700 font-medium hover:opacity-90 transition-all"
+              className="flex-1 px-4 py-2.5 rounded-lg bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition-all"
               disabled={loading}>
               
               Cancel
             </button>
             <button
               onClick={handleReset}
-              className="flex-1 px-4 py-2.5 rounded-lg bg-[#1B89CD] hover:opacity-90 text-white font-medium transition-all disabled:opacity-50"
+              className="flex-1 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all disabled:opacity-60"
               disabled={loading}>
               
               {loading ? 'Verifying...' : 'Reset PIN'}

@@ -351,9 +351,9 @@ const ManageEmployees = () => {
 
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-6 py-2.5 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all"
+            className="flex items-center gap-2 px-6 py-3 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all"
             style={{
-              background: "linear-gradient(135deg, #09A046 0%, #059669 100%)"
+              background: "linear-gradient(135deg, #10B981 0%, #059669 100%)"
             }}>
             
             <FaPlus className="w-4 h-4" />
@@ -384,9 +384,9 @@ const ManageEmployees = () => {
             </p>
             <button
             onClick={() => setShowAddModal(true)}
-            className="px-6 py-2.5 text-white rounded-lg font-medium hover:opacity-90 transition-all shadow-md"
+            className="px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-all shadow-md"
             style={{
-              background: "linear-gradient(135deg, #09A046 0%, #059669 100%)"
+              background: "linear-gradient(135deg, #10B981 0%, #059669 100%)"
             }}>
             
               + Add Your First Employee
@@ -506,7 +506,7 @@ const ManageEmployees = () => {
                       {}
                       <button
                   onClick={() => handleViewEmployee(employee)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm flex-1 text-center bg-[#E6E6E6] text-gray-700 hover:opacity-90`}>
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm flex-1 text-center bg-gray-200 text-gray-700 hover:bg-gray-300`}>
                   
                         View
                       </button>
@@ -514,7 +514,7 @@ const ManageEmployees = () => {
                       {}
                       <button
                   onClick={() => handleEditEmployee(employee)}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#1B89CD] text-white hover:opacity-90 transition-colors shadow-sm"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#007AFF] text-white hover:bg-blue-600 transition-colors shadow-sm"
                   title="Edit Details">
                   
                         <FaEdit className="w-3.5 h-3.5" />
@@ -523,8 +523,10 @@ const ManageEmployees = () => {
                       {}
                       <button
                   onClick={() => handleToggleStatus(employee)}
-                  style={{ background: "linear-gradient(135deg, #AD7F65 0%, #76462B 100%)" }}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-white hover:opacity-90 transition-colors shadow-sm"
+                  className={`w-8 h-8 flex items-center justify-center rounded-lg text-white hover:opacity-90 transition-colors shadow-sm ${employee.status === "Active" ?
+                  "bg-[#FFA500]" :
+                  "bg-[#10B981]"}`
+                  }
                   title={
                   employee.status === "Active" ?
                   "Disable Account" :

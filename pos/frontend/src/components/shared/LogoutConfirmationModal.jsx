@@ -64,16 +64,16 @@ const LogoutConfirmationModal = ({ isOpen, onClose, onConfirm }) => {
           <div className="flex gap-4">
             <button
               onClick={onConfirm}
-              className="flex-1 py-2.5 px-6 rounded-lg font-bold text-white transition-all shadow-md hover:shadow-lg"
+              className="flex-1 py-3 px-6 rounded-lg font-bold text-white transition-all shadow-md hover:shadow-lg"
               style={{
-                background: 'linear-gradient(135deg, #AD7F65 0%, #76462B 100%)'
+                background: 'linear-gradient(135deg, #D4A59A 0%, #AD7F65 50%, #76462B 100%)'
               }}>
               
               Confirm
             </button>
             <button
               onClick={onClose}
-              className="flex-1 py-2.5 px-6 rounded-lg font-bold text-gray-700 bg-[#E6E6E6] hover:opacity-90 transition-all shadow-sm">
+              className="flex-1 py-3 px-6 rounded-lg font-bold text-gray-700 bg-gray-200 hover:bg-gray-300 transition-all shadow-sm">
               
               Cancel
             </button>

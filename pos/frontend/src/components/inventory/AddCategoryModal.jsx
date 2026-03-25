@@ -68,15 +68,16 @@ const AddCategoryModal = ({ show, onClose, onAdd }) => {
                         <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2.5 rounded-xl font-medium transition-colors bg-[#E6E6E6] text-gray-700 hover:opacity-90 disabled:opacity-50">
+              className={`px-6 py-2.5 rounded-xl font-medium transition-colors ${theme === 'dark' ?
+              'bg-gray-700 text-gray-300 hover:bg-gray-600' :
+              'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
               
                             Cancel
                         </button>
                         <button
               type="submit"
               disabled={loading || !newCategory.trim()}
-              className="px-6 py-2.5 rounded-xl text-white font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
-              style={{ background: "#09A046" }}>
+              className="px-6 py-2.5 rounded-xl bg-green-600 text-white font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg">
               
                             {loading ? 'Adding...' : 'Add Category'}
                         </button>

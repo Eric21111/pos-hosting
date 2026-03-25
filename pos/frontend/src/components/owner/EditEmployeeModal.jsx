@@ -371,16 +371,16 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
             <button
               onClick={onClose}
-              className="px-6 py-2.5 rounded-lg bg-[#E6E6E6] font-bold text-gray-700 hover:opacity-90 transition-all">
+              className="px-6 py-2.5 rounded-lg bg-gray-200 font-bold text-gray-700 hover:bg-gray-300 transition-all">
               
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={loading}
-              className="px-8 py-2.5 rounded-lg text-white font-bold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-8 py-2.5 rounded-lg text-white font-bold transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
               style={{
-                background: '#1B89CD'
+                background: '#007AFF'
               }}>
               
               {loading ? 'Updating...' : 'Update'}

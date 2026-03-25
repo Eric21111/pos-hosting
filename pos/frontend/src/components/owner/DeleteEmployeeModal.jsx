@@ -31,14 +31,14 @@ const DeleteEmployeeModal = ({ isOpen, onClose, onConfirm, employee }) => {
           <div className="flex gap-4">
             <button
               onClick={onConfirm}
-              className="flex-1 px-6 py-2.5 rounded-lg text-white font-medium hover:opacity-90 transition-all shadow-md"
-              style={{ background: '#CD0000' }}>
+              className="flex-1 px-6 py-3 rounded-lg text-white font-medium hover:opacity-90 transition-all shadow-md"
+              style={{ background: 'linear-gradient(135deg, #AD7F65 0%, #76462B 100%)' }}>
               
               Confirm
             </button>
             <button
               onClick={onClose}
-              className="flex-1 px-6 py-2.5 rounded-lg text-gray-700 bg-[#E6E6E6] hover:opacity-90 transition-all font-medium shadow-md">
+              className="flex-1 px-6 py-3 rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 transition-all font-medium shadow-md">
               
               Cancel
             </button>

@@ -571,14 +571,14 @@ const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded, onEmployeeCreated 
             <button
               onClick={onClose}
               disabled={loading}
-              className="px-6 py-2.5 rounded-lg bg-[#E6E6E6] font-bold text-gray-700 hover:opacity-90 transition-all disabled:opacity-50">
+              className="px-6 py-2.5 rounded-lg bg-gray-200 font-bold text-gray-700 hover:bg-gray-300 transition-all disabled:opacity-50">
               
               Cancel
             </button>
             <button
               onClick={handleAddEmployee}
               disabled={loading || emailLoading || !isEmailVerified}
-              className="px-8 py-2.5 rounded-lg text-white font-bold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed bg-[#09A046]">
+              className="px-8 py-2.5 rounded-lg text-white font-bold transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed bg-[#10B981]">
               
               {loading ? 'Adding...' : 'Add'}
             </button>
