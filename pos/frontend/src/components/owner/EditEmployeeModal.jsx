@@ -247,8 +247,8 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
           {}
           <h4 className="text-base font-bold text-gray-800 mb-6">Personal Details</h4>
           <div className="grid grid-cols-2 gap-x-8 gap-y-6 mb-10">
-            <div>
-              <label className="text-sm font-medium text-gray-500 mb-1 block">First Name <span className="text-red-500">*</span></label>
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block">First Name <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 name="firstName"
@@ -258,7 +258,7 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
                 placeholder="First Name" />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500 mb-1 block">Middle Initial</label>
+              <label className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block">Middle Initial</label>
               <input
                 type="text"
                 name="middleInitial"
@@ -271,7 +271,7 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
                 />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500 mb-1 block">Last Name <span className="text-red-500">*</span></label>
+              <label className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block">Last Name <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 name="lastName"
@@ -281,7 +281,7 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
                 placeholder="Last Name" />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500 mb-1 block">Contact number</label>
+              <label className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block">Contact number</label>
               <input
                 type="text"
                 name="contactNo"
@@ -291,7 +291,7 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
                 placeholder="09123456789" />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500 mb-1 block">Email <span className="text-red-500">*</span></label>
+              <label className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block">Email <span className="text-red-500">*</span></label>
               <input
                 type="email"
                 name="email"
@@ -301,7 +301,7 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
                 placeholder="email@example.com" />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500 mb-1 block">Date Joined <span className="text-red-500">*</span></label>
+              <label className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block">Date Joined <span className="text-red-500">*</span></label>
               <input
                 type="date"
                 name="dateJoined"
@@ -310,7 +310,7 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
                 className="w-full text-lg font-bold text-gray-800 border-b border-gray-200 focus:border-[#AD7F65] focus:outline-none py-1" />
             </div>
             <div className="col-span-2">
-              <label className="text-sm font-medium text-gray-500 mb-1 block">Position <span className="text-red-500">*</span></label>
+              <label className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block">Position <span className="text-red-500">*</span></label>
               <div className="text-base font-semibold text-gray-800 flex items-center gap-2">
                 <span>Employee - </span>
                 <select
