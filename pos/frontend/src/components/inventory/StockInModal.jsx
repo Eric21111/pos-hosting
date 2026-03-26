@@ -1010,7 +1010,10 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading, brandPartn
                           <div className="grid grid-cols-2 gap-4 pt-3">
                             {/* V1 - Colors */}
                             <div className={`p-3 rounded-lg border ${theme === "dark" ? "border-gray-700 bg-[#1E1B18]" : "border-gray-200 bg-white"}`}>
-                              <p className={`text-xs font-bold mb-2 ${theme === "dark" ? "text-white" : "text-gray-800"}`}>VARIANT 1 – Colors</p>
+                              <div className="flex items-center gap-2 mb-2">
+                                <p className={`text-xs font-bold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>VARIANT 1 – Colors</p>
+                                <span title="Press Enter to add" className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold border ${theme === "dark" ? "text-gray-300 border-gray-600" : "text-gray-600 border-gray-300"}`}>i</span>
+                              </div>
                               <select value="" onChange={(e) => { if (e.target.value && !newV1Tags.includes(e.target.value)) setNewV1Tags(prev => [...prev, e.target.value]); }}
                                 className={`w-full px-2 py-1.5 text-xs border rounded-lg mb-2 appearance-none cursor-pointer ${theme === "dark" ? "bg-[#2A2724] border-gray-700 text-white" : "bg-white border-gray-300"}`}>
                                 <option value="">Select color...</option>
@@ -1028,7 +1031,10 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading, brandPartn
                             </div>
                             {/* V2 - Size */}
                             <div className={`p-3 rounded-lg border ${theme === "dark" ? "border-gray-700 bg-[#1E1B18]" : "border-gray-200 bg-white"}`}>
-                              <p className={`text-xs font-bold mb-2 ${theme === "dark" ? "text-white" : "text-gray-800"}`}>VARIANT 2 – Size <span className="font-normal text-gray-400">(optional)</span></p>
+                              <div className="flex items-center gap-2 mb-2">
+                                <p className={`text-xs font-bold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>VARIANT 2 – Size <span className="font-normal text-gray-400">(optional)</span></p>
+                                <span title="Press Enter to add" className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold border ${theme === "dark" ? "text-gray-300 border-gray-600" : "text-gray-600 border-gray-300"}`}>i</span>
+                              </div>
                               <select value="" onChange={(e) => { if (e.target.value && !newV2Tags.includes(e.target.value)) setNewV2Tags(prev => [...prev, e.target.value]); }}
                                 className={`w-full px-2 py-1.5 text-xs border rounded-lg mb-2 appearance-none cursor-pointer ${theme === "dark" ? "bg-[#2A2724] border-gray-700 text-white" : "bg-white border-gray-300"}`}>
                                 <option value="">Select size...</option>
@@ -1105,7 +1111,7 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading, brandPartn
                                   );
                                 })}
                               </div>
-                              <button type="button" onClick={handleAddNewCombosFromPicker} className="w-full py-2 text-sm font-semibold rounded-lg text-white transition-all hover:opacity-90" style={{ background: "#09A046" }}>Add</button>
+                              <button type="button" onClick={handleAddNewCombosFromPicker} className="w-full py-2 text-sm font-semibold rounded-lg text-white transition-all hover:opacity-90" style={{ background: "#09A046" }}>Add +</button>
                             </>);
                           })()}
                         </div>

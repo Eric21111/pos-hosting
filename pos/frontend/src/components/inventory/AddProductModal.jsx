@@ -865,7 +865,10 @@ const AddProductModal = ({
                     {/* Option Group 1 - Required */}
                     <div className={`p-4 rounded-xl border ${theme === "dark" ? "bg-[#1E1B18] border-gray-700" : "bg-gray-50 border-gray-200"}`}>
                       <div className="flex items-center justify-between mb-3">
-                        <label className={`text-xs font-bold uppercase tracking-wide ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Option Group 1 – Required</label>
+                        <div className="flex items-center gap-2">
+                          <label className={`text-xs font-bold uppercase tracking-wide ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Option Group 1 – Required</label>
+                          <span title="Press Enter to add" className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold border ${theme === "dark" ? "text-gray-300 border-gray-600" : "text-gray-600 border-gray-300"}`}>i</span>
+                        </div>
                         <span className={`text-[10px] italic ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>e.g. Color · Flavor · Shade · Style</span>
                       </div>
                       <input type="text" value={optionGroup1Name} onChange={(e) => setOptionGroup1Name(e.target.value)} placeholder="e.g. Color"
@@ -906,7 +909,7 @@ const AddProductModal = ({
                           ))}
                           <input type="text" value={customColorInput} onChange={(e) => setCustomColorInput(e.target.value)}
                             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCustomColor(); } }}
-                            placeholder="Add"
+                            placeholder="Add +"
                             className={`w-16 px-2 py-1 text-xs border-2 border-dashed rounded-full focus:outline-none focus:border-[#09A046] text-center ${theme === "dark" ? "bg-transparent border-gray-600 text-white placeholder-gray-500" : "bg-transparent border-gray-300 text-gray-700 placeholder-gray-400"}`} />
                         </div>
                       </div>
@@ -915,7 +918,10 @@ const AddProductModal = ({
                     {/* Option Group 2 - Optional (Sizes) */}
                     <div className={`p-4 rounded-xl border ${theme === "dark" ? "bg-[#1E1B18] border-gray-700" : "bg-gray-50 border-gray-200"}`}>
                       <div className="flex items-center justify-between mb-3">
-                        <label className={`text-xs font-bold uppercase tracking-wide ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Option Group 2</label>
+                        <div className="flex items-center gap-2">
+                          <label className={`text-xs font-bold uppercase tracking-wide ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Option Group 2</label>
+                          <span title="Press Enter to add" className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold border ${theme === "dark" ? "text-gray-300 border-gray-600" : "text-gray-600 border-gray-300"}`}>i</span>
+                        </div>
                         <span className={`text-[10px] italic ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>e.g. Size · Weight · Volume · Pack</span>
                       </div>
                       <input type="text" value={optionGroup2Name} onChange={(e) => setOptionGroup2Name(e.target.value)} placeholder="e.g. Size"
@@ -984,7 +990,7 @@ const AddProductModal = ({
                           ))}
                                   <input type="text" value={customSizeValue} onChange={(e) => setCustomSizeValue(e.target.value)}
                             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); const trimmed = customSizeValue.trim(); if (trimmed && !customSizes.includes(trimmed)) { setCustomSizes(prev => [...prev, trimmed]); handleSizeToggle(trimmed); setCustomSizeValue(""); } } }}
-                            placeholder="Add"
+                            placeholder="Add +"
                             className={`w-16 px-2 py-1 text-xs border-2 border-dashed rounded-full focus:outline-none focus:border-[#09A046] text-center ${theme === "dark" ? "bg-transparent border-gray-600 text-white placeholder-gray-500" : "bg-transparent border-gray-300 text-gray-700 placeholder-gray-400"}`} />
                                 </div>
                             </div>
