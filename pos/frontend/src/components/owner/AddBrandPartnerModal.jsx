@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { FaTimes, FaUserFriends } from 'react-icons/fa';
-import circleIcon from '../../assets/owner/add-employee-circle.svg';
+import circleIcon from '../../assets/owner/circle.svg';
 import cameraIcon from '../../assets/owner/camera.svg';
 import { useTheme } from '../../context/ThemeContext';
 

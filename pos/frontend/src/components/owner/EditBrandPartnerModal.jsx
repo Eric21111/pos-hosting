@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { FaTimes, FaUserFriends } from 'react-icons/fa';
 import cameraIcon from '../../assets/owner/camera.svg';
-import circleIcon from '../../assets/owner/add-employee-circle.svg';
+import circleIcon from '../../assets/owner/circle.svg';
 import { useTheme } from '../../context/ThemeContext';
 
 const EditBrandPartnerModal = ({ isOpen, onClose, onSuccess, brandPartner }) => {
