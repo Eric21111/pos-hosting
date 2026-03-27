@@ -71,6 +71,10 @@ const RemoveItemPinModal = ({ isOpen, onClose, onConfirm, item }) => {
       e.stopPropagation();
     }
 
+    if (loading || isConfirmingRef.current) {
+      return;
+    }
+
     console.log('[RemoveItemPinModal] handleConfirm called, reason:', reason, 'pin length:', pin.length);
 
     if (!reason) {
@@ -84,6 +88,7 @@ const RemoveItemPinModal = ({ isOpen, onClose, onConfirm, item }) => {
     }
 
     setError('');
+    isConfirmingRef.current = true;
     setLoading(true);
 
     try {
@@ -93,6 +98,7 @@ const RemoveItemPinModal = ({ isOpen, onClose, onConfirm, item }) => {
       if (!currentUser.email) {
         setError('User information not found. Please log in again.');
         setLoading(false);
+        isConfirmingRef.current = false;
         return;
       }
 
@@ -101,6 +107,7 @@ const RemoveItemPinModal = ({ isOpen, onClose, onConfirm, item }) => {
       if (trimmedPin.length !== 6 || !/^\d{6}$/.test(trimmedPin)) {
         setError('PIN must be exactly 6 digits');
         setLoading(false);
+        isConfirmingRef.current = false;
         return;
       }
 
@@ -126,13 +133,6 @@ const RemoveItemPinModal = ({ isOpen, onClose, onConfirm, item }) => {
         console.log('[RemoveItemPinModal] PIN verified successfully, calling onConfirm with reason:', voidReason);
 
 
-        if (isConfirmingRef.current) {
-          console.log('[RemoveItemPinModal] Already confirming, skipping duplicate call');
-          return;
-        }
-        isConfirmingRef.current = true;
-
-
         const approverInfo = {
           approvedBy: data.data?.name || data.data?.firstName || 'Unknown',
           approvedById: data.data?._id || data.data?.id || '',
@@ -152,6 +152,7 @@ const RemoveItemPinModal = ({ isOpen, onClose, onConfirm, item }) => {
               `Item removed from this sale. (${voidedQty} ${voidedQty === 1 ? 'item' : 'items'} voided)`
             );
             console.log('[RemoveItemPinModal] onConfirm called successfully with approver:', approverInfo);
+            setLoading(false);
           } catch (error) {
             console.error('[RemoveItemPinModal] Error calling onConfirm:', error);
             setError('Failed to void item. Please try again.');
@@ -171,12 +172,14 @@ const RemoveItemPinModal = ({ isOpen, onClose, onConfirm, item }) => {
         setError(data.message || 'Invalid PIN. Please try again.');
 
         setLoading(false);
+        isConfirmingRef.current = false;
       }
     } catch (error) {
       console.error('Error verifying PIN:', error);
       setError('Failed to connect to server. Please try again.');
 
       setLoading(false);
+      isConfirmingRef.current = false;
     }
   };
 
