@@ -12,6 +12,7 @@ import ProductDetailsModal from "../components/terminal/ProductDetailsModal";
 import QRCodePaymentModal from "../components/terminal/QRCodePaymentModal";
 import RemoveItemPinModal from "../components/terminal/RemoveItemPinModal";
 import { API_BASE_URL } from "../config/api";
+import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
 import { useDataCache } from "../context/DataCacheContext";
 import { useTheme } from "../context/ThemeContext";
@@ -62,30 +63,14 @@ const Terminal = () => {
   const [sortOption, setSortOption] = useState("newest");
   const [isProcessingTransaction, setIsProcessingTransaction] = useState(false);
   const productsBeforeTxnRef = useRef(null);
-  const terminalToastTimerRef = useRef(null);
-  const [terminalToast, setTerminalToast] = useState(null);
   const itemsPerPage = 10;
-
-  const showTerminalToast = useCallback((message, type = "success") => {
-    if (terminalToastTimerRef.current) clearTimeout(terminalToastTimerRef.current);
-    setTerminalToast({ message, type });
-    terminalToastTimerRef.current = setTimeout(() => {
-      setTerminalToast(null);
-    }, 3200);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (terminalToastTimerRef.current) clearTimeout(terminalToastTimerRef.current);
-    };
-  }, []);
 
   const toastBr = useMemo(
     () => ({
-      success: (msg) => showTerminalToast(msg, "success"),
-      error: (msg) => showTerminalToast(msg, "error")
+      success: (msg) => toast.success(msg),
+      error: (msg) => toast.error(msg)
     }),
-    [showTerminalToast]
+    []
   );
 
   const resolveItemSize = (item = {}) => {
@@ -1859,19 +1844,6 @@ const Terminal = () => {
 
   return (
     <>
-      {terminalToast && (
-        <div className="fixed bottom-4 right-4 z-[2147483647]">
-          <div
-            className={`px-4 py-3 rounded-xl shadow-xl border text-sm font-semibold ${
-              terminalToast.type === "error"
-                ? "bg-red-50 text-red-700 border-red-200"
-                : "bg-green-50 text-green-700 border-green-200"
-            }`}
-          >
-            {terminalToast.message}
-          </div>
-        </div>
-      )}
       <div
         className={`relative flex flex-col h-screen ${theme === "dark" ? "bg-[#121212]" : "bg-[#F9FAFB]"}`}>
 
