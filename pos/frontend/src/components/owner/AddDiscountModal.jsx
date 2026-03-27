@@ -154,19 +154,13 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
   const inputClass = `w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${isDark ?
   'bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500' :
   'bg-white border-gray-300 text-gray-900'}`;
+  const labelClass = `text-xs font-bold uppercase tracking-wide mb-1 block ${isDark ? 'text-gray-400' : 'text-gray-500'}`;
 
 
   return (
     <>
       <div className="fixed inset-0 flex items-center justify-center z-[10002] p-4 backdrop-blur-sm">
         <div className={`rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col ${isDark ? 'bg-[#2A2724]' : 'bg-white'}`}>
-          <div
-            className="h-6"
-            style={{
-              background: 'linear-gradient(135deg, #AD7F65 0%, #76462B 100%)'
-            }} />
-          
-
           <div className={`px-6 py-4 border-b flex items-center justify-between ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
             <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>
               {discountToEdit ? 'Edit Discount' : 'Create New Discount'}
@@ -187,8 +181,8 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
 
                   <div className="space-y-4">
                     <div>
-                      <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Discount Name
+                      <label className={labelClass}>
+                        Discount Name <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -202,9 +196,9 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                     </div>
 
                     <div>
-                      <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      <label className={labelClass}>
                         <span>Discount Code</span>
-                        <span className="ml-2 text-xs text-gray-400 font-normal">Optional</span>
+                        <span className="ml-2 text-[10px] font-normal normal-case tracking-normal text-gray-400">Optional</span>
                       </label>
                       <input
                         type="text"
@@ -217,8 +211,8 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                     </div>
 
                     <div>
-                      <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Discount Type
+                      <label className={labelClass}>
+                        Discount Type <span className="text-red-500">*</span>
                       </label>
                       <div className="flex gap-6">
                         <label className="flex items-center gap-2 cursor-pointer">
@@ -247,8 +241,8 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                     </div>
 
                     <div>
-                      <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Discount Value
+                      <label className={labelClass}>
+                        Discount Value <span className="text-red-500">*</span>
                       </label>
                       <div className="flex items-center gap-2">
                         <input
@@ -270,8 +264,8 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                     </div>
 
                     <div>
-                      <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Applies to
+                      <label className={labelClass}>
+                        Applies to <span className="text-red-500">*</span>
                       </label>
                       <div className="space-y-2">
                         <label className="flex items-center gap-2 cursor-pointer">
@@ -310,7 +304,7 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                       </div>
                       {formData.appliesTo === 'category' &&
                       <div className="mt-3">
-                          <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                          <label className={labelClass}>
                             Select Category <span className="text-red-500">*</span>
                           </label>
                           <select
@@ -329,6 +323,9 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                       }
                       {formData.appliesTo === 'products' &&
                       <div className="mt-3">
+                          <label className={labelClass}>
+                            Products <span className="text-red-500">*</span>
+                          </label>
                           <button
                           type="button"
                           onClick={openProductPicker}
@@ -382,18 +379,21 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                     </div>
 
                     <div>
-                      <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Validity Period
+                      <label className={labelClass}>
+                        Validity Period {!formData.noExpiration && <span className="text-red-500">*</span>}
                       </label>
                       <div className="grid grid-cols-2 gap-3 mb-2">
                         <div>
-                          <label className="text-xs text-gray-500 block mb-1">Valid from</label>
+                          <label className={`text-xs font-medium block mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                            Valid from {!formData.noExpiration && <span className="text-red-500">*</span>}
+                          </label>
                           <input
                             type="date"
                             name="validFrom"
                             value={formData.validFrom}
                             onChange={handleChange}
                             disabled={formData.noExpiration}
+                            required={!formData.noExpiration}
                             className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed ${isDark ?
                             'bg-[#1E1B18] border-gray-600 text-white' :
                             'bg-white border-gray-300 text-gray-900 disabled:bg-gray-100'}`
@@ -401,13 +401,16 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                           
                         </div>
                         <div>
-                          <label className="text-xs text-gray-500 block mb-1">Valid until</label>
+                          <label className={`text-xs font-medium block mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                            Valid until {!formData.noExpiration && <span className="text-red-500">*</span>}
+                          </label>
                           <input
                             type="date"
                             name="validUntil"
                             value={formData.validUntil}
                             onChange={handleChange}
                             disabled={formData.noExpiration}
+                            required={!formData.noExpiration}
                             className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed ${isDark ?
                             'bg-[#1E1B18] border-gray-600 text-white' :
                             'bg-white border-gray-300 text-gray-900 disabled:bg-gray-100'}`
@@ -434,9 +437,9 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
 
                   <div className="space-y-4">
                     <div>
-                      <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      <label className={labelClass}>
                         <span>Minimum Purchase Amount</span>
-                        <span className="ml-2 text-xs text-gray-400 font-normal">Optional</span>
+                        <span className="ml-2 text-[10px] font-normal normal-case tracking-normal text-gray-400">Optional</span>
                       </label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600">₱</span>
@@ -446,16 +449,16 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                           value={formData.minPurchaseAmount}
                           onChange={handleChange}
                           step="0.01"
-                          className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent" />
+                          className={`w-full pl-8 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] focus:border-transparent ${isDark ? 'bg-[#1E1B18] border-gray-600 text-white' : 'border-gray-300 bg-white'}`} />
                         
                       </div>
                       <p className="text-xs text-gray-400 mt-1">Customer must spend at least this amount</p>
                     </div>
 
                     <div>
-                      <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      <label className={labelClass}>
                         <span>Usage Limit</span>
-                        <span className="ml-2 text-xs text-gray-400 font-normal">Optional</span>
+                        <span className="ml-2 text-[10px] font-normal normal-case tracking-normal text-gray-400">Optional</span>
                       </label>
                       <input
                         type="number"
@@ -469,8 +472,8 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                     </div>
 
                     <div>
-                      <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Description / Notes
+                      <label className={labelClass}>
+                        Description / Notes <span className="text-[10px] font-normal normal-case tracking-normal text-gray-400">Optional</span>
                       </label>
                       <textarea
                         name="description"
