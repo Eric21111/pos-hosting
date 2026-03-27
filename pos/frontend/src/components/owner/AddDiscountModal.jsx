@@ -380,12 +380,12 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
 
                     <div>
                       <label className={labelClass}>
-                        Validity Period {!formData.noExpiration && <span className="text-red-500">*</span>}
+                        Validity Period {!formData.noExpiration}
                       </label>
                       <div className="grid grid-cols-2 gap-3 mb-2">
                         <div>
                           <label className={`text-xs font-medium block mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                            Valid from {!formData.noExpiration && <span className="text-red-500">*</span>}
+                            Valid from {!formData.noExpiration}
                           </label>
                           <input
                             type="date"
@@ -402,7 +402,7 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
                         </div>
                         <div>
                           <label className={`text-xs font-medium block mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                            Valid until {!formData.noExpiration && <span className="text-red-500">*</span>}
+                            Valid until {!formData.noExpiration}
                           </label>
                           <input
                             type="date"
