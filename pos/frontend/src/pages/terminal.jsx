@@ -12,7 +12,7 @@ import ProductDetailsModal from "../components/terminal/ProductDetailsModal";
 import QRCodePaymentModal from "../components/terminal/QRCodePaymentModal";
 import RemoveItemPinModal from "../components/terminal/RemoveItemPinModal";
 import { API_BASE_URL } from "../config/api";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
 import { useDataCache } from "../context/DataCacheContext";
 import { useTheme } from "../context/ThemeContext";
@@ -26,10 +26,8 @@ import shoesIcon from "../assets/inventory-icons/shoe.svg";
 import topIcon from "../assets/inventory-icons/Top.svg";
 
 const toastBr = {
-  success: (msg) =>
-    toast.success(msg, { toasterId: "terminal", position: "bottom-right" }),
-  error: (msg) =>
-    toast.error(msg, { toasterId: "terminal", position: "bottom-right" })
+  success: (msg) => toast.success(msg, { position: "bottom-right" }),
+  error: (msg) => toast.error(msg, { position: "bottom-right" })
 };
 
 const Terminal = () => {
@@ -1848,6 +1846,12 @@ const Terminal = () => {
 
   return (
     <>
+      <Toaster
+        position="bottom-right"
+        reverseOrder={false}
+        containerStyle={{ zIndex: 2147483647 }}
+        toastOptions={{ style: { zIndex: 2147483647 } }}
+      />
       <div
         className={`relative flex flex-col h-screen ${theme === "dark" ? "bg-[#121212]" : "bg-[#F9FAFB]"}`}>
 
