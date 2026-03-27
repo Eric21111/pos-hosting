@@ -1236,6 +1236,24 @@ const Terminal = () => {
     return cart.reduce((sum, item) => sum + item.itemPrice * item.quantity, 0);
   }, [cart]);
 
+  const normalizeCategory = useCallback((value) => String(value || "").trim().toLowerCase(), []);
+
+  const itemMatchesDiscountCategory = useCallback((item, discountCategory) => {
+    const target = normalizeCategory(discountCategory);
+    if (!target) return false;
+
+    const candidates = [];
+    if (item?.category) candidates.push(item.category);
+    if (item?.subCategory) candidates.push(item.subCategory);
+
+    const productId = String(item?._id || item?.productId || item?.id || "");
+    const product = productMap.get(productId);
+    if (product?.category) candidates.push(product.category);
+    if (product?.subCategory) candidates.push(product.subCategory);
+
+    return candidates.some((category) => normalizeCategory(category) === target);
+  }, [normalizeCategory, productMap]);
+
 
   const validateDiscountForCart = (discountItem, cartItems) => {
     if (!discountItem || !cartItems || cartItems.length === 0) {
@@ -1252,20 +1270,9 @@ const Terminal = () => {
 
 
     if (appliesToType === "category" && discountItem.category) {
-      const hasMatchingItem = cartItems.some((item) => {
-
-        let itemCategory = item.category;
-
-
-        if (!itemCategory) {
-          const productId = String(item._id || item.productId || item.id);
-          const product = productMap.get(productId);
-          itemCategory = product?.category;
-        }
-
-
-        return itemCategory === discountItem.category;
-      });
+      const hasMatchingItem = cartItems.some((item) =>
+        itemMatchesDiscountCategory(item, discountItem.category)
+      );
 
       if (!hasMatchingItem) {
         return {
@@ -1348,15 +1355,7 @@ const Terminal = () => {
           totalEligibleAmount = subtotal;
         } else if (appliesToType === "category" && selectedDiscount.category) {
           totalEligibleAmount = cart.reduce((sum, item) => {
-
-            let itemCategory = item.category;
-            if (!itemCategory) {
-              const productId = String(item._id || item.productId || item.id);
-              const product = productMap.get(productId);
-              itemCategory = product?.category;
-            }
-
-            if (itemCategory === selectedDiscount.category) {
+            if (itemMatchesDiscountCategory(item, selectedDiscount.category)) {
               return sum + item.itemPrice * item.quantity;
             }
             return sum;

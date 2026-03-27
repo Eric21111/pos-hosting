@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaBox, FaCheck, FaSearch, FaTimes } from 'react-icons/fa';
+import { API_ENDPOINTS } from '../../config/api';
 import { useTheme } from '../../context/ThemeContext';
 
 const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) => {
@@ -26,13 +27,12 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
   const [productSearch, setProductSearch] = useState('');
   const [productCategoryFilter, setProductCategoryFilter] = useState('All');
   const [tempSelectedProducts, setTempSelectedProducts] = useState([]);
-
-  const categories = ['Tops', 'Bottoms', 'Dresses', 'Makeup', 'Accessories', 'Shoes', 'Head Wear', 'Foods'];
+  const [categoryOptions, setCategoryOptions] = useState([]);
 
   const fetchProducts = useCallback(async () => {
     setProductsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/products');
+      const response = await fetch(API_ENDPOINTS.products);
       const data = await response.json();
       if (data.success && Array.isArray(data.data)) {
         setAllProducts(data.data);
@@ -44,9 +44,37 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
     }
   }, []);
 
+  const fetchCategories = useCallback(async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.categories);
+      const data = await response.json();
+      if (data.success && Array.isArray(data.data)) {
+        setCategoryOptions(
+          data.data
+            .map((c) => c?.name)
+            .filter((name) => typeof name === 'string' && name.trim() && name !== 'All')
+        );
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+    }
+  }, []);
+
+  const categories = useMemo(() => {
+    const set = new Set();
+    allProducts.forEach((p) => {
+      if (p?.category) set.add(String(p.category).trim());
+      if (p?.subCategory) set.add(String(p.subCategory).trim());
+    });
+    categoryOptions.forEach((c) => set.add(String(c).trim()));
+    if (discountToEdit?.category) set.add(String(discountToEdit.category).trim());
+    return Array.from(set).filter(Boolean).sort((a, b) => a.localeCompare(b));
+  }, [allProducts, categoryOptions, discountToEdit]);
+
   useEffect(() => {
     if (isOpen) {
       fetchProducts();
+      fetchCategories();
       if (discountToEdit) {
         setFormData({
           discountName: discountToEdit.title || '',
@@ -81,7 +109,7 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
         });
       }
     }
-  }, [isOpen, discountToEdit, fetchProducts]);
+  }, [isOpen, discountToEdit, fetchProducts, fetchCategories]);
 
   if (!isOpen) return null;
 

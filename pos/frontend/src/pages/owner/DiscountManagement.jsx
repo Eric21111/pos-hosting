@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FaBox, FaCalendar, FaEdit, FaPlus, FaSearch, FaTag, FaTrash, FaUsers } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import AddDiscountModal from '../../components/owner/AddDiscountModal';
@@ -281,12 +281,20 @@ const DiscountManagement = () => {
       if (filterCategory === 'no-category') {
         matchesCategory = !discount.category || discount.category === null;
       } else {
-        matchesCategory = discount.category === filterCategory;
+        matchesCategory = String(discount.category || '').trim().toLowerCase() === String(filterCategory).trim().toLowerCase();
       }
     }
 
     return matchesSearch && matchesType && matchesCategory;
   });
+
+  const categoryFilterOptions = useMemo(() => {
+    const set = new Set();
+    discounts.forEach((d) => {
+      if (d?.category) set.add(String(d.category).trim());
+    });
+    return Array.from(set).filter(Boolean).sort((a, b) => a.localeCompare(b));
+  }, [discounts]);
 
   return (
     <div className={`p-8 min-h-screen ${theme === 'dark' ? 'bg-[#1E1B18]' : 'bg-gray-50'}`}>
@@ -340,14 +348,9 @@ const DiscountManagement = () => {
             
             <option value="all">All Categories</option>
             <option value="no-category">All Products</option>
-            <option value="Tops">Tops</option>
-            <option value="Bottoms">Bottoms</option>
-            <option value="Dresses">Dresses</option>
-            <option value="Makeup">Makeup</option>
-            <option value="Accessories">Accessories</option>
-            <option value="Shoes">Shoes</option>
-            <option value="Head Wear">Head Wear</option>
-            <option value="Foods">Foods</option>
+            {categoryFilterOptions.map((category) => (
+              <option key={category} value={category}>{category}</option>
+            ))}
           </select>
         </div>
         <button
