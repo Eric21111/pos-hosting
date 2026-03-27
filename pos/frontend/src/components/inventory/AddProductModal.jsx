@@ -86,15 +86,16 @@ const AddProductModal = ({
   const parentCategories = [...defaultParentCategories, ...customParentCategories];
 
   const orphanCustomSubCategories = categories
-    .map((c) => c?.name)
     .filter(
-      (name) =>
-        name !== "All" &&
-        name !== "Others" &&
-        !defaultParentCategories.includes(name) &&
-        !allKnownDefaultSubs.has(name) &&
-        !legacyParentCategories.includes(name)
-    );
+      (c) =>
+        c?.name !== "All" &&
+        c?.name !== "Others" &&
+        c?.parentCategory &&
+        !defaultParentCategories.includes(c?.name) &&
+        !allKnownDefaultSubs.has(c?.name) &&
+        !legacyParentCategories.includes(c?.name)
+    )
+    .map((c) => c?.name);
 
   const getSubcategories = (parentCat) => {
     const defaultSubs = categoryStructure[parentCat] || [];
