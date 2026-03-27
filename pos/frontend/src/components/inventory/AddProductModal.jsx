@@ -63,12 +63,13 @@ const AddProductModal = ({
     "Makeup": ["Face", "Eyes", "Lips", "Nails", "SkinCare", "Others"],
     "Accessories": ["Jewelry", "Bags", "Head Wear", "Glasses/Sunglasses", "Others"],
     "Shoes": ["Sneakers", "Boots", "Sandals", "Others"],
+    "Essentials": ["Daily Essentials", "Personal Care", "Home Essentials", "Others"],
     "Others": ["Others"]
   };
 
   const parentCategories = Object.keys(categoryStructure);
   const allKnownDefaultSubs = new Set(Object.values(categoryStructure).flat());
-  const legacyParentCategories = ["Apparel", "Shoes", "Foods", "Accessories", "Makeup", "Head Wear"];
+  const legacyParentCategories = ["Apparel", "Shoes", "Foods", "Accessories", "Makeup", "Head Wear", "Essentials"];
 
   const customSubCategories = categories
     .map((c) => c.name)
@@ -960,7 +961,7 @@ const AddProductModal = ({
                                 } else if (["Tops", "Bottoms", "Dresses", "Outerwear"].includes(subCategory)) {
                                   sizes = ["XS", "S", "M", "L", "XL", "XXL", "Free Size"];
                                 } else if (category === "Shoes") { sizes = ["5", "6", "7", "8", "9", "10", "11", "12"]; }
-                                else if (category === "Accessories" || category === "Makeup") { sizes = ["Free Size"]; }
+                                else if (category === "Accessories" || category === "Makeup" || category === "Essentials") { sizes = ["Free Size"]; }
                                 else { sizes = ["Free Size"]; }
                                 return [...sizes, ...customSizes].map((size) => (
                                   <div key={size} onClick={() => handleSizeToggle(size)}

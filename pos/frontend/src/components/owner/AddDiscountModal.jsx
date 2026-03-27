@@ -3,6 +3,19 @@ import { FaBox, FaCheck, FaSearch, FaTimes } from 'react-icons/fa';
 import { API_ENDPOINTS } from '../../config/api';
 import { useTheme } from '../../context/ThemeContext';
 
+const CATEGORY_STRUCTURE = {
+  "Apparel - Men": ["Tops", "Bottoms", "Outerwear"],
+  "Apparel - Women": ["Tops", "Bottoms", "Dresses", "Outerwear"],
+  "Apparel - Kids": ["Tops", "Bottoms", "Dresses", "Outerwear"],
+  "Apparel - Unisex": ["Tops", "Bottoms", "Dresses", "Outerwear"],
+  "Foods": ["Beverages", "Snacks", "Meals", "Desserts", "Ingredients", "Other"],
+  "Makeup": ["Face", "Eyes", "Lips", "Nails", "SkinCare", "Others"],
+  "Accessories": ["Jewelry", "Bags", "Head Wear", "Glasses/Sunglasses", "Others"],
+  "Shoes": ["Sneakers", "Boots", "Sandals", "Others"],
+  "Essentials": ["Daily Essentials", "Personal Care", "Home Essentials", "Others"],
+  "Others": ["Others"]
+};
+
 const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) => {
   const { theme } = useTheme();
   const [formData, setFormData] = useState({
@@ -61,19 +74,28 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
     }
   }, []);
 
+  const parentCategories = useMemo(() => Object.keys(CATEGORY_STRUCTURE), []);
+  const allKnownDefaultSubs = useMemo(() => new Set(Object.values(CATEGORY_STRUCTURE).flat()), []);
+
   const categories = useMemo(() => {
-    const set = new Set();
-    allProducts.forEach((p) => {
-      if (p?.category) set.add(String(p.category).trim());
+    const set = new Set(parentCategories);
+    categoryOptions.forEach((c) => {
+      const n = String(c || '').trim();
+      if (n && !allKnownDefaultSubs.has(n)) set.add(n);
     });
-    categoryOptions.forEach((c) => set.add(String(c).trim()));
+    allProducts.forEach((p) => {
+      const n = String(p?.category || '').trim();
+      if (n) set.add(n);
+    });
     if (discountToEdit?.category) set.add(String(discountToEdit.category).trim());
     return Array.from(set).filter(Boolean).sort((a, b) => a.localeCompare(b));
-  }, [allProducts, categoryOptions, discountToEdit]);
+  }, [parentCategories, categoryOptions, allProducts, allKnownDefaultSubs, discountToEdit]);
 
   const subCategoryOptions = useMemo(() => {
     if (!formData.category) return [];
     const set = new Set();
+    const defaultSubs = CATEGORY_STRUCTURE[formData.category] || [];
+    defaultSubs.forEach((s) => set.add(String(s).trim()));
     allProducts.forEach((p) => {
       const category = String(p?.category || '').trim();
       const selectedCategory = String(formData.category || '').trim();
@@ -81,9 +103,15 @@ const AddDiscountModal = ({ isOpen, onClose, onAdd, onEdit, discountToEdit }) =>
         set.add(String(p.subCategory).trim());
       }
     });
+    categoryOptions.forEach((c) => {
+      const n = String(c || '').trim();
+      if (n && !parentCategories.includes(n) && !allKnownDefaultSubs.has(n)) {
+        set.add(n);
+      }
+    });
     if (discountToEdit?.subCategory) set.add(String(discountToEdit.subCategory).trim());
     return Array.from(set).filter(Boolean).sort((a, b) => a.localeCompare(b));
-  }, [allProducts, formData.category, discountToEdit]);
+  }, [allProducts, formData.category, discountToEdit, categoryOptions, parentCategories, allKnownDefaultSubs]);
 
   useEffect(() => {
     if (isOpen) {

@@ -241,6 +241,7 @@ const Inventory = () => {
     Dresses: dressesIcon,
     Makeup: makeupIcon,
     Accessories: accessoriesIcon,
+    Essentials: accessoriesIcon,
     Shoes: shoesIcon,
     "Head Wear": headWearIcon
   };
@@ -260,8 +261,12 @@ const Inventory = () => {
             icon: categoryIconMap[cat.name] || allIcon
           }));
 
+        const withEssentials = activeCategories.some((cat) => cat.name === "Essentials")
+          ? activeCategories
+          : [...activeCategories, { name: "Essentials", icon: categoryIconMap.Essentials }];
 
-        setCategories([{ name: "All", icon: allIcon }, ...activeCategories]);
+
+        setCategories([{ name: "All", icon: allIcon }, ...withEssentials]);
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -273,6 +278,7 @@ const Inventory = () => {
         { name: "Dresses", icon: dressesIcon },
         { name: "Makeup", icon: makeupIcon },
         { name: "Accessories", icon: accessoriesIcon },
+        { name: "Essentials", icon: accessoriesIcon },
         { name: "Shoes", icon: shoesIcon },
         { name: "Head Wear", icon: headWearIcon }]
       );
@@ -297,6 +303,7 @@ const Inventory = () => {
     Dresses: "DRS",
     Makeup: "MUA",
     Accessories: "MUA",
+    Essentials: "ESS",
     Shoes: "SHO",
     "Head Wear": "HDW",
     Foods: "FOD"
