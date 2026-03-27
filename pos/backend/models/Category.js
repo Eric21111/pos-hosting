@@ -4,8 +4,19 @@ const categorySchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    unique: true,
     trim: true
+  },
+  type: {
+    type: String,
+    enum: ['category', 'subcategory'],
+    default: 'category',
+    index: true
+  },
+  parentCategory: {
+    type: String,
+    default: null,
+    trim: true,
+    index: true
   },
   status: {
     type: String,
@@ -23,7 +34,9 @@ const categorySchema = new mongoose.Schema({
 // Indexes for faster queries
 categorySchema.index({ status: 1 });
 categorySchema.index({ name: 1 });
+categorySchema.index({ type: 1, parentCategory: 1, status: 1 });
 categorySchema.index({ dateCreated: -1 });
+categorySchema.index({ name: 1, type: 1, parentCategory: 1 }, { unique: true });
 
 // Export schema for dynamic connection
 module.exports.schema = categorySchema;

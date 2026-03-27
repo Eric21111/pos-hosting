@@ -258,29 +258,30 @@ const Inventory = () => {
           filter((cat) => cat.status === "active" && cat.name !== "Others").
           map((cat) => ({
             name: cat.name,
-            icon: categoryIconMap[cat.name] || allIcon
+            icon: categoryIconMap[cat.name] || allIcon,
+            parentCategory: cat.parentCategory || null
           }));
 
         const withEssentials = activeCategories.some((cat) => cat.name === "Essentials")
           ? activeCategories
-          : [...activeCategories, { name: "Essentials", icon: categoryIconMap.Essentials }];
+          : [...activeCategories, { name: "Essentials", icon: categoryIconMap.Essentials, parentCategory: null }];
 
 
-        setCategories([{ name: "All", icon: allIcon }, ...withEssentials]);
+        setCategories([{ name: "All", icon: allIcon, parentCategory: null }, ...withEssentials]);
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
 
       setCategories([
-        { name: "All", icon: allIcon },
-        { name: "Tops", icon: topIcon },
-        { name: "Bottoms", icon: bottomsIcon },
-        { name: "Dresses", icon: dressesIcon },
-        { name: "Makeup", icon: makeupIcon },
-        { name: "Accessories", icon: accessoriesIcon },
-        { name: "Essentials", icon: accessoriesIcon },
-        { name: "Shoes", icon: shoesIcon },
-        { name: "Head Wear", icon: headWearIcon }]
+        { name: "All", icon: allIcon, parentCategory: null },
+        { name: "Tops", icon: topIcon, parentCategory: null },
+        { name: "Bottoms", icon: bottomsIcon, parentCategory: null },
+        { name: "Dresses", icon: dressesIcon, parentCategory: null },
+        { name: "Makeup", icon: makeupIcon, parentCategory: null },
+        { name: "Accessories", icon: accessoriesIcon, parentCategory: null },
+        { name: "Essentials", icon: accessoriesIcon, parentCategory: null },
+        { name: "Shoes", icon: shoesIcon, parentCategory: null },
+        { name: "Head Wear", icon: headWearIcon, parentCategory: null }]
       );
     }
   };

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTheme } from "../../context/ThemeContext";
 import AddBrandModal from "./AddBrandModal";
 import AddCategoryModal from "./AddCategoryModal";
+import AddSubcategoryModal from "./AddSubcategoryModal";
 
 
 const COMMON_COLORS = [
@@ -67,24 +68,42 @@ const AddProductModal = ({
     "Others": ["Others"]
   };
 
-  const parentCategories = Object.keys(categoryStructure);
+  const defaultParentCategories = Object.keys(categoryStructure);
   const allKnownDefaultSubs = new Set(Object.values(categoryStructure).flat());
   const legacyParentCategories = ["Apparel", "Shoes", "Foods", "Accessories", "Makeup", "Head Wear", "Essentials"];
 
-  const customSubCategories = categories
-    .map((c) => c.name)
+  const customParentCategories = categories
+    .map((c) => c?.name)
+    .filter((name) =>
+      name &&
+      name !== "All" &&
+      name !== "Others" &&
+      !defaultParentCategories.includes(name) &&
+      !allKnownDefaultSubs.has(name) &&
+      !legacyParentCategories.includes(name)
+    );
+
+  const parentCategories = [...defaultParentCategories, ...customParentCategories];
+
+  const orphanCustomSubCategories = categories
+    .map((c) => c?.name)
     .filter(
       (name) =>
         name !== "All" &&
         name !== "Others" &&
-        !parentCategories.includes(name) &&
+        !defaultParentCategories.includes(name) &&
         !allKnownDefaultSubs.has(name) &&
         !legacyParentCategories.includes(name)
     );
 
   const getSubcategories = (parentCat) => {
     const defaultSubs = categoryStructure[parentCat] || [];
-    const subs = [...defaultSubs, ...customSubCategories];
+    const mappedCustomSubCategories = categories
+      .filter((c) => c?.parentCategory === parentCat)
+      .map((c) => c?.name)
+      .filter(Boolean);
+
+    const subs = [...defaultSubs, ...mappedCustomSubCategories, ...orphanCustomSubCategories];
 
     if (newProduct.subCategory && newProduct.subCategory !== "__add_new__" && !subs.includes(newProduct.subCategory)) {
       if (newProduct.category === parentCat) {
@@ -96,6 +115,7 @@ const AddProductModal = ({
 
   const [showDraftNotice, setShowDraftNotice] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showSubcategoryModal, setShowSubcategoryModal] = useState(false);
   const [showBrandModal, setShowBrandModal] = useState(false);
   const [showCustomSizeInput, setShowCustomSizeInput] = useState(false);
   const [customSizeValue, setCustomSizeValue] = useState("");
@@ -109,6 +129,16 @@ const AddProductModal = ({
   const [showVariantDropdown, setShowVariantDropdown] = useState(false);
   const [customColorInput, setCustomColorInput] = useState("");
   const hasVariants = selectedVariants.length > 0 || (newProduct.selectedSizes?.length > 0);
+
+  const sortedParentCategories = (() => {
+    const unique = Array.from(new Set(parentCategories.filter(Boolean)));
+    const withoutOthers = unique.filter((c) => c !== "Others").sort((a, b) => a.localeCompare(b));
+    return [...withoutOthers, ...(unique.includes("Others") ? ["Others"] : [])];
+  })();
+
+  const effectiveParentCategories = sortedParentCategories.includes(newProduct.category)
+    ? sortedParentCategories
+    : (newProduct.category ? [...sortedParentCategories, newProduct.category] : sortedParentCategories);
 
   const formatStockInStyleBatchCode = (d = new Date()) => {
     const y = d.getFullYear();
