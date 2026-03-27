@@ -26,8 +26,10 @@ import shoesIcon from "../assets/inventory-icons/shoe.svg";
 import topIcon from "../assets/inventory-icons/Top.svg";
 
 const toastBr = {
-  success: (msg) => toast.success(msg, { position: "bottom-right" }),
-  error: (msg) => toast.error(msg, { position: "bottom-right" })
+  success: (msg) =>
+    toast.success(msg, { toasterId: "terminal", position: "bottom-right" }),
+  error: (msg) =>
+    toast.error(msg, { toasterId: "terminal", position: "bottom-right" })
 };
 
 const Terminal = () => {

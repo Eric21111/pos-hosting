@@ -258,7 +258,17 @@ function App() {
         <AuthProvider>
           <DataCacheProvider>
             <Router>
-              <Toaster position="top-center" reverseOrder={false} />
+              <Toaster
+                position="top-center"
+                reverseOrder={false}
+                toastOptions={{ style: { zIndex: 99999 } }}
+              />
+              <Toaster
+                toasterId="terminal"
+                position="bottom-right"
+                reverseOrder={false}
+                toastOptions={{ style: { zIndex: 99999 } }}
+              />
               <PageTitle />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
