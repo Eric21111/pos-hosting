@@ -12,7 +12,6 @@ import ProductDetailsModal from "../components/terminal/ProductDetailsModal";
 import QRCodePaymentModal from "../components/terminal/QRCodePaymentModal";
 import RemoveItemPinModal from "../components/terminal/RemoveItemPinModal";
 import { API_BASE_URL } from "../config/api";
-import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
 import { useDataCache } from "../context/DataCacheContext";
 import { useTheme } from "../context/ThemeContext";
@@ -83,14 +82,8 @@ const Terminal = () => {
 
   const toastBr = useMemo(
     () => ({
-      success: (msg) => {
-        toast.success(msg, { position: "bottom-right" });
-        showTerminalToast(msg, "success");
-      },
-      error: (msg) => {
-        toast.error(msg, { position: "bottom-right" });
-        showTerminalToast(msg, "error");
-      }
+      success: (msg) => showTerminalToast(msg, "success"),
+      error: (msg) => showTerminalToast(msg, "error")
     }),
     [showTerminalToast]
   );
@@ -1866,12 +1859,6 @@ const Terminal = () => {
 
   return (
     <>
-      <Toaster
-        position="bottom-right"
-        reverseOrder={false}
-        containerStyle={{ zIndex: 2147483647 }}
-        toastOptions={{ style: { zIndex: 2147483647 } }}
-      />
       {terminalToast && (
         <div className="fixed bottom-4 right-4 z-[2147483647]">
           <div
