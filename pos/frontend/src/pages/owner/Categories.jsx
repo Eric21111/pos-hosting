@@ -531,12 +531,15 @@ const Categories = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1">
                           {!builtInCategories.includes(mainGroup.name) &&
                             <button
                               onClick={() => handleEdit(mainGroup)}
-                              className={`px-4 py-1.5 text-xs font-medium border rounded-md transition-colors ${theme === 'dark' ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}>
-                              Edit
+                              className={`p-2 rounded-lg transition-colors group ${theme === 'dark' ? 'hover:bg-[#352F2A]' : 'hover:bg-blue-50'}`}
+                              title="Edit">
+                              <svg className="w-5 h-5 text-blue-500 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
                             </button>
                           }
                           <button
@@ -548,20 +551,29 @@ const Categories = () => {
                               setShowOnPos(true);
                               setShowAddSubModal(true);
                             }}
-                            className={`px-4 py-1.5 text-xs font-medium border rounded-md transition-colors ${theme === 'dark' ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}>
-                            + Sub
+                            className={`p-2 rounded-lg transition-colors group ${theme === 'dark' ? 'hover:bg-[#352F2A]' : 'hover:bg-green-50'}`}
+                            title="Add Subcategory">
+                            <svg className="w-5 h-5 text-green-500 group-hover:text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
                           </button>
                           {mainGroup.status === 'active' ? (
                             <button
                               onClick={() => handleDelete(mainGroup)}
-                              className={`px-4 py-1.5 text-xs font-medium border rounded-md transition-colors ${theme === 'dark' ? 'border-red-900/50 text-red-400 hover:bg-red-900/30' : 'border-red-100 text-red-500 hover:bg-red-50'}`}>
-                              Archive
+                              className={`p-2 rounded-lg transition-colors group ${theme === 'dark' ? 'hover:bg-[#352F2A]' : 'hover:bg-orange-50'}`}
+                              title="Archive">
+                              <svg className="w-5 h-5 text-orange-400 group-hover:text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                              </svg>
                             </button>
                           ) : (
                             <button
                               onClick={() => handleToggleStatus(mainGroup._id)}
-                              className={`px-4 py-1.5 text-xs font-medium border rounded-md transition-colors ${theme === 'dark' ? 'border-green-900/50 text-green-400 hover:bg-green-900/30' : 'border-green-100 text-green-600 hover:bg-green-50'}`}>
-                              Activate
+                              className={`p-2 rounded-lg transition-colors group ${theme === 'dark' ? 'hover:bg-[#352F2A]' : 'hover:bg-green-50'}`}
+                              title="Activate">
+                              <svg className="w-5 h-5 text-green-500 group-hover:text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
                             </button>
                           )}
                         </div>
@@ -603,25 +615,34 @@ const Categories = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                            <div className="flex items-center justify-end gap-1">
                             {!builtInCategories.includes(subCat.name) &&
                               <button
                                 onClick={() => handleEdit(subCat)}
-                                className={`px-4 py-1.5 text-xs font-medium border rounded-md transition-colors ${theme === 'dark' ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}>
-                                Edit
+                                className={`p-2 rounded-lg transition-colors group ${theme === 'dark' ? 'hover:bg-[#352F2A]' : 'hover:bg-blue-50'}`}
+                                title="Edit">
+                                <svg className="w-5 h-5 text-blue-500 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
                               </button>
                             }
                             {subCat.status === 'active' ? (
                               <button
                                 onClick={() => handleDelete(subCat)}
-                                className={`px-4 py-1.5 text-xs font-medium border rounded-md transition-colors ${theme === 'dark' ? 'border-red-900/50 text-red-400 hover:bg-red-900/30' : 'border-red-100 text-red-500 hover:bg-red-50'}`}>
-                                Archive
+                                className={`p-2 rounded-lg transition-colors group ${theme === 'dark' ? 'hover:bg-[#352F2A]' : 'hover:bg-orange-50'}`}
+                                title="Archive">
+                                <svg className="w-5 h-5 text-orange-400 group-hover:text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                </svg>
                               </button>
                             ) : (
                               <button
                                 onClick={() => handleToggleStatus(subCat._id)}
-                                className={`px-4 py-1.5 text-xs font-medium border rounded-md transition-colors ${theme === 'dark' ? 'border-green-900/50 text-green-400 hover:bg-green-900/30' : 'border-green-100 text-green-600 hover:bg-green-50'}`}>
-                                Activate
+                                className={`p-2 rounded-lg transition-colors group ${theme === 'dark' ? 'hover:bg-[#352F2A]' : 'hover:bg-green-50'}`}
+                                title="Activate">
+                                <svg className="w-5 h-5 text-green-500 group-hover:text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
                               </button>
                             )}
                           </div>
