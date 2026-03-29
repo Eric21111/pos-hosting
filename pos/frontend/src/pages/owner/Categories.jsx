@@ -72,6 +72,27 @@ const Categories = () => {
         needsRefresh = true;
       }
 
+      // Fix legacy entries: patch any known subcategory that's incorrectly typed as 'category'
+      const knownSubNames = new Set(Object.values(categoryStructure).flat());
+      const mistyped = existingData.filter(c => 
+        c.type !== 'subcategory' && knownSubNames.has(c.name)
+      );
+      if (mistyped.length > 0) {
+        const fixPromises = mistyped.map(cat => {
+          const parentName = Object.entries(categoryStructure).find(
+            ([, subs]) => subs.includes(cat.name)
+          )?.[0] || null;
+          if (!parentName) return null;
+          return fetch(`http://localhost:5000/api/categories/${cat._id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'subcategory', parentCategory: parentName })
+          }).catch(() => null);
+        }).filter(Boolean);
+        await Promise.all(fixPromises);
+        needsRefresh = true;
+      }
+
       const createPromises = [];
 
       Object.keys(categoryStructure).forEach(parentName => {
@@ -291,9 +312,21 @@ const Categories = () => {
     setShowViewProductsModal(true);
   };
 
+  const knownSubcategoryNames = useMemo(() => {
+    const names = new Set();
+    Object.values(categoryStructure).forEach(subs => subs.forEach(s => names.add(s)));
+    return names;
+  }, []);
+
   const groupedCategories = useMemo(() => {
-    const mainCats = categories.filter(cat => cat.type !== 'subcategory' && cat.name !== 'Others');
-    const subCats = categories.filter(cat => cat.type === 'subcategory');
+    const mainCats = categories.filter(cat => 
+      cat.type !== 'subcategory' && 
+      cat.name !== 'Others' && 
+      !knownSubcategoryNames.has(cat.name)
+    );
+    const subCats = categories.filter(cat => 
+      cat.type === 'subcategory' || knownSubcategoryNames.has(cat.name)
+    );
     
     const results = [];
     
