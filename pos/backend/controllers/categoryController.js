@@ -14,6 +14,9 @@ exports.getAllCategories = async (req, res) => {
         if (product.category) {
           productCounts[product.category] = (productCounts[product.category] || 0) + 1;
         }
+        if (product.subCategory) {
+          productCounts[product.subCategory] = (productCounts[product.subCategory] || 0) + 1;
+        }
       });
     } catch (error) {
       console.warn('Error fetching product counts:', error.message);
@@ -52,8 +55,13 @@ exports.getCategoryById = async (req, res) => {
       });
     }
     
-    // Get product count for this category
-    const productCount = await Product.countDocuments({ category: category.name });
+    // Get product count for this category or subcategory
+    const productCount = await Product.countDocuments({
+      $or: [
+        { category: category.name },
+        { subCategory: category.name }
+      ]
+    });
     category.productCount = productCount;
     
     res.json({
