@@ -473,7 +473,8 @@ const Categories = () => {
               setShowOnPos(true);
               setShowAddMainModal(true);
             }}
-            className="flex items-center gap-2 px-6 py-3 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all bg-[#007AFF] hover:bg-blue-600">
+            className="flex items-center gap-2 px-6 py-3 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all hover:opacity-90"
+            style={{ background: "linear-gradient(135deg, #10B981 0%, #059669 100%)" }}>
             
             <FaPlus className="w-4 h-4" />
             Add main category

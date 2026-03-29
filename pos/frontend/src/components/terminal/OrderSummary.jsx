@@ -214,10 +214,12 @@ const OrderSummary = memo(({
 
 
       let itemCategory = item.category;
-      if (!itemCategory && products.length > 0) {
+      let itemSubCategory = item.subCategory;
+      if ((!itemCategory || !itemSubCategory) && products.length > 0) {
         const productId = String(item._id || item.productId || item.id);
         const product = productMap.get(productId);
-        itemCategory = product?.category;
+        itemCategory = itemCategory || product?.category;
+        itemSubCategory = itemSubCategory || product?.subCategory;
       }
 
       selectedDiscounts.forEach((discount) => {
@@ -227,8 +229,16 @@ const OrderSummary = memo(({
         if (appliesToType === 'all') {
           applies = true;
         } else if (appliesToType === 'category' && discount.category) {
-          if (itemCategory === discount.category) {
-            applies = true;
+          const catMatch = String(itemCategory || '').trim().toLowerCase() === String(discount.category || '').trim().toLowerCase();
+          if (catMatch) {
+            if (!discount.subCategory) {
+              applies = true;
+            } else {
+              const subMatch = String(itemSubCategory || '').trim().toLowerCase() === String(discount.subCategory || '').trim().toLowerCase();
+              if (subMatch) {
+                applies = true;
+              }
+            }
           }
         } else if (appliesToType === 'products' && discount.productIds && discount.productIds.length > 0) {
           const itemId = item._id || item.productId || item.id;
