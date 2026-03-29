@@ -11,7 +11,7 @@ exports.getAllEmployees = async (req, res) => {
   try {
     // Exclude profileImage from the list payload to massively reduce size and increase speed
     const employees = await Employee.find({})
-      .select('-profileImage')
+      
       .sort({ dateJoined: -1 })
       .lean();
 
@@ -40,7 +40,7 @@ exports.getAllEmployees = async (req, res) => {
 exports.getEmployeeById = async (req, res) => {
   try {
     const employee = await Employee.findById(req.params.id)
-      .select('-profileImage')
+      
       .lean();
 
     if (!employee) {
@@ -252,7 +252,7 @@ exports.updateEmployee = async (req, res) => {
       id,
       updateData,
       { new: true, runValidators: true }
-    ).select('-profileImage');
+    );
 
     if (!employee) {
       return res.status(404).json({
@@ -324,7 +324,7 @@ exports.verifyPin = async (req, res) => {
     const fastEmployee = await Employee.findOne({
       fastPinHash: computedFastHash,
       status: 'Active'
-    }).select('-profileImage').lean();
+    }).lean();
 
     if (fastEmployee) {
       // Mark employee as online
@@ -380,7 +380,7 @@ exports.verifyPin = async (req, res) => {
         lastActive: new Date()
       });
 
-      const { pin: unusedPin, profileImage: unusedImage, fastPinHash: unusedFastHash, ...employeeWithoutPin } = found;
+      const { pin: unusedPin, fastPinHash: unusedFastHash, ...employeeWithoutPin } = found;
 
       return res.json({
         success: true,
@@ -432,7 +432,7 @@ exports.resetPin = async (req, res) => {
         lastUpdated: Date.now()
       },
       { new: true }
-    ).select('-profileImage');
+    );
 
     if (!employee) {
       return res.status(404).json({
@@ -460,7 +460,7 @@ exports.resetPin = async (req, res) => {
 exports.toggleStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const employee = await Employee.findById(id).select('-profileImage');
+    const employee = await Employee.findById(id);
 
     if (!employee) {
       return res.status(404).json({
@@ -475,7 +475,7 @@ exports.toggleStatus = async (req, res) => {
       id,
       { status: newStatus, lastUpdated: Date.now() },
       { new: true }
-    ).select('-profileImage');
+    );
 
     const { pin, ...employeeWithoutPin } = updatedEmployee.toObject();
 
@@ -499,7 +499,7 @@ exports.getEmployeesByRole = async (req, res) => {
   try {
     const { role } = req.params;
     const employees = await Employee.find({ role })
-      .select('-profileImage')
+      
       .sort({ dateJoined: -1 })
       .lean();
 
@@ -526,7 +526,7 @@ exports.getEmployeesByRole = async (req, res) => {
 exports.sendTemporaryPin = async (req, res) => {
   try {
     const { id } = req.params;
-    const employee = await Employee.findById(id).select('-profileImage');
+    const employee = await Employee.findById(id);
 
     if (!employee) {
       return res.status(404).json({
@@ -627,7 +627,7 @@ exports.searchEmployees = async (req, res) => {
         { role: { $regex: query, $options: 'i' } }
       ]
     })
-      .select('-profileImage') // Exclude profileImage for search results as well
+       // Exclude profileImage for search results as well
       .sort({ dateJoined: -1 })
       .lean();
 
@@ -681,7 +681,7 @@ exports.updatePin = async (req, res) => {
         lastUpdated: Date.now()
       },
       { new: true }
-    ).select('-profileImage');
+    );
 
     if (!employee) {
       return res.status(404).json({
