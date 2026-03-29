@@ -99,14 +99,17 @@ const Terminal = () => {
   });
 
   const defaultCategories = [
-    { name: "All", icon: allIcon },
-    { name: "Tops", icon: topIcon },
-    { name: "Bottoms", icon: bottomsIcon },
-    { name: "Dresses", icon: dressesIcon },
-    { name: "Makeup", icon: makeupIcon },
-    { name: "Shoes", icon: shoesIcon },
-    { name: "Essentials", icon: accessoriesIcon }];
+    { name: "All", icon: allIcon }
+  ];
 
+  const categoryStructureOptions = [
+    "Tops", "Bottoms", "Dresses", "Outerwear",
+    "Beverages", "Snacks", "Meals", "Desserts", "Ingredients", "Other",
+    "Face", "Eyes", "Lips", "Nails", "SkinCare", "Others",
+    "Jewelry", "Bags", "Head Wear", "Glasses/Sunglasses", 
+    "Sneakers", "Boots", "Sandals", 
+    "Daily Essentials", "Personal Care", "Home Essentials"
+  ];
 
   const [mainCategories, setMainCategories] = useState(defaultCategories);
   const [subCategories, setSubCategories] = useState([]);
@@ -122,6 +125,25 @@ const Terminal = () => {
   };
 
 
+  const categoryStructure = {
+    "Apparel - Men": ["Tops", "Bottoms", "Outerwear"],
+    "Apparel - Women": ["Tops", "Bottoms", "Dresses", "Outerwear"],
+    "Apparel - Kids": ["Tops", "Bottoms", "Dresses", "Outerwear"],
+    "Apparel - Unisex": ["Tops", "Bottoms", "Dresses", "Outerwear"],
+    "Foods": ["Beverages", "Snacks", "Meals", "Desserts", "Ingredients", "Other"],
+    "Makeup": ["Face", "Eyes", "Lips", "Nails", "SkinCare", "Others"],
+    "Accessories": ["Jewelry", "Bags", "Head Wear", "Glasses/Sunglasses", "Others"],
+    "Shoes": ["Sneakers", "Boots", "Sandals", "Others"],
+    "Essentials": ["Daily Essentials", "Personal Care", "Home Essentials", "Others"],
+  };
+
+  const getParentCategoryForLegacy = (name) => {
+    for (const [parent, subs] of Object.entries(categoryStructure)) {
+      if (subs.includes(name)) return parent;
+    }
+    return null;
+  };
+
   const fetchCategories = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/categories`);
@@ -131,12 +153,15 @@ const Terminal = () => {
         const activeDbCats = data.data.filter((cat) => cat.status === "active");
 
         const dbMainCats = activeDbCats
-          .filter(c => c.type !== 'subcategory')
+          .filter(c => c.type !== 'subcategory' && !categoryStructureOptions.includes(c.name))
           .map(cat => ({ name: cat.name, icon: categoryIconMap[cat.name] || allIcon }));
 
         const dbSubCats = activeDbCats
-          .filter(c => c.type === 'subcategory')
-          .map(cat => ({ name: cat.name, parentCategory: cat.parentCategory }));
+          .filter(c => c.type === 'subcategory' || categoryStructureOptions.includes(c.name))
+          .map(cat => ({ 
+            name: cat.name, 
+            parentCategory: cat.parentCategory || getParentCategoryForLegacy(cat.name)
+          }));
 
         const mergedMainCategories = [...defaultCategories];
         const defaultNames = new Set(defaultCategories.map((c) => c.name));
