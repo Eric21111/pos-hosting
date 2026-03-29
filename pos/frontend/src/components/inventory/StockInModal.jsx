@@ -1866,7 +1866,7 @@ const StockInModal = ({ isOpen, onClose, product, onConfirm, loading, brandPartn
                 {currentStep < 3 ? (
                   <button type="button" disabled={!isStepValid(currentStep)} onClick={() => { if (isStepValid(currentStep)) setCurrentStep(prev => prev + 1); }}
                     className="px-8 py-2.5 text-sm font-semibold rounded-xl text-white transition-all shadow-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ background: "#09A046" }}>
+                    style={{ background: "linear-gradient(135deg, #AD7F65 0%, #76462B 100%)" }}>
                     Continue
                   </button>
                 ) : (

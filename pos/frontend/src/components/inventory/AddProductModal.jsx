@@ -1424,7 +1424,7 @@ const AddProductModal = ({
               </button>
               <button type="submit" disabled={loading}
                 className="px-8 py-2.5 text-sm font-semibold rounded-xl text-white transition-all shadow-md hover:opacity-90 disabled:opacity-50"
-                style={{ background: "#09A046" }}>
+                style={{ background: "#1B89CD" }}>
                 {loading ? "Updating..." : "Update Product"}
               </button>
             </div>
