@@ -582,14 +582,20 @@ const AddProductModal = ({
                     <div className="flex flex-col items-center" style={{ minWidth: 50 }}>
                       <div
                         onClick={() => { if (currentStep > step.id) setCurrentStep(step.id); }}
-                        className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-200 ${currentStep > step.id
-                          ? "bg-[#09A046] border-[#09A046] text-white cursor-pointer hover:shadow-md"
-                          : currentStep === step.id
-                            ? "bg-[#09A046] border-[#09A046] text-white shadow-md"
-                            : theme === "dark"
-                              ? "bg-transparent border-gray-600 text-gray-500"
-                              : "bg-transparent border-gray-300 text-gray-400"
-                          }`}
+                        className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-200 ${
+                          currentStep > step.id
+                            ? "border-[#059669] text-white cursor-pointer hover:shadow-md"
+                            : currentStep === step.id
+                              ? "border-[#059669] text-white shadow-md"
+                              : theme === "dark"
+                                ? "bg-transparent border-gray-600 text-gray-500"
+                                : "bg-transparent border-gray-300 text-gray-400"
+                        }`}
+                        style={
+                          currentStep >= step.id
+                            ? { background: "linear-gradient(135deg, #10B981 0%, #059669 100%)" }
+                            : {}
+                        }
                       >
                         {currentStep > step.id ? (
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -597,24 +603,29 @@ const AddProductModal = ({
                           </svg>
                         ) : step.id}
                       </div>
-                      <span className={`text-[11px] mt-1 font-semibold whitespace-nowrap ${currentStep === step.id
-                        ? "text-[#09A046]"
-                        : currentStep > step.id
-                          ? "text-[#09A046]"
-                          : theme === "dark" ? "text-gray-500" : "text-gray-400"
-                        }`}>
+                      <span className={`text-[11px] mt-1 font-semibold whitespace-nowrap ${
+                        currentStep === step.id
+                          ? "text-[#10B981]"
+                          : currentStep > step.id
+                            ? "text-[#10B981]"
+                            : theme === "dark" ? "text-gray-500" : "text-gray-400"
+                      }`}>
                         {step.label}
                       </span>
                     </div>
                     {index < STEPS.length - 1 && (
-                      <div className={`flex-1 h-[2px] mx-1 mt-[-16px] rounded transition-all duration-200 ${currentStep > step.id ? "bg-[#09A046]" : theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`} />
+                      <div
+                        className={`flex-1 h-[2px] mx-1 mt-[-16px] rounded transition-all duration-200 ${
+                          currentStep > step.id ? "" : theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                        }`}
+                        style={currentStep > step.id ? { background: "linear-gradient(135deg, #10B981 0%, #059669 100%)" } : {}}
+                      />
                     )}
                   </div>
                 ))}
               </div>
             </div>
           )}
-
           {/* Scrollable content area */}
           <div className={`flex-1 px-8 pb-4 ${currentStep === 5 ? "flex flex-col overflow-hidden" : "overflow-y-auto"}`}>
 
