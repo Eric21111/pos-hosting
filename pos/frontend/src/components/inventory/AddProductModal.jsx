@@ -1405,7 +1405,7 @@ const AddProductModal = ({
                   onClick={(e) => { e.preventDefault(); setCurrentStep((prev) => prev + 1); }}
                   disabled={!isStepValid(currentStep)}
                   className={`px-8 py-2.5 text-sm font-semibold rounded-xl text-white transition-all shadow-md hover:opacity-90 ${!isStepValid(currentStep) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  style={{ background: "#09A046" }}>
+                  style={{ background: "linear-gradient(135deg, #AD7F65 0%, #76462B 100%)" }}> 
                   Continue
                 </button>
               ) : (

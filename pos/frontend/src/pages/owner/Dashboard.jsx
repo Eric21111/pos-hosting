@@ -461,7 +461,7 @@ const Dashboard = () => {
                   <div className={`p-2.5 rounded-full mb-3 ${isDark ? "bg-blue-500/15" : "bg-blue-50"}`}>
                     <FaShoppingBag className="text-blue-500 text-base" />
                   </div>
-                  <p className={`text-3xl sm:text-6xl font-black tabular-nums leading-none tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
+                  <p className={`text-3xl sm:text-5xl font-black tabular-nums leading-none tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
                     {formatCompactPeso(metrics.totalSalesToday)}
                   </p>
                   <p className={`text-sm font-extrabold mt-2.5 ${isDark ? "text-blue-400" : "text-blue-600"}`}>Total Sales</p>
@@ -476,7 +476,7 @@ const Dashboard = () => {
                   <div className={`p-2.5 rounded-full mb-3 ${isDark ? "bg-purple-500/15" : "bg-purple-50"}`}>
                     <FaHandshake className="text-purple-500 text-base" />
                   </div>
-                  <p className={`text-3xl sm:text-6xl font-black tabular-nums leading-none tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
+                  <p className={`text-3xl sm:text-5xl font-black tabular-nums leading-none tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
                     {(metrics.totalTransactions ?? 0).toLocaleString("en-US")}
                   </p>
                   <p className={`text-sm font-extrabold mt-2.5 ${isDark ? "text-purple-400" : "text-purple-700"}`}>Total Transactions</p>
@@ -492,7 +492,7 @@ const Dashboard = () => {
                     <FaChartLine className="text-green-500 text-base" />
                   </div>
                   <p className={`flex items-baseline justify-center gap-0.5 font-black leading-none ${isDark ? "text-white" : "text-gray-900"}`}>
-                    <span className="text-3xl sm:text-6xl tabular-nums tracking-tight">{metrics.growthRate}</span>
+                    <span className="text-3xl sm:text-5xl tabular-nums tracking-tight">{metrics.growthRate}</span>
                     <span className={`text-2xl font-bold ${isDark ? "text-gray-400" : "text-gray-600"}`}>%</span>
                   </p>
                   <p className={`text-sm font-extrabold mt-2.5 ${isDark ? "text-green-400" : "text-green-700"}`}>Average Growth Rate</p>
@@ -507,7 +507,7 @@ const Dashboard = () => {
                   <div className={`p-2.5 rounded-full mb-3 ${isDark ? "bg-red-500/15" : "bg-red-50"}`}>
                     <FaExclamationTriangle className="text-red-500 text-base" />
                   </div>
-                  <p className={`text-3xl sm:text-6xl font-black tabular-nums leading-none tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
+                  <p className={`text-3xl sm:text-5xl font-black tabular-nums leading-none tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
                     {(metrics.lowStockItems ?? 0).toLocaleString("en-US")}
                   </p>
                   <p className={`text-sm font-extrabold mt-2.5 ${isDark ? "text-red-400" : "text-red-600"}`}>Low Stock Items</p>
