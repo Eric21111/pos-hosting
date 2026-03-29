@@ -1886,7 +1886,7 @@ const Terminal = () => {
                       ? "bg-[#2A2724] text-gray-300 border border-gray-700 hover:border-gray"
                       : "bg-white text-gray-800 border border-gray-200 hover:border-gray"
                 }`}
-                style={selectedCategory === cat.name ? { borderBottomColor: "linear-gradient(135deg, #AD7F65 0%, #76462B 100%)" } : {}}
+                style={selectedCategory === cat.name ? { borderBottomColor: "#76462B" } : {}}
                 title={cat.name}>
                 <span className="truncate w-full text-center">{cat.name}</span>
               </button>
