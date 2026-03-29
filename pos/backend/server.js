@@ -89,6 +89,7 @@ const allowedOrigins = [
   "http://localhost:3000",    // Alternate dev port
   "http://127.0.0.1:5173",
   "http://127.0.0.1:3000",
+  "https://pos-hosting.vercel.app", // Explicitly added to prevent CORS blocks
   process.env.FRONTEND_URL,  // Production frontend URL (set in .env)
   process.env.WEBHOOK_BASE_URL, // ngrok tunnel URL
 ].filter(Boolean); // Remove undefined values
