@@ -593,7 +593,7 @@ const AddProductModal = ({
                         }`}
                         style={
                           currentStep >= step.id
-                            ? { background: "linear-gradient(135deg, #10B981 0%, #059669 100%)" }
+                            ? { background: 'linear-gradient(135deg, #AD7F65 0%, #76462B 100%)' }
                             : {}
                         }
                       >
@@ -618,7 +618,7 @@ const AddProductModal = ({
                         className={`flex-1 h-[2px] mx-1 mt-[-16px] rounded transition-all duration-200 ${
                           currentStep > step.id ? "" : theme === "dark" ? "bg-gray-700" : "bg-gray-200"
                         }`}
-                        style={currentStep > step.id ? { background: "linear-gradient(135deg, #10B981 0%, #059669 100%)" } : {}}
+                        style={currentStep > step.id ? { background: 'linear-gradient(135deg, #AD7F65 0%, #76462B 100%)' } : {}}
                       />
                     )}
                   </div>
