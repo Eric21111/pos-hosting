@@ -3,7 +3,7 @@
     "name": "Create Your Style",
     "slug": "cysmob",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./app/(tabs)/iconz/iconn.jpeg",
     "scheme": "cysmob",
     "splash": {
@@ -44,7 +44,8 @@
           }
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-screen-orientation"
     ],
     "experiments": {
       "typedRoutes": true,

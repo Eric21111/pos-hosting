@@ -55,7 +55,7 @@ const EditEmployeeProfile = ({ isOpen, onClose, employee, onEmployeeUpdated }) =
       });
 
       // Use API base URL and avoid cache-busting on every open (faster + less network load).
-      setProfilePreview(employee._id ? `${API_BASE_URL}/api/employees/${employee._id}/image` : defaultAvatar);
+      setProfilePreview(employee._id ? `${API_BASE_URL}/api/employees/${employee._id}/image?v=${new Date(employee.updatedAt || employee.lastUpdated || 0).getTime()}` : defaultAvatar);
       setMessage('');
       setError('');
     }

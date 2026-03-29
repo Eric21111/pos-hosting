@@ -45,22 +45,28 @@ const InventoryTable = ({
 
   useEffect(() => {
     // Lock to landscape (guard: avoid crashing on unsupported devices)
+    let mounted = true;
     (async () => {
       try {
-        await ScreenOrientation.lockAsync(
-          ScreenOrientation.OrientationLock.LANDSCAPE,
-        );
+        if (ScreenOrientation && typeof ScreenOrientation.lockAsync === 'function') {
+          await ScreenOrientation.lockAsync(
+            ScreenOrientation.OrientationLock.LANDSCAPE,
+          );
+        }
       } catch (e) {
         console.warn("Failed to lock orientation:", e?.message || e);
       }
     })();
 
     return () => {
+      mounted = false;
       (async () => {
         try {
-          await ScreenOrientation.lockAsync(
-            ScreenOrientation.OrientationLock.PORTRAIT,
-          );
+          if (ScreenOrientation && typeof ScreenOrientation.lockAsync === 'function') {
+            await ScreenOrientation.lockAsync(
+              ScreenOrientation.OrientationLock.PORTRAIT,
+            );
+          }
         } catch (e) {
           console.warn("Failed to unlock orientation:", e?.message || e);
         }
@@ -488,7 +494,13 @@ export default function Inventory() {
   useEffect(() => {
     return () => {
       if (Platform.OS !== "web") {
-        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);
+        try {
+          if (ScreenOrientation && typeof ScreenOrientation.lockAsync === 'function') {
+            ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);
+          }
+        } catch (e) {
+          console.warn("Failed to reset orientation:", e?.message || e);
+        }
       }
     };
   }, []);
@@ -801,7 +813,7 @@ export default function Inventory() {
 
               {recentlyAddedItems.map((item) => (
                 <TouchableOpacity
-                  key={item.id.toString()}
+                  key={(item.id || item._id || Math.random()).toString()}
                   style={styles.recentItemCard}
                 >
                   <View style={styles.recentItemContent}>

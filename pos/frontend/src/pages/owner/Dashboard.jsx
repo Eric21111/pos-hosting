@@ -31,7 +31,7 @@ import TopSellingModal from "../../components/owner/TopSellingModal";
 import Header from "../../components/shared/header";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
-import { API_ENDPOINTS } from "../../config/api";
+import { API_ENDPOINTS, API_BASE_URL } from "../../config/api";
 
 const formatCompactPeso = (n) => {
   const abs = Math.abs(Number(n) || 0);
@@ -290,7 +290,7 @@ const Dashboard = () => {
         const timestamp = new Date().getTime();
         const onlineEmployees = data.data.map(emp => ({
           ...emp,
-          image: `http://localhost:5000/api/employees/${emp._id}/image?t=${timestamp}`
+          image: `${API_BASE_URL}/api/employees/${emp._id}/image?t=${timestamp}`
         }));
         setActiveEmployees(onlineEmployees);
       }

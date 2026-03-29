@@ -11,6 +11,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import filterIcon from "../../assets/filter.svg";
 import { useAuth } from "../../context/AuthContext";
+import { API_BASE_URL } from "../../config/api";
 import { SidebarContext } from "../../context/SidebarContext";
 import { useTheme } from "../../context/ThemeContext";
 
@@ -117,7 +118,7 @@ const Header = ({
     const fetchLowStock = async () => {
       try {
         const response = await fetch(
-          "http://localhost:5000/api/products/low-stock"
+          `${API_BASE_URL}/api/products/low-stock`
         );
         const data = await response.json();
         if (data.success) {
@@ -233,7 +234,7 @@ const Header = ({
   const profileImageSrc = (currentUser?.image?.startsWith('data:image') || currentUser?.profileImage?.startsWith('data:image'))
     ? (currentUser.image || currentUser.profileImage)
     : userId
-      ? `http://localhost:5000/api/employees/${userId}/image`
+      ? `${API_BASE_URL}/api/employees/${userId}/image?v=${new Date(currentUser?.updatedAt || currentUser?.lastUpdated || 0).getTime()}`
       : fallbackAvatarUrl;
   return (
     <div

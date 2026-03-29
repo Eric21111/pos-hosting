@@ -173,7 +173,7 @@ const ManageEmployees = () => {
     try {
 
       const response = await fetch(
-        `http://localhost:5000/api/employees/${resettingEmployee._id || resettingEmployee.id}/send-temporary-pin`,
+        `${API_BASE_URL}/api/employees/${resettingEmployee._id || resettingEmployee.id}/send-temporary-pin`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" }
@@ -221,7 +221,7 @@ const ManageEmployees = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/employees/${togglingEmployee._id || togglingEmployee.id}`,
+        `${API_BASE_URL}/api/employees/${togglingEmployee._id || togglingEmployee.id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -263,7 +263,7 @@ const ManageEmployees = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/employees/${deletingEmployee._id || deletingEmployee.id}`,
+        `${API_BASE_URL}/api/employees/${deletingEmployee._id || deletingEmployee.id}`,
         {
           method: "DELETE"
         }
