@@ -7,6 +7,7 @@ exports.getAllCategories = async (req, res) => {
     
     // Efficiently get product counts for each category using Aggregation instead of fetching all products
     const productCounts = {};
+    const detailedSubcategoryCounts = {};
     
     try {
       const aggregationResults = await Product.aggregate([
@@ -15,6 +16,10 @@ exports.getAllCategories = async (req, res) => {
             byCategory: [
               { $match: { category: { $nin: [null, ""] } } },
               { $group: { _id: "$category", count: { $sum: 1 } } }
+            ],
+            bySubCategoryDetailed: [
+              { $match: { subCategory: { $nin: [null, ""] }, category: { $nin: [null, ""] } } },
+              { $group: { _id: { category: "$category", subCategory: "$subCategory" }, count: { $sum: 1 } } }
             ],
             bySubCategory: [
               { $match: { subCategory: { $nin: [null, ""] } } },
@@ -32,7 +37,17 @@ exports.getAllCategories = async (req, res) => {
           }
         });
         
-        // Map subcategory counts 
+        // Map detailed subcategory counts 
+        aggregationResults[0].bySubCategoryDetailed.forEach(sub => {
+          if (sub._id && sub._id.category && sub._id.subCategory) {
+            if (!detailedSubcategoryCounts[sub._id.category]) {
+                detailedSubcategoryCounts[sub._id.category] = {};
+            }
+            detailedSubcategoryCounts[sub._id.category][sub._id.subCategory] = sub.count;
+          }
+        });
+
+        // Map global subcategory counts 
         aggregationResults[0].bySubCategory.forEach(sub => {
           if (sub._id) {
             productCounts[sub._id] = (productCounts[sub._id] || 0) + sub.count;
@@ -53,6 +68,7 @@ exports.getAllCategories = async (req, res) => {
     res.json({
       success: true,
       count: formattedCategories.length,
+      detailedSubcategoryCounts,
       data: formattedCategories
     });
   } catch (error) {

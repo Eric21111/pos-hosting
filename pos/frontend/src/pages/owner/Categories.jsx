@@ -17,6 +17,7 @@ const Categories = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [detailedSubcategoryCounts, setDetailedSubcategoryCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [categoryName, setCategoryName] = useState('');
   const [isActive, setIsActive] = useState(true);
@@ -152,6 +153,9 @@ const Categories = () => {
 
       if (data.success && Array.isArray(data.data)) {
         setCategories(data.data);
+        if (data.detailedSubcategoryCounts) {
+          setDetailedSubcategoryCounts(data.detailedSubcategoryCounts);
+        }
         return data.data;
       } else {
         console.warn('Invalid response format:', data);
@@ -339,7 +343,10 @@ const Categories = () => {
       const builtInNames = categoryStructure[main.name] || [];
       const builtInSubs = builtInNames.map(name => {
         const sub = subCats.find(s => s.name === name);
-        if (sub) return { ...sub, parentCategory: main.name };
+        if (sub) {
+          const splitCount = (detailedSubcategoryCounts[main.name] && detailedSubcategoryCounts[main.name][name]) ? detailedSubcategoryCounts[main.name][name] : 0;
+          return { ...sub, parentCategory: main.name, productCount: splitCount };
+        }
         return null;
       }).filter(Boolean);
 
