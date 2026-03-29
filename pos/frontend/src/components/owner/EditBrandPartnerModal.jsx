@@ -57,7 +57,7 @@ const EditBrandPartnerModal = ({ isOpen, onClose, onSuccess, brandPartner }) => 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.brandName.trim() || !formData.email.trim() || !formData.contactNumber.trim() || !formData.contactPerson.trim()) {
+    if (!formData.brandName.trim()) {
       setError('Please complete all required fields.');
       return;
     }
@@ -167,14 +167,13 @@ const EditBrandPartnerModal = ({ isOpen, onClose, onSuccess, brandPartner }) => 
                 
                             </div>
                             <div>
-                                <label className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block">Email <span className="text-red-500">*</span></label>
+                                <label className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block">Email</label>
                                 <input
                   type="email"
                   name="email"
                   placeholder="yourname12345@gmail.com"
                   value={formData.email}
                   onChange={handleInputChange}
-                  required
                   className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] ${theme === 'dark' ?
                   'bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500' :
                   'bg-white border-gray-200 text-gray-900'}`
@@ -182,14 +181,13 @@ const EditBrandPartnerModal = ({ isOpen, onClose, onSuccess, brandPartner }) => 
                 
                             </div>
                             <div>
-                                <label className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block">Contact No. <span className="text-red-500">*</span></label>
+                                <label className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block">Contact No.</label>
                                 <input
                   type="text"
                   name="contactNumber"
                   placeholder="+63"
                   value={formData.contactNumber}
                   onChange={handleInputChange}
-                  required
                   className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] ${theme === 'dark' ?
                   'bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500' :
                   'bg-white border-gray-200 text-gray-900'}`
@@ -197,14 +195,13 @@ const EditBrandPartnerModal = ({ isOpen, onClose, onSuccess, brandPartner }) => 
                 
                             </div>
                             <div>
-                                <label className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block">Contact Person <span className="text-red-500">*</span></label>
+                                <label className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block">Contact Person</label>
                                 <input
                   type="text"
                   name="contactPerson"
                   placeholder="e.g., John Doe"
                   value={formData.contactPerson}
                   onChange={handleInputChange}
-                  required
                   className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD7F65] ${theme === 'dark' ?
                   'bg-[#1E1B18] border-gray-600 text-white placeholder-gray-500' :
                   'bg-white border-gray-200 text-gray-900'}`
