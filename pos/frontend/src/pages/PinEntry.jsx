@@ -196,27 +196,27 @@ const PinEntry = () => {
               </div>
               <p
                 className="text-xl font-semibold text-gray-800 mb-1"
-                style={{ fontFamily: "sans-serif" }}>
+                style={{ fontFamily: "'Poppins', sans-serif" }}>
                 
                 Enter Your PIN
               </p>
               <p
                 className="text-sm text-gray-600 mb-2"
-                style={{ fontFamily: "sans-serif" }}>
+                style={{ fontFamily: "'Poppins', sans-serif" }}>
                 
                 Please enter your 6-digit PIN to continue
               </p>
               {error &&
               <p
                 className="text-xs text-red-600 mb-4 text-center max-w-xs"
-                style={{ fontFamily: "sans-serif" }}>
+                style={{ fontFamily: "'Poppins', sans-serif"}}>
                 
                   {error}
                 </p>
               }
               <p
                 className="text-sm text-gray-600 mb-6"
-                style={{ fontFamily: "sans-serif" }}>
+                style={{ fontFamily: "'Poppins', sans-serif" }}>
                 
                 PIN
               </p>
@@ -237,7 +237,7 @@ const PinEntry = () => {
               <button
                 onClick={() => setShowKeypad(!showKeypad)}
                 className="text-[#8B7355] text-sm font-semibold cursor-pointer hover:text-[#6d5a43] transition-colors duration-200 mb-4"
-                style={{ fontFamily: "sans-serif" }}>
+                style={{ fontFamily: "'Poppins', sans-serif" }}>
                 
                 {showKeypad ? "Hide Keypad" : "Show Keypad"}
               </button>
@@ -252,7 +252,7 @@ const PinEntry = () => {
                   key={number}
                   onClick={() => handleNumberClick(number.toString())}
                   className="w-16 h-16 rounded-full bg-white text-gray-900 text-2xl font-semibold cursor-pointer transition-all duration-200 shadow-md hover:shadow-lg hover:bg-gray-50 active:scale-95"
-                  style={{ fontFamily: "sans-serif" }}>
+                  style={{ fontFamily: "'Poppins', sans-serif" }}>
                   
                     {number}
                   </button>
@@ -261,7 +261,7 @@ const PinEntry = () => {
                 <button
                   onClick={() => handleNumberClick("0")}
                   className="w-16 h-16 rounded-full bg-white text-gray-900 text-2xl font-semibold cursor-pointer transition-all duration-200 shadow-md hover:shadow-lg hover:bg-gray-50 active:scale-95"
-                  style={{ fontFamily: "sans-serif" }}>
+                  style={{ fontFamily: "'Poppins', sans-serif" }}>
                   
                   0
                 </button>
@@ -291,7 +291,7 @@ const PinEntry = () => {
                 className="text-white border-none rounded-full px-20 py-3 text-lg font-semibold cursor-pointer transition-all duration-300 uppercase shadow-md hover:shadow-lg active:translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleLogin}
                 disabled={loading || pin.length !== 6}
-                style={{ fontFamily: "sans-serif", background: "linear-gradient(135deg, #AD7F65 0%, #76462B 100%)" }}>
+                style={{ fontFamily: "'Poppins', sans-serif", background: "linear-gradient(135deg, #AD7F65 0%, #76462B 100%)" }}>
                 {loading ? "VERIFYING..." : "LOGIN"}
               </button>
             }
