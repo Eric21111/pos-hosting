@@ -128,6 +128,8 @@ const ProductCard = memo(function ProductCard({ product, onToggleExpand }) {
         <img
           src={product.itemImage}
           alt={product.itemName}
+          loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover" /> :
 
 

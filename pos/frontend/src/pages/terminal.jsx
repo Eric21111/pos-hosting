@@ -411,12 +411,26 @@ const Terminal = () => {
   const fetchProducts = async (background = false) => {
     try {
       if (!background) setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/products`);
-      const data = await response.json();
 
-      if (data.success) {
-        setProducts(data.data);
-        setCachedData("products", data.data);
+      // Step 1: Fast load — fetch without images for instant rendering
+      const minimalRes = await fetch(`${API_BASE_URL}/api/products?fields=minimal`);
+      const minimalData = await minimalRes.json();
+
+      if (minimalData.success) {
+        setProducts(minimalData.data);
+        if (!background) setLoading(false);
+
+        // Step 2: Background load — fetch full data with images
+        try {
+          const fullRes = await fetch(`${API_BASE_URL}/api/products`);
+          const fullData = await fullRes.json();
+          if (fullData.success) {
+            setProducts(fullData.data);
+            setCachedData("products", fullData.data);
+          }
+        } catch (imgErr) {
+          console.warn("Background image fetch failed:", imgErr);
+        }
       }
     } catch (error) {
       console.error("Error fetching products:", error);
