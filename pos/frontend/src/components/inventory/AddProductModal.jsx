@@ -584,9 +584,9 @@ const AddProductModal = ({
                         onClick={() => { if (currentStep > step.id) setCurrentStep(step.id); }}
                         className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-200 ${
                           currentStep > step.id
-                            ? "border-[#059669] text-white cursor-pointer hover:shadow-md"
+                            ? "border-[#76462B] text-white cursor-pointer hover:shadow-md"
                             : currentStep === step.id
-                              ? "border-[#059669] text-white shadow-md"
+                              ? "border-[#76462B] text-white shadow-md"
                               : theme === "dark"
                                 ? "bg-transparent border-gray-600 text-gray-500"
                                 : "bg-transparent border-gray-300 text-gray-400"
@@ -605,9 +605,9 @@ const AddProductModal = ({
                       </div>
                       <span className={`text-[11px] mt-1 font-semibold whitespace-nowrap ${
                         currentStep === step.id
-                          ? "text-[#10B981]"
+                          ? "text-[#76462B]"
                           : currentStep > step.id
-                            ? "text-[#10B981]"
+                            ? "text-[#76462B]"
                             : theme === "dark" ? "text-gray-500" : "text-gray-400"
                       }`}>
                         {step.label}
