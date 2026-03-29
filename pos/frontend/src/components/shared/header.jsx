@@ -226,11 +226,15 @@ const Header = ({
   trim();
   const displayName = fullNameFromUser || userName;
   const displayRole = currentUser?.role || userRole;
-  const profileImage = currentUser?.profileImage || currentUser?.image || null;
+  const userId = currentUser?._id || currentUser?.id;
   const fallbackAvatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
     displayName || "User"
   )}&background=AD7F65&color=fff`;
-  const profileImageSrc = profileImage || fallbackAvatarUrl;
+  const profileImageSrc = (currentUser?.image?.startsWith('data:image') || currentUser?.profileImage?.startsWith('data:image'))
+    ? (currentUser.image || currentUser.profileImage)
+    : userId
+      ? `http://localhost:5000/api/employees/${userId}/image`
+      : fallbackAvatarUrl;
   return (
     <div
       className={`relative flex items-center justify-between z-[100] ${showBorder ? `mb-6 pb-4 border-b ${theme === "dark" ? "border-gray-700" : "border-gray-200"}` : ""} ${className}`}>
@@ -520,6 +524,7 @@ const Header = ({
                 <img
                 src={profileImageSrc}
                 alt="User"
+                onError={(e) => { e.target.onerror = null; e.target.src = fallbackAvatarUrl; }}
                 className={`w-10 h-10 rounded-full ring-2 shadow-sm object-cover ${theme === "dark" ? "ring-gray-600" : "ring-white"}`} />
               
                 <div
@@ -797,6 +802,7 @@ const Header = ({
               <img
               src={profileImageSrc}
               alt="User"
+              onError={(e) => { e.target.onerror = null; e.target.src = fallbackAvatarUrl; }}
               className={`w-10 h-10 rounded-full ring-2 shadow-sm object-cover ${theme === "dark" ? "ring-gray-600" : "ring-white"}`} />
             
               <div

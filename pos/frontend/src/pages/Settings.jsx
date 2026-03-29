@@ -110,8 +110,13 @@ const Settings = () => {
       setContactNumber(currentUser.contactNo || "");
       setRole(currentUser.role || "");
       setStatus(currentUser.status || "Active");
+      const userId = currentUser._id || currentUser.id;
       setProfileImage(
-        currentUser.image || currentUser.profileImage || defaultAvatar
+        (currentUser.image?.startsWith('data:image') || currentUser.profileImage?.startsWith('data:image'))
+          ? (currentUser.image || currentUser.profileImage)
+          : userId 
+            ? `${API_BASE}/api/employees/${userId}/image`
+            : defaultAvatar
       );
       setPermissions(
         currentUser.permissions || {
@@ -1322,8 +1327,9 @@ const Settings = () => {
               
                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg relative">
                   <img
-                  src={profileImage}
+                  src={profileImage || defaultAvatar}
                   alt={computedName}
+                  onError={(e) => { e.target.onerror = null; e.target.src = defaultAvatar; }}
                   className="w-full h-full object-cover transition-opacity group-hover:opacity-75" />
                 
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
