@@ -31,6 +31,8 @@ const COMMON_COLORS = [
   "Rose Gold",
   "Custom"];
 
+const BRAND_ADD_SENTINEL = "__add_new_brand__";
+
 
 const AddProductModal = ({
   showAddModal,
@@ -491,12 +493,22 @@ const AddProductModal = ({
 
   const handleBrandSelectChange = (e) => {
     const { value } = e.target;
-    if (value === "__add_new_brand__") {
+    if (value === BRAND_ADD_SENTINEL) {
+      // Never keep sentinel in form state; immediately open modal.
+      setNewProduct((prev) => ({ ...prev, brandName: "" }));
       setShowBrandModal(true);
       return;
     }
     handleInputChange(e);
   };
+
+  useEffect(() => {
+    if (!showAddModal) return;
+    if (newProduct.brandName === BRAND_ADD_SENTINEL) {
+      setNewProduct((prev) => ({ ...prev, brandName: "" }));
+      setShowBrandModal(true);
+    }
+  }, [showAddModal, newProduct.brandName, setNewProduct]);
 
 
   const handleFormSubmit = (e) => {
@@ -673,7 +685,7 @@ const AddProductModal = ({
                       style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")` }}>
                       <option value="" disabled className={theme === "dark" ? "bg-[#2A2724]" : ""} style={{ color: '#9CA3AF' }}>Select Brand Partner</option>
                       {partnerNames.map((name) => (<option key={name} value={name} className={theme === "dark" ? "bg-[#2A2724]" : ""}>{name}</option>))}
-                      <option value="__add_new_brand__" className="font-semibold text-[#09A046]">+ Add Brand</option>
+                      <option value={BRAND_ADD_SENTINEL} className="font-semibold text-[#09A046]">+ Add Brand</option>
                       {legacyBrandSelected && <option value={newProduct.brandName}>{newProduct.brandName} (Inactive)</option>}
                           </select>
                         </div>
@@ -816,7 +828,7 @@ const AddProductModal = ({
                               style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")` }}>
                           <option value="" disabled className={theme === "dark" ? "bg-[#2A2724]" : ""} style={{ color: '#9CA3AF' }}>Select Brand Partner</option>
                               {partnerNames.map((name) => (<option key={name} value={name} className={theme === "dark" ? "bg-[#2A2724]" : ""}>{name}</option>))}
-                          <option value="__add_new_brand__" className="font-semibold text-[#09A046]">+ Add Brand</option>
+                          <option value={BRAND_ADD_SENTINEL} className="font-semibold text-[#09A046]">+ Add Brand</option>
                               {legacyBrandSelected && <option value={newProduct.brandName}>{newProduct.brandName} (Inactive)</option>}
                             </select>
                           </div>
