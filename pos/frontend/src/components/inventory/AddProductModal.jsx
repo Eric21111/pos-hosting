@@ -31,6 +31,8 @@ const COMMON_COLORS = [
   "Rose Gold",
   "Custom"];
 
+const BRAND_ADD_SENTINEL = "__add_new_brand__";
+
 
 const AddProductModal = ({
   showAddModal,
@@ -478,6 +480,16 @@ const AddProductModal = ({
 
   // `hasVariants` is derived from current selections now (no toggle).
 
+  // Safety: if the form state ever holds the sentinel value, auto-open the
+  // "Add Brand Partner" modal (hook must be unconditional to avoid React hook order errors).
+  useEffect(() => {
+    if (!showAddModal) return;
+    if (newProduct.brandName === BRAND_ADD_SENTINEL) {
+      setNewProduct((prev) => ({ ...prev, brandName: "" }));
+      setShowBrandModal(true);
+    }
+  }, [showAddModal, newProduct.brandName, setNewProduct]);
+
   if (!showAddModal) return null;
 
   const partnerNames = Array.from(
@@ -489,13 +501,28 @@ const AddProductModal = ({
     newProduct.brandName !== "Default" &&
     !partnerNames.includes(newProduct.brandName);
 
+  const handleBrandSelectChange = (e) => {
+    const { value } = e.target;
+    if (value === BRAND_ADD_SENTINEL) {
+      // Never keep sentinel in form state; immediately open modal.
+      setNewProduct((prev) => ({ ...prev, brandName: "" }));
+      setShowBrandModal(true);
+      return;
+    }
+    handleInputChange(e);
+  };
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
 
+    const normalizedBrandName =
+      newProduct.brandName && newProduct.brandName !== BRAND_ADD_SENTINEL
+        ? newProduct.brandName
+        : "Default";
 
     const completeProductData = {
       ...newProduct,
+      brandName: normalizedBrandName,
       productImages: productImages,
 
       ...(newProduct.variant === "Custom" && { variant: "Custom" }),
@@ -659,15 +686,13 @@ const AddProductModal = ({
                 <div className="grid grid-cols-2 gap-4">
                         <div>
                     <label className={`block text-xs font-bold uppercase tracking-wide mb-1.5 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Brand Partner <span className="text-red-500">*</span></label>
-                    <select name="brandName" value={newProduct.brandName || ""} onChange={(e) => {
-                      if (e.target.value === "__add_new_brand__") { setShowBrandModal(true); return; }
-                              handleInputChange(e);
-                    }}
+                    <select name="brandName" value={newProduct.brandName || ""} onChange={handleBrandSelectChange}
                       className={`w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#09A046] focus:border-transparent appearance-none bg-no-repeat bg-[length:16px] bg-[center_right_12px] ${!newProduct.brandName ? "text-gray-400" : ""} ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-white border-gray-300"}`}
                       style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")` }}>
                       <option value="" disabled className={theme === "dark" ? "bg-[#2A2724]" : ""} style={{ color: '#9CA3AF' }}>Select Brand Partner</option>
+                      <option value="Default" className={theme === "dark" ? "bg-[#2A2724]" : ""}>Default</option>
                       {partnerNames.map((name) => (<option key={name} value={name} className={theme === "dark" ? "bg-[#2A2724]" : ""}>{name}</option>))}
-                      <option value="__add_new_brand__" className="font-semibold text-[#09A046]">+ Add Brand</option>
+                      <option value={BRAND_ADD_SENTINEL} className="font-semibold text-[#09A046]">+ Add Brand</option>
                       {legacyBrandSelected && <option value={newProduct.brandName}>{newProduct.brandName} (Inactive)</option>}
                           </select>
                         </div>
@@ -805,15 +830,13 @@ const AddProductModal = ({
                     <div className="grid grid-cols-2 gap-4">
                           <div>
                         <label className={`block text-xs font-bold uppercase tracking-wide mb-1.5 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Brand Partner <span className="text-red-500">*</span></label>
-                        <select name="brandName" value={newProduct.brandName || ""} onChange={(e) => {
-                              if (e.target.value === "__add_new_brand__") { setShowBrandModal(true); return; }
-                              handleInputChange(e);
-                            }}
+                        <select name="brandName" value={newProduct.brandName || ""} onChange={handleBrandSelectChange}
                           className={`w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#09A046] focus:border-transparent appearance-none bg-no-repeat bg-[length:16px] bg-[center_right_12px] ${!newProduct.brandName ? "text-gray-400" : ""} ${theme === "dark" ? "bg-[#1E1B18] border-gray-600 text-white" : "bg-white border-gray-300"}`}
                               style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")` }}>
                           <option value="" disabled className={theme === "dark" ? "bg-[#2A2724]" : ""} style={{ color: '#9CA3AF' }}>Select Brand Partner</option>
+                          <option value="Default" className={theme === "dark" ? "bg-[#2A2724]" : ""}>Default</option>
                               {partnerNames.map((name) => (<option key={name} value={name} className={theme === "dark" ? "bg-[#2A2724]" : ""}>{name}</option>))}
-                          <option value="__add_new_brand__" className="font-semibold text-[#09A046]">+ Add Brand</option>
+                          <option value={BRAND_ADD_SENTINEL} className="font-semibold text-[#09A046]">+ Add Brand</option>
                               {legacyBrandSelected && <option value={newProduct.brandName}>{newProduct.brandName} (Inactive)</option>}
                             </select>
                           </div>
