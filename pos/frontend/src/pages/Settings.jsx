@@ -183,6 +183,14 @@ const Settings = () => {
 
   const archiveRowId = (a) => String(a._id || a.id);
 
+  const restoreTargetIds = useMemo(
+    () =>
+      selectedArchiveIds.length > 0
+        ? selectedArchiveIds
+        : archives.map(archiveRowId),
+    [selectedArchiveIds, archives]
+  );
+
   const fetchArchives = useCallback(async () => {
     setArchivesLoading(true);
     try {
@@ -234,14 +242,15 @@ const Settings = () => {
     }
   };
 
-  const clearArchiveSelection = () => setSelectedArchiveIds([]);
-
   const handleBulkRestore = async () => {
-    if (selectedArchiveIds.length === 0) return;
+    const ids =
+      selectedArchiveIds.length > 0
+        ? [...selectedArchiveIds]
+        : archives.map((a) => archiveRowId(a));
+    if (ids.length === 0) return;
     setBulkArchivesLoading(true);
     setError("");
     try {
-      const ids = [...selectedArchiveIds];
       const removed = [];
       const failed = [];
       for (const id of ids) {
@@ -256,9 +265,7 @@ const Settings = () => {
           failed.push(data.message || "Restore failed");
         }
       }
-      setArchives((prev) =>
-        prev.filter((a) => !removed.includes(archiveRowId(a)))
-      );
+      await fetchArchives();
       setSelectedArchiveIds((prev) => prev.filter((id) => !removed.includes(id)));
       setShowBulkRestoreModal(false);
       if (failed.length === 0) {
@@ -301,9 +308,7 @@ const Settings = () => {
           failed.push(data.message || "Delete failed");
         }
       }
-      setArchives((prev) =>
-        prev.filter((a) => !removed.includes(archiveRowId(a)))
-      );
+      await fetchArchives();
       setSelectedArchiveIds((prev) => prev.filter((id) => !removed.includes(id)));
       setShowBulkClearModal(false);
       if (failed.length === 0) {
@@ -1249,9 +1254,12 @@ const Settings = () => {
                       setError("");
                       setShowBulkRestoreModal(true);
                     }}
-                    className={`px-4 py-2 rounded-lg text-sm font-bold shadow transition-colors flex items-center gap-2 ${theme === "dark" ? "bg-emerald-800/80 hover:bg-emerald-700 text-white" : "bg-emerald-600 hover:bg-emerald-700 text-white"}`}
+                    className="px-4 py-2 rounded-lg text-sm font-bold text-white shadow transition-all hover:opacity-95 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #10B981 0%, #059669 100%)"
+                    }}
                     disabled={
-                      selectedArchiveIds.length === 0 ||
                       archivesLoading ||
                       bulkArchivesLoading ||
                       exportArchivesLoading ||
@@ -1259,17 +1267,22 @@ const Settings = () => {
                     }>
 
                     <FaUndo className="w-4 h-4" />
-                    Restore selected
+                    {selectedArchiveIds.length === 0
+                      ? "Restore all"
+                      : "Restore selected"}
                   </button>
                   <button
                     type="button"
                     onClick={() => {
                       setError("");
-                      setShowBulkClearModal(true);
+                      if (selectedArchiveIds.length > 0) {
+                        setShowBulkClearModal(true);
+                      } else {
+                        setShowClearArchiveModal(true);
+                      }
                     }}
-                    className="bg-amber-700/90 hover:bg-amber-800 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition-colors flex items-center gap-2"
+                    className="bg-red-600/90 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition-colors flex items-center gap-2 disabled:opacity-50"
                     disabled={
-                      selectedArchiveIds.length === 0 ||
                       archivesLoading ||
                       bulkArchivesLoading ||
                       exportArchivesLoading ||
@@ -1277,18 +1290,10 @@ const Settings = () => {
                     }>
 
                     <FaTrash className="w-4 h-4" />
-                    Clear selected
+                    {selectedArchiveIds.length === 0
+                      ? "Clear all data"
+                      : "Clear selected"}
                   </button>
-                  {selectedArchiveIds.length > 0 &&
-                    <button
-                      type="button"
-                      onClick={clearArchiveSelection}
-                      className={`text-sm font-semibold underline-offset-2 hover:underline ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
-                      disabled={bulkArchivesLoading}>
-
-                      Clear selection
-                    </button>
-                  }
                   <button
                     onClick={handleExportArchives}
                     className="bg-[#AD7F65] hover:bg-[#8e654e] text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition-colors flex items-center gap-2"
@@ -1296,13 +1301,6 @@ const Settings = () => {
 
                     <FaDownload className="w-4 h-4" />
                     {exportArchivesLoading ? "Exporting..." : "Export Data"}
-                  </button>
-                  <button
-                    onClick={() => setShowClearArchiveModal(true)}
-                    className="bg-red-600/90 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition-colors"
-                    disabled={clearArchivesLoading || exportArchivesLoading || bulkArchivesLoading}>
-
-                    Clear All Data
                   </button>
                 </>
               }
@@ -2042,7 +2040,11 @@ const Settings = () => {
               <button
                 type="button"
                 onClick={handleBulkRestore}
-                className="flex-1 py-2 rounded-lg font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex justify-center items-center"
+                className="flex-1 py-2 rounded-lg font-bold text-white transition-all hover:opacity-95 flex justify-center items-center"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #10B981 0%, #059669 100%)"
+                }}
                 disabled={bulkArchivesLoading}>
 
                 {bulkArchivesLoading ?

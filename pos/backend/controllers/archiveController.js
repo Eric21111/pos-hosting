@@ -222,6 +222,7 @@ exports.restoreArchiveItem = async (req, res) => {
 
     const qty = Math.max(0, Number(archiveItem.quantity) || 0);
     const wasArchived = product.isArchived === true;
+    const prevDisplay = product.displayInTerminal;
 
     const hasSizes =
       product.sizes &&
@@ -238,7 +239,22 @@ exports.restoreArchiveItem = async (req, res) => {
       await product.save();
     }
 
-    await Archive.findByIdAndDelete(archiveItem._id);
+    const deleteResult = await Archive.deleteOne({ _id: archiveItem._id });
+    if (deleteResult.deletedCount === 0) {
+      if (wasArchived) {
+        try {
+          product.isArchived = true;
+          product.displayInTerminal = prevDisplay;
+          await product.save();
+        } catch (rollbackErr) {
+          console.error('Restore rollback failed:', rollbackErr);
+        }
+      }
+      return res.status(500).json({
+        success: false,
+        message: 'Could not remove archive row. Nothing was changed. Try again.'
+      });
+    }
 
     res.json({
       success: true,
