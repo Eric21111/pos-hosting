@@ -26,6 +26,7 @@ import {
   FaSync,
   FaTimesCircle,
   FaTrash,
+  FaUndo,
   FaUser
 } from
   "react-icons/fa";
@@ -63,6 +64,11 @@ const Settings = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [archives, setArchives] = useState([]);
   const [archivesLoading, setArchivesLoading] = useState(false);
+  const [selectedArchiveIds, setSelectedArchiveIds] = useState([]);
+  const [bulkArchivesLoading, setBulkArchivesLoading] = useState(false);
+  const [showBulkRestoreModal, setShowBulkRestoreModal] = useState(false);
+  const [showBulkClearModal, setShowBulkClearModal] = useState(false);
+  const selectAllArchivesRef = useRef(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [pinLoading, setPinLoading] = useState(false);
   const [syncLoading, setSyncLoading] = useState(false);
@@ -175,10 +181,14 @@ const Settings = () => {
     }
   }, []);
 
+  const archiveRowId = (a) => String(a._id || a.id);
+
   const fetchArchives = useCallback(async () => {
     setArchivesLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/api/archive`);
+      const response = await fetch(`${API_BASE}/api/archive`, {
+        cache: "no-store"
+      });
       const data = await response.json();
 
       if (data.success) {
@@ -193,6 +203,128 @@ const Settings = () => {
       setArchivesLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    setSelectedArchiveIds((prev) =>
+      prev.filter((id) => archives.some((a) => archiveRowId(a) === id))
+    );
+  }, [archives]);
+
+  useEffect(() => {
+    const el = selectAllArchivesRef.current;
+    if (!el) return;
+    const n = selectedArchiveIds.length;
+    const t = archives.length;
+    el.indeterminate = t > 0 && n > 0 && n < t;
+  }, [selectedArchiveIds, archives.length]);
+
+  const toggleArchiveRowSelect = (id) => {
+    const s = String(id);
+    setSelectedArchiveIds((prev) =>
+      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+    );
+  };
+
+  const toggleSelectAllArchives = () => {
+    if (!archives.length || archivesLoading) return;
+    if (selectedArchiveIds.length === archives.length) {
+      setSelectedArchiveIds([]);
+    } else {
+      setSelectedArchiveIds(archives.map((a) => archiveRowId(a)));
+    }
+  };
+
+  const clearArchiveSelection = () => setSelectedArchiveIds([]);
+
+  const handleBulkRestore = async () => {
+    if (selectedArchiveIds.length === 0) return;
+    setBulkArchivesLoading(true);
+    setError("");
+    try {
+      const ids = [...selectedArchiveIds];
+      const removed = [];
+      const failed = [];
+      for (const id of ids) {
+        const res = await fetch(`${API_BASE}/api/archive/${id}/restore`, {
+          method: "POST",
+          cache: "no-store"
+        });
+        const data = await res.json().catch(() => ({}));
+        if (data.success) {
+          removed.push(id);
+        } else {
+          failed.push(data.message || "Restore failed");
+        }
+      }
+      setArchives((prev) =>
+        prev.filter((a) => !removed.includes(archiveRowId(a)))
+      );
+      setSelectedArchiveIds((prev) => prev.filter((id) => !removed.includes(id)));
+      setShowBulkRestoreModal(false);
+      if (failed.length === 0) {
+        setSuccessMessage(
+          removed.length === 1
+            ? "Item restored to inventory."
+            : `Restored ${removed.length} items.`
+        );
+      } else {
+        setSuccessMessage(
+          `Restored ${removed.length}. Failed: ${failed.slice(0, 3).join("; ")}${failed.length > 3 ? "…" : ""}`
+        );
+      }
+      setShowSuccessModal(true);
+    } catch (err) {
+      console.error(err);
+      setError("Could not complete restore. Try again.");
+    } finally {
+      setBulkArchivesLoading(false);
+    }
+  };
+
+  const handleBulkClearArchives = async () => {
+    if (selectedArchiveIds.length === 0) return;
+    setBulkArchivesLoading(true);
+    setError("");
+    try {
+      const ids = [...selectedArchiveIds];
+      const removed = [];
+      const failed = [];
+      for (const id of ids) {
+        const res = await fetch(`${API_BASE}/api/archive/${id}`, {
+          method: "DELETE",
+          cache: "no-store"
+        });
+        const data = await res.json().catch(() => ({}));
+        if (data.success) {
+          removed.push(id);
+        } else {
+          failed.push(data.message || "Delete failed");
+        }
+      }
+      setArchives((prev) =>
+        prev.filter((a) => !removed.includes(archiveRowId(a)))
+      );
+      setSelectedArchiveIds((prev) => prev.filter((id) => !removed.includes(id)));
+      setShowBulkClearModal(false);
+      if (failed.length === 0) {
+        setSuccessMessage(
+          removed.length === 1
+            ? "Archive entry removed."
+            : `Removed ${removed.length} archive entries.`
+        );
+      } else {
+        setSuccessMessage(
+          `Removed ${removed.length}. Failed: ${failed.slice(0, 3).join("; ")}${failed.length > 3 ? "…" : ""}`
+        );
+      }
+      setShowSuccessModal(true);
+    } catch (err) {
+      console.error(err);
+      setError("Could not remove entries. Try again.");
+    } finally {
+      setBulkArchivesLoading(false);
+    }
+  };
 
   const handleGcashSave = async (e) => {
     e.preventDefault();
@@ -634,6 +766,7 @@ const Settings = () => {
         setSuccessMessage(data.message || "All archives cleared successfully!");
         setShowSuccessModal(true);
         setArchives([]);
+        setSelectedArchiveIds([]);
         setShowClearArchiveModal(false);
       } else {
         setError(data.message || "Failed to clear archives");
@@ -1107,13 +1240,59 @@ const Settings = () => {
 
         activeTab === "archives" ?
           <div className="space-y-4">
-            <div className="flex justify-end pr-2 gap-3">
+            <div className="flex flex-wrap justify-end items-center pr-2 gap-3">
               {archives.length > 0 &&
                 <>
                   <button
+                    type="button"
+                    onClick={() => {
+                      setError("");
+                      setShowBulkRestoreModal(true);
+                    }}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold shadow transition-colors flex items-center gap-2 ${theme === "dark" ? "bg-emerald-800/80 hover:bg-emerald-700 text-white" : "bg-emerald-600 hover:bg-emerald-700 text-white"}`}
+                    disabled={
+                      selectedArchiveIds.length === 0 ||
+                      archivesLoading ||
+                      bulkArchivesLoading ||
+                      exportArchivesLoading ||
+                      clearArchivesLoading
+                    }>
+
+                    <FaUndo className="w-4 h-4" />
+                    Restore selected
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setError("");
+                      setShowBulkClearModal(true);
+                    }}
+                    className="bg-amber-700/90 hover:bg-amber-800 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition-colors flex items-center gap-2"
+                    disabled={
+                      selectedArchiveIds.length === 0 ||
+                      archivesLoading ||
+                      bulkArchivesLoading ||
+                      exportArchivesLoading ||
+                      clearArchivesLoading
+                    }>
+
+                    <FaTrash className="w-4 h-4" />
+                    Clear selected
+                  </button>
+                  {selectedArchiveIds.length > 0 &&
+                    <button
+                      type="button"
+                      onClick={clearArchiveSelection}
+                      className={`text-sm font-semibold underline-offset-2 hover:underline ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
+                      disabled={bulkArchivesLoading}>
+
+                      Clear selection
+                    </button>
+                  }
+                  <button
                     onClick={handleExportArchives}
                     className="bg-[#AD7F65] hover:bg-[#8e654e] text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition-colors flex items-center gap-2"
-                    disabled={exportArchivesLoading || clearArchivesLoading}>
+                    disabled={exportArchivesLoading || clearArchivesLoading || bulkArchivesLoading}>
 
                     <FaDownload className="w-4 h-4" />
                     {exportArchivesLoading ? "Exporting..." : "Export Data"}
@@ -1121,7 +1300,7 @@ const Settings = () => {
                   <button
                     onClick={() => setShowClearArchiveModal(true)}
                     className="bg-red-600/90 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition-colors"
-                    disabled={clearArchivesLoading || exportArchivesLoading}>
+                    disabled={clearArchivesLoading || exportArchivesLoading || bulkArchivesLoading}>
 
                     Clear All Data
                   </button>
@@ -1137,6 +1316,22 @@ const Settings = () => {
                     className={theme === "dark" ? "bg-[#1E1B18]" : "bg-gray-50"}>
 
                     <tr>
+                      <th
+                        className={`px-3 py-3 w-12 text-left text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+
+                        <input
+                          ref={selectAllArchivesRef}
+                          type="checkbox"
+                          className="w-4 h-4 rounded border-gray-400 text-[#AD7F65] focus:ring-[#AD7F65]"
+                          checked={
+                            archives.length > 0 &&
+                            selectedArchiveIds.length === archives.length
+                          }
+                          onChange={toggleSelectAllArchives}
+                          disabled={archivesLoading || bulkArchivesLoading || archives.length === 0}
+                          title="Select all"
+                        />
+                      </th>
                       <th
                         className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
 
@@ -1195,7 +1390,7 @@ const Settings = () => {
                     {archivesLoading ?
                       <tr>
                         <td
-                          colSpan="10"
+                          colSpan="11"
                           className="px-4 py-8 text-center text-gray-500">
 
                           <div className="flex flex-col items-center justify-center">
@@ -1207,7 +1402,7 @@ const Settings = () => {
                       archives.length === 0 ?
                         <tr>
                           <td
-                            colSpan="10"
+                            colSpan="11"
                             className="px-4 py-8 text-center text-gray-500">
 
                             <div className="flex flex-col items-center justify-center">
@@ -1228,6 +1423,18 @@ const Settings = () => {
                               key={archive._id || archive.id}
                               className={`hover:${theme === "dark" ? "bg-[#1E1B18]" : "bg-gray-50"}`}>
 
+                              <td
+                                className="px-3 py-3 whitespace-nowrap"
+                                onClick={(e) => e.stopPropagation()}>
+
+                                <input
+                                  type="checkbox"
+                                  className="w-4 h-4 rounded border-gray-400 text-[#AD7F65] focus:ring-[#AD7F65]"
+                                  checked={selectedArchiveIds.includes(archiveRowId(archive))}
+                                  onChange={() => toggleArchiveRowSelect(archiveRowId(archive))}
+                                  disabled={archivesLoading || bulkArchivesLoading}
+                                />
+                              </td>
                               <td
                                 className={`px-4 py-3 whitespace-nowrap text-sm font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
 
@@ -1779,6 +1986,113 @@ const Settings = () => {
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> :
 
                   "Delete All"
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      {showBulkRestoreModal &&
+        <div className="fixed inset-0 z-[61] flex items-center justify-center p-4 backdrop-blur-sm bg-black/20">
+          <div
+            className={`p-6 rounded-2xl shadow-xl w-full max-w-md ${theme === "dark" ? "bg-[#2A2724] text-white" : "bg-white text-gray-900"}`}>
+
+            <h3 className="text-xl font-bold mb-3 text-center">
+              Restore to inventory?
+            </h3>
+            <p className="text-sm text-center mb-4 opacity-90">
+              {selectedArchiveIds.length} item(s) will return to Product &amp; Stocks and
+              be removed from this archive list.
+            </p>
+            <ul
+              className={`text-xs max-h-28 overflow-y-auto mb-4 space-y-1 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
+
+              {archives
+                .filter((a) => selectedArchiveIds.includes(archiveRowId(a)))
+                .slice(0, 8)
+                .map((a) =>
+                  <li key={archiveRowId(a)}>
+                    <span className="font-mono">{a.sku}</span>
+                    {" — "}
+                    {a.itemName}
+                  </li>
+                )}
+              {selectedArchiveIds.length > 8 &&
+                <li className="italic">
+                  +{selectedArchiveIds.length - 8} more…
+                </li>
+              }
+            </ul>
+            {error &&
+              <p className="text-red-500 text-sm text-center mb-3">{error}</p>
+            }
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowBulkRestoreModal(false);
+                  setError("");
+                }}
+                className={`flex-1 py-2 rounded-lg font-bold border transition-colors ${theme === "dark" ? "border-gray-600 hover:bg-gray-700 text-white" : "border-gray-300 hover:bg-gray-100 text-gray-700"}`}
+                disabled={bulkArchivesLoading}>
+
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleBulkRestore}
+                className="flex-1 py-2 rounded-lg font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex justify-center items-center"
+                disabled={bulkArchivesLoading}>
+
+                {bulkArchivesLoading ?
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> :
+
+                  "Restore"
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      {showBulkClearModal &&
+        <div className="fixed inset-0 z-[61] flex items-center justify-center p-4 backdrop-blur-sm bg-black/20">
+          <div
+            className={`p-6 rounded-2xl shadow-xl w-full max-w-md ${theme === "dark" ? "bg-[#2A2724] text-white" : "bg-white text-gray-900"}`}>
+
+            <h3 className="text-xl font-bold mb-3 text-center">
+              Remove archive entries?
+            </h3>
+            <p className="text-sm text-center mb-4 opacity-90">
+              Permanently delete {selectedArchiveIds.length} row(s) from the archive
+              history. This does not delete live products.
+            </p>
+            {error &&
+              <p className="text-red-500 text-sm text-center mb-3">{error}</p>
+            }
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowBulkClearModal(false);
+                  setError("");
+                }}
+                className={`flex-1 py-2 rounded-lg font-bold border transition-colors ${theme === "dark" ? "border-gray-600 hover:bg-gray-700 text-white" : "border-gray-300 hover:bg-gray-100 text-gray-700"}`}
+                disabled={bulkArchivesLoading}>
+
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleBulkClearArchives}
+                className="flex-1 py-2 rounded-lg font-bold bg-amber-800 text-white hover:bg-amber-900 transition-colors flex justify-center items-center"
+                disabled={bulkArchivesLoading}>
+
+                {bulkArchivesLoading ?
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> :
+
+                  "Remove"
                 }
               </button>
             </div>
