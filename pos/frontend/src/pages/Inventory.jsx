@@ -1335,12 +1335,9 @@ const Inventory = () => {
         `${API_BASE_URL}/api/products/${archiveId}/archive`,
         {
           method: "PATCH",
-<<<<<<< HEAD
-          cache: "no-store"
-=======
+          cache: "no-store",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ archivedByName, archivedById })
->>>>>>> a29404422b24721f2480814cab6e976bc88ba091
         }
       );
 
