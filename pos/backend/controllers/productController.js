@@ -1,5 +1,26 @@
 const Product = require("../models/Product");
 const StockMovement = require("../models/StockMovement");
+const Archive = require("../models/Archive");
+const SalesTransaction = require("../models/SalesTransaction");
+
+const ARCHIVE_CATEGORY_ENUM = new Set([
+  "Tops",
+  "Bottoms",
+  "Dresses",
+  "Makeup",
+  "Accessories",
+  "Essentials",
+  "Shoes",
+  "Head Wear",
+  "Foods",
+  "Others",
+]);
+
+const mapProductCategoryToArchiveCategory = (category) => {
+  const c = String(category || "").trim();
+  if (ARCHIVE_CATEGORY_ENUM.has(c)) return c;
+  return "Others";
+};
 
 exports.getAllProducts = async (req, res) => {
   try {
@@ -1124,10 +1145,51 @@ exports.archiveProduct = async (req, res) => {
       });
     }
 
+    if (product.isArchived) {
+      return res.json({
+        success: true,
+        message: "Product already archived",
+      });
+    }
+
+    const qty = Math.max(
+      1,
+      Number(product.currentStock) >= 0 ? Number(product.currentStock) : 0
+    );
+
+    const prevDisplayInTerminal = product.displayInTerminal;
     product.isArchived = true;
     product.displayInTerminal = false;
     product.lastUpdated = Date.now();
     await product.save();
+
+    try {
+      await Archive.create({
+        productId: product._id,
+        itemName: product.itemName,
+        sku: product.sku || "N/A",
+        variant: product.variant || "",
+        selectedSize: product.size || "",
+        category: mapProductCategoryToArchiveCategory(product.category),
+        brandName: product.brandName || "",
+        itemPrice: product.itemPrice ?? 0,
+        costPrice: product.costPrice ?? 0,
+        quantity: qty,
+        itemImage: product.itemImage || "",
+        reason: "Other",
+        returnReason: "",
+        originalTransactionId: null,
+        source: "stock-out",
+        archivedBy: req.body?.archivedByName || "Inventory",
+        archivedById: req.body?.archivedById || "",
+        notes: "Product archived from inventory",
+      });
+    } catch (archiveErr) {
+      product.isArchived = false;
+      product.displayInTerminal = prevDisplayInTerminal;
+      await product.save();
+      throw archiveErr;
+    }
 
     res.json({
       success: true,
@@ -1169,6 +1231,28 @@ const findSizeKey = (sizes = {}, size = "") => {
   return Object.keys(sizes).find((key) => key?.toLowerCase() === normalized);
 };
 
+const findVariantKey = (variants, name) => {
+  if (!name || typeof variants !== "object" || variants === null) {
+    return null;
+  }
+  if (Object.prototype.hasOwnProperty.call(variants, name)) {
+    return name;
+  }
+  const target = String(name).trim().toLowerCase();
+  return (
+    Object.keys(variants).find(
+      (k) => String(k).trim().toLowerCase() === target,
+    ) || null
+  );
+};
+
+const getSizeKeys = (sizes) => {
+  if (!sizes || typeof sizes !== "object") {
+    return [];
+  }
+  return sizes instanceof Map ? Array.from(sizes.keys()) : Object.keys(sizes);
+};
+
 const getSizeQuantity = (sizeData) => {
   if (
     typeof sizeData === "object" &&
@@ -1194,7 +1278,8 @@ const getSizePrice = (sizeData) => {
 // Update stock after successful transaction
 exports.updateStockAfterTransaction = async (req, res) => {
   try {
-    const { items, performedByName, performedById, type, reason } = req.body;
+    const { items, performedByName, performedById, type, reason, linkTransactionId } =
+      req.body;
 
     if (!items || !Array.isArray(items)) {
       return res.status(400).json({
@@ -1259,6 +1344,84 @@ exports.updateStockAfterTransaction = async (req, res) => {
       return next.filter((b) => safeNum(b.qty, 0) > 0 || b.batchSlotPadding === true);
     };
 
+    const consumeBatchesWithAllocations = (batches, removeQty) => {
+      let remaining = safeNum(removeQty, 0);
+      const next = Array.isArray(batches) ? batches.map((b) => ({ ...b })) : [];
+      const allocations = [];
+      for (let i = 0; i < next.length && remaining > 0; i++) {
+        const avail = safeNum(next[i].qty, 0);
+        if (avail <= 0) continue;
+        const take = Math.min(avail, remaining);
+        if (take <= 0) continue;
+        const createdAt = next[i].createdAt || nowIso();
+        allocations.push({
+          createdAt: String(createdAt),
+          qty: take,
+          price: safeNum(next[i].price, 0),
+          costPrice: safeNum(next[i].costPrice, 0),
+        });
+        next[i].qty = avail - take;
+        remaining -= take;
+      }
+      const filtered = next.filter(
+        (b) => safeNum(b.qty, 0) > 0 || b.batchSlotPadding === true,
+      );
+      return { batches: filtered, allocations };
+    };
+
+    const allocationsForReturnQty = (fullAllocations, returnQty) => {
+      let rem = safeNum(returnQty, 0);
+      const out = [];
+      for (const a of fullAllocations || []) {
+        if (rem <= 0) break;
+        const q = safeNum(a.qty, 0);
+        if (q <= 0) continue;
+        const take = Math.min(q, rem);
+        out.push({
+          createdAt: a.createdAt,
+          qty: take,
+          price: safeNum(a.price, 0),
+          costPrice: safeNum(a.costPrice, 0),
+        });
+        rem -= take;
+      }
+      return out;
+    };
+
+    const restoreBatchesFromAllocations = (batches, allocations) => {
+      const next = Array.isArray(batches) ? batches.map((b) => ({ ...b })) : [];
+      for (const alloc of allocations || []) {
+        const q = safeNum(alloc.qty, 0);
+        if (q <= 0) continue;
+        const target = String(alloc.createdAt || "");
+        const idx = next.findIndex((b) => String(b.createdAt || "") === target);
+        if (idx >= 0) {
+          next[idx].qty = safeNum(next[idx].qty, 0) + q;
+        } else {
+          next.push({
+            qty: q,
+            price: safeNum(alloc.price, 0),
+            costPrice: safeNum(alloc.costPrice, 0),
+            createdAt: alloc.createdAt || nowIso(),
+          });
+        }
+      }
+      next.sort((a, b) =>
+        String(a.createdAt || "").localeCompare(String(b.createdAt || "")),
+      );
+      return next;
+    };
+
+    const persistLineBatchAllocations = async (txId, lineIndex, allocations) => {
+      if (!txId || lineIndex == null || lineIndex < 0 || !allocations?.length) {
+        return;
+      }
+      await SalesTransaction.updateOne(
+        { _id: txId },
+        { $set: { [`items.${lineIndex}.batchAllocations`]: allocations } },
+      );
+    };
+
     // Process items sequentially to prevent race conditions when multiple
     // items reference the same product (e.g., same shirt in different sizes)
     const updatedProducts = [];
@@ -1283,84 +1446,209 @@ exports.updateStockAfterTransaction = async (req, res) => {
 
       const stockBefore = product.currentStock;
 
-      // Handle products with sizes
-      if (product.sizes && item.size) {
-        const sizeKey = findSizeKey(product.sizes, item.size);
+      const isReturnStockIn =
+        isStockIn &&
+        (String(reason || "").includes("Returned") ||
+          movementReason === "Returned Item");
+
+      let batchAllocationsForReturn = null;
+      if (isReturnStockIn) {
+        batchAllocationsForReturn = Array.isArray(item.batchAllocations)
+          ? item.batchAllocations
+          : null;
+        if (
+          (!batchAllocationsForReturn || !batchAllocationsForReturn.length) &&
+          item.originalTransactionId &&
+          item.originalLineIndex != null
+        ) {
+          const origTx = await SalesTransaction.findById(
+            item.originalTransactionId,
+          ).lean();
+          const line = origTx?.items?.[item.originalLineIndex];
+          batchAllocationsForReturn = line?.batchAllocations || null;
+        }
+        if (batchAllocationsForReturn?.length) {
+          batchAllocationsForReturn = allocationsForReturnQty(
+            batchAllocationsForReturn,
+            item.quantity,
+          );
+        }
+      }
+
+      const sizeKeys = getSizeKeys(product.sizes);
+      const hasSizes = sizeKeys.length > 0;
+      const rawSize = item.size || item.selectedSize || "";
+      let sizeForStock =
+        rawSize && String(rawSize).trim() ? String(rawSize).trim() : null;
+      const rawVariant = item.variant || item.selectedVariation || "";
+      let variantForStock =
+        rawVariant && String(rawVariant).trim()
+          ? String(rawVariant).trim()
+          : null;
+
+      if (hasSizes && !sizeForStock && isStockIn && sizeKeys.length === 1) {
+        sizeForStock = sizeKeys[0];
+      }
+
+      if (hasSizes && !sizeForStock) {
+        throw new Error(
+          `Size is required to update stock for "${product.itemName}" (SKU: ${product.sku || "N/A"}).`,
+        );
+      }
+
+      // Handle products with per-size (and optional per-variant) inventory
+      if (hasSizes && sizeForStock) {
+        const sizeKey = findSizeKey(product.sizes, sizeForStock);
 
         if (!sizeKey) {
           if (isStockIn) {
-            const hasPriceStructure = Object.values(product.sizes).some(
+            const sizeVals =
+              product.sizes instanceof Map
+                ? Array.from(product.sizes.values())
+                : Object.values(product.sizes);
+            const hasPriceStructure = sizeVals.some(
               (s) =>
                 typeof s === "object" && s !== null && s.price !== undefined,
             );
             if (hasPriceStructure) {
-              product.sizes[item.size] = {
+              product.sizes[sizeForStock] = {
                 quantity: item.quantity,
                 price: item.price || product.itemPrice || 0,
               };
             } else {
-              product.sizes[item.size] = item.quantity;
+              product.sizes[sizeForStock] = item.quantity;
             }
             product.markModified("sizes");
           } else {
             throw new Error(
-              `Size ${item.size} not found for product ${product.itemName}`,
+              `Size ${sizeForStock} not found for product ${product.itemName}`,
             );
           }
         } else {
-          // Get current size data (handle both Map and object types)
           const currentSizeData = product.sizes.get
             ? product.sizes.get(sizeKey)
             : product.sizes[sizeKey];
           const currentQuantity = getSizeQuantity(currentSizeData);
           const currentPrice = getSizePrice(currentSizeData);
 
-          // Check if this size has variants and a variant is specified
-          if (item.variant && typeof currentSizeData === "object" && currentSizeData !== null && currentSizeData.variants) {
-            // Handle variant-specific stock
-            const variantData = currentSizeData.variants[item.variant];
+          const hasVariantBuckets =
+            typeof currentSizeData === "object" &&
+            currentSizeData !== null &&
+            currentSizeData.variants &&
+            typeof currentSizeData.variants === "object" &&
+            Object.keys(currentSizeData.variants).length > 0;
 
-            const fallbackVariantPrice =
-              safeNum(
-                currentSizeData.variantPrices?.[item.variant],
-                safeNum(currentPrice, safeNum(item.price, safeNum(product.itemPrice, 0))),
-              );
-            const fallbackVariantCostPrice =
-              safeNum(
-                currentSizeData.variantCostPrices?.[item.variant],
-                safeNum(currentSizeData.costPrice, safeNum(product.costPrice, 0)),
-              );
+          if (hasVariantBuckets && !variantForStock) {
+            const vKeys = Object.keys(currentSizeData.variants);
+            if (vKeys.length === 1) {
+              variantForStock = vKeys[0];
+            }
+          }
+          if (hasVariantBuckets && !variantForStock) {
+            throw new Error(
+              `Variant is required to update stock for ${product.itemName} (size ${sizeKey}).`,
+            );
+          }
 
-            const normalizedVariant = ensureBatches(variantData, fallbackVariantPrice, fallbackVariantCostPrice);
+          if (
+            variantForStock &&
+            hasVariantBuckets
+          ) {
+            const variantKey = findVariantKey(
+              currentSizeData.variants,
+              variantForStock,
+            );
+            if (!variantKey) {
+              throw new Error(
+                `Variant "${variantForStock}" not found for ${product.itemName} (size ${sizeKey}).`,
+              );
+            }
+
+            const variantData = currentSizeData.variants[variantKey];
+
+            const fallbackVariantPrice = safeNum(
+              currentSizeData.variantPrices?.[variantKey],
+              safeNum(
+                currentPrice,
+                safeNum(item.price, safeNum(product.itemPrice, 0)),
+              ),
+            );
+            const fallbackVariantCostPrice = safeNum(
+              currentSizeData.variantCostPrices?.[variantKey],
+              safeNum(currentSizeData.costPrice, safeNum(product.costPrice, 0)),
+            );
+
+            const normalizedVariant = ensureBatches(
+              variantData,
+              fallbackVariantPrice,
+              fallbackVariantCostPrice,
+            );
             const currentVariantQty = safeNum(normalizedVariant.quantity, 0);
 
             if (isStockOut && currentVariantQty < item.quantity) {
               throw new Error(
-                `Insufficient stock for ${product.itemName} (${item.size}, ${item.variant}). Available: ${currentVariantQty}, Requested: ${item.quantity}`,
+                `Insufficient stock for ${product.itemName} (${sizeForStock}, ${variantForStock}). Available: ${currentVariantQty}, Requested: ${item.quantity}`,
               );
             }
 
-            // Update variant batches FIFO (Batch 1 consumed first, stock-in creates new batch)
-            const nextVariantBatches = isStockIn
-              ? addBatch(
+            let nextVariantBatches;
+            if (isStockIn) {
+              if (batchAllocationsForReturn?.length > 0) {
+                nextVariantBatches = restoreBatchesFromAllocations(
+                  normalizedVariant.batches,
+                  batchAllocationsForReturn,
+                );
+              } else {
+                nextVariantBatches = addBatch(
+                  normalizedVariant.batches,
+                  item.quantity,
+                  safeNum(
+                    item.price,
+                    safeNum(fallbackVariantPrice, safeNum(product.itemPrice, 0)),
+                  ),
+                  safeNum(
+                    item.costPrice,
+                    safeNum(fallbackVariantCostPrice, safeNum(product.costPrice, 0)),
+                  ),
+                  {
+                    batchCode: item.batchCode,
+                    expirationDate: item.expirationDate,
+                  },
+                );
+              }
+            } else {
+              const cons = consumeBatchesWithAllocations(
                 normalizedVariant.batches,
                 item.quantity,
-                safeNum(item.price, safeNum(fallbackVariantPrice, safeNum(product.itemPrice, 0))),
-                safeNum(item.costPrice, safeNum(fallbackVariantCostPrice, safeNum(product.costPrice, 0))),
-                { batchCode: item.batchCode, expirationDate: item.expirationDate },
-              )
-              : consumeBatches(normalizedVariant.batches, item.quantity);
+              );
+              nextVariantBatches = cons.batches;
+              if (
+                linkTransactionId != null &&
+                item.lineIndex != null &&
+                cons.allocations?.length
+              ) {
+                await persistLineBatchAllocations(
+                  linkTransactionId,
+                  item.lineIndex,
+                  cons.allocations,
+                );
+              }
+            }
 
-            const nextVariantQty = nextVariantBatches.reduce((sum, b) => sum + safeNum(b.qty, 0), 0);
-            currentSizeData.variants[item.variant] = {
+            const nextVariantQty = nextVariantBatches.reduce(
+              (sum, b) => sum + safeNum(b.qty, 0),
+              0,
+            );
+            currentSizeData.variants[variantKey] = {
               ...normalizedVariant,
               batches: nextVariantBatches,
               quantity: nextVariantQty,
             };
 
-            // Recalculate size total quantity from all variants
             let sizeTotal = 0;
-            for (const [varKey, varValue] of Object.entries(currentSizeData.variants)) {
+            for (const [, varValue] of Object.entries(
+              currentSizeData.variants,
+            )) {
               if (typeof varValue === "number") {
                 sizeTotal += varValue;
               } else if (typeof varValue === "object" && varValue !== null) {
@@ -1369,7 +1657,6 @@ exports.updateStockAfterTransaction = async (req, res) => {
             }
             currentSizeData.quantity = sizeTotal;
 
-            // Explicitly reassign the updated size data back to product.sizes (handle both Map and object types)
             if (product.sizes.set) {
               product.sizes.set(sizeKey, currentSizeData);
             } else {
@@ -1377,37 +1664,78 @@ exports.updateStockAfterTransaction = async (req, res) => {
             }
             product.markModified("sizes");
           } else {
-            // No variants, update size quantity directly
             if (isStockOut && currentQuantity < item.quantity) {
               throw new Error(
-                `Insufficient stock for ${product.itemName} (${item.size}). Available: ${currentQuantity}, Requested: ${item.quantity}`,
+                `Insufficient stock for ${product.itemName} (${sizeForStock}). Available: ${currentQuantity}, Requested: ${item.quantity}`,
               );
             }
 
             const normalizedSize = ensureBatches(
               currentSizeData,
-              safeNum(currentPrice, safeNum(item.price, safeNum(product.itemPrice, 0))),
+              safeNum(
+                currentPrice,
+                safeNum(item.price, safeNum(product.itemPrice, 0)),
+              ),
               safeNum(currentSizeData?.costPrice, safeNum(product.costPrice, 0)),
             );
 
-            const nextSizeBatches = isStockIn
-              ? addBatch(
+            let nextSizeBatches;
+            if (isStockIn) {
+              if (batchAllocationsForReturn?.length > 0) {
+                nextSizeBatches = restoreBatchesFromAllocations(
+                  normalizedSize.batches,
+                  batchAllocationsForReturn,
+                );
+              } else {
+                nextSizeBatches = addBatch(
+                  normalizedSize.batches,
+                  item.quantity,
+                  safeNum(
+                    item.price,
+                    safeNum(normalizedSize.price, safeNum(product.itemPrice, 0)),
+                  ),
+                  safeNum(
+                    item.costPrice,
+                    safeNum(
+                      normalizedSize.costPrice,
+                      safeNum(product.costPrice, 0),
+                    ),
+                  ),
+                  { batchCode: item.batchCode, expirationDate: item.expirationDate },
+                );
+              }
+            } else {
+              const cons = consumeBatchesWithAllocations(
                 normalizedSize.batches,
                 item.quantity,
-                safeNum(item.price, safeNum(normalizedSize.price, safeNum(product.itemPrice, 0))),
-                safeNum(item.costPrice, safeNum(normalizedSize.costPrice, safeNum(product.costPrice, 0))),
-                { batchCode: item.batchCode, expirationDate: item.expirationDate },
-              )
-              : consumeBatches(normalizedSize.batches, item.quantity);
+              );
+              nextSizeBatches = cons.batches;
+              if (
+                linkTransactionId != null &&
+                item.lineIndex != null &&
+                cons.allocations?.length
+              ) {
+                await persistLineBatchAllocations(
+                  linkTransactionId,
+                  item.lineIndex,
+                  cons.allocations,
+                );
+              }
+            }
 
-            const newQuantity = nextSizeBatches.reduce((sum, b) => sum + safeNum(b.qty, 0), 0);
+            const newQuantity = nextSizeBatches.reduce(
+              (sum, b) => sum + safeNum(b.qty, 0),
+              0,
+            );
 
-            // Update size data (keep existing shape object for price fields)
             const updatedSizeData = {
               ...normalizedSize,
               batches: nextSizeBatches,
               quantity: newQuantity,
-              price: safeNum(currentPrice, safeNum(item.price, safeNum(product.itemPrice, 0))),
+              price: safeNum(
+                currentPrice,
+                safeNum(item.price, safeNum(product.itemPrice, 0)),
+              ),
             };
 
             if (product.sizes.set) {
@@ -1419,14 +1747,16 @@ exports.updateStockAfterTransaction = async (req, res) => {
           }
         }
 
-        // Recalculate total stock from all sizes
         let totalStock = 0;
-        for (const [key, value] of Object.entries(product.sizes)) {
+        const sizeEntries =
+          product.sizes instanceof Map
+            ? Array.from(product.sizes.entries())
+            : Object.entries(product.sizes);
+        for (const [, value] of sizeEntries) {
           totalStock += getSizeQuantity(value);
         }
         product.currentStock = totalStock;
       } else {
-        // Handle products without sizes
         if (isStockOut && product.currentStock < item.quantity) {
           throw new Error(
             `Insufficient stock for ${product.itemName}. Available: ${product.currentStock}, Requested: ${item.quantity}`,
@@ -1467,8 +1797,15 @@ exports.updateStockAfterTransaction = async (req, res) => {
         reason: movementReason,
         handledBy: performedByName || "System",
         handledById: performedById || "",
-        notes: item.size ? `Size: ${item.size}` : "",
-        sizeQuantities: item.size ? { [item.size]: item.quantity } : null,
+        notes: [
+          sizeForStock ? `Size: ${sizeForStock}` : null,
+          variantForStock ? `Variant: ${variantForStock}` : null,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        sizeQuantities: sizeForStock
+          ? { [sizeForStock]: item.quantity }
+          : null,
       });
 
       updatedProducts.push(product);

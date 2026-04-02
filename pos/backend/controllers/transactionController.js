@@ -18,6 +18,15 @@ const toObjectId = (id) => {
   }
 };
 
+/** Return reasons that should not restock inventory (unsellable / written off). */
+const isArchiveReturnReason = (reason) => {
+  const head = String(reason || '')
+    .split(':')[0]
+    .trim()
+    .toLowerCase();
+  return ['damaged', 'defective', 'expired'].includes(head);
+};
+
 // Generate a unique receipt number
 const generateUniqueReceiptNumber = async () => {
   let attempts = 0;
@@ -71,7 +80,8 @@ exports.getAllTransactions = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const transactions = await SalesTransaction.find({})
-      .select('-items.itemImage -items.variant -items.selectedSize -items.sku') // Optimized projection
+      // Keep variant/selectedSize/sku on items — needed for returns and receipts (only strip heavy image)
+      .select("-items.itemImage")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -461,8 +471,12 @@ exports.returnItems = async (req, res) => {
     originalTransaction.returnTransactionIds.push(returnTransaction._id);
     await originalTransaction.save();
 
-    // Restore stock for returned items
+    // Restore stock only for sellable returns (wrong item, wrong size, etc.)
     for (const item of returnItems) {
+      const rr = item.returnReason || returnReason;
+      if (isArchiveReturnReason(rr)) {
+        continue;
+      }
       try {
         const product = await Product.findById(item.productId);
         if (product) {

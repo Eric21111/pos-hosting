@@ -17,6 +17,7 @@ import {
   FaDownload,
   FaEye,
   FaEyeSlash,
+  FaInfoCircle,
   FaKey,
   FaLink,
   FaPalette,
@@ -174,6 +175,25 @@ const Settings = () => {
     }
   }, []);
 
+  const fetchArchives = useCallback(async () => {
+    setArchivesLoading(true);
+    try {
+      const response = await fetch(`${API_BASE}/api/archive`);
+      const data = await response.json();
+
+      if (data.success) {
+        setArchives(data.data || []);
+      } else {
+        setArchives([]);
+      }
+    } catch (error) {
+      console.error("Error fetching archives:", error);
+      setArchives([]);
+    } finally {
+      setArchivesLoading(false);
+    }
+  }, []);
+
   const handleGcashSave = async (e) => {
     e.preventDefault();
     setGcashMessage({ type: "", text: "" });
@@ -322,32 +342,29 @@ const Settings = () => {
   };
 
   useEffect(() => {
-    if (activeTab === "archives") {
+    if (activeTab !== "archives") return;
+    fetchArchives();
+    const intervalMs = 25000;
+    const id = setInterval(() => {
       fetchArchives();
-    }
+    }, intervalMs);
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        fetchArchives();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [activeTab, fetchArchives]);
+
+  useEffect(() => {
     if (activeTab === "gcash") {
       fetchGcashSettings();
     }
-  }, [activeTab]);
-
-  const fetchArchives = async () => {
-    setArchivesLoading(true);
-    try {
-      const response = await fetch(`${API_BASE}/api/archive`);
-      const data = await response.json();
-
-      if (data.success) {
-        setArchives(data.data || []);
-      } else {
-        setArchives([]);
-      }
-    } catch (error) {
-      console.error("Error fetching archives:", error);
-      setArchives([]);
-    } finally {
-      setArchivesLoading(false);
-    }
-  };
+  }, [activeTab, fetchGcashSettings]);
 
   const formatDateTime = (dateString) => {
     if (!dateString) return "-";
@@ -797,12 +814,25 @@ const Settings = () => {
                 </div>
               </div>
 
+              <div className="px-8 pb-4">
+                <div
+                  className={`rounded-xl p-4 flex items-start gap-3 ${isDark ? "bg-amber-900/15 border border-amber-800/40" : "bg-amber-50 border border-amber-100"}`}>
+                  <FaInfoCircle
+                    className={`w-5 h-5 shrink-0 mt-0.5 ${isDark ? "text-amber-400" : "text-amber-600"}`}
+                  />
+                  <p
+                    className={`text-sm leading-relaxed ${isDark ? "text-amber-100/90" : "text-amber-900/90"}`}>
+                    If you want to configure GCash, contact the developer for this.
+                  </p>
+                </div>
+              </div>
+
               { }
               <div className="px-8 pb-4">
                 <div
                   className={`rounded-xl p-4 flex items-start gap-3 ${isDark ? "bg-blue-900/10 border border-blue-900/30" : "bg-blue-50/70 border border-blue-100"}`}>
 
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#42A5F5] to-[#1565C0] flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#42A5F5] to-[#1565C0] flex items-center justify-center shrink-0 mt-0.5">
                     <FaShieldAlt className="w-3.5 h-3.5 text-white" />
                   </div>
                   <div>
