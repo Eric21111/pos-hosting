@@ -507,7 +507,7 @@ const CashRemittance = () => {
 
             {/* ═══════ Opening Float Edit Modal ═══════ */}
             {showFloatModal && (
-                <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" onClick={() => setShowFloatModal(false)}>
+                <div className="fixed inset-0 bg-black/40 z-[200] flex items-center justify-center" onClick={() => setShowFloatModal(false)}>
                     <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-bold text-gray-800">Set Opening Float</h3>
