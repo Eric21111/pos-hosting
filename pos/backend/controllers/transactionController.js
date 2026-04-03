@@ -810,13 +810,24 @@ exports.getDashboardStats = async (req, res) => {
                 }
               },
               {
+                $addFields: {
+                  effectiveSoldQty: {
+                    $cond: [
+                      { $eq: ['$items.returnStatus', 'Returned'] },
+                      0,
+                      { $ifNull: ['$items.quantity', 1] }
+                    ]
+                  }
+                }
+              },
+              {
                 $group: {
                   _id: null,
                   totalProfit: {
                     $sum: {
                       $multiply: [
                         { $subtract: [{ $ifNull: ['$items.price', 0] }, '$itemCostPrice'] },
-                        { $ifNull: ['$items.quantity', 1] }
+                        '$effectiveSoldQty'
                       ]
                     }
                   }
