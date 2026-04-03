@@ -19,6 +19,23 @@ const ViewProductModal = ({
     return Number.isFinite(n) ? n : 0;
   };
 
+  /** Hide variant/size rows that never received stock (no real batch rows). Show if qty>0 or any non-padding batch (incl. sold-out qty 0). */
+  const hasRealBatchHistory = (batches) => {
+    const list = Array.isArray(batches) ? batches : [];
+    if (list.length === 0) return false;
+    return list.some((b) => {
+      if (!b) return false;
+      if (toNum(b.qty) > 0) return true;
+      if (b.batchSlotPadding) return false;
+      return true;
+    });
+  };
+
+  const shouldShowStockRow = (lineQty, batches) => {
+    if (toNum(lineQty) > 0) return true;
+    return hasRealBatchHistory(batches);
+  };
+
   const formatMoneyRange = (nums, fallbackStr) => {
     const arr = (nums || []).filter((n) => typeof n === "number" && Number.isFinite(n));
     if (arr.length === 0) return fallbackStr;
@@ -586,6 +603,9 @@ const ViewProductModal = ({
                       : "Table: total + price per option"
                     : "Table: total + price per option"}
                 </div>
+                <div className={`text-[11px] ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
+                  Showing options that have stock or past batch history. Never-stocked combinations are hidden.
+                </div>
               </div>
 
               <div className="p-4">
@@ -634,6 +654,8 @@ const ViewProductModal = ({
                                 const variantData = variants?.[variantName];
                                 const variantQty = typeof variantData === 'number' ? variantData : (variantData && typeof variantData === 'object' ? variantData.quantity || 0 : 0);
                                 const batches = getBatchList(typeof variantData === "object" && variantData !== null ? variantData : null);
+
+                                if (!shouldShowStockRow(variantQty, batches)) return;
 
                                 // Format Variant for SKU
                                 const dynamicSku = generateDynamicSku(baseSku, variantName, size);
@@ -684,6 +706,8 @@ const ViewProductModal = ({
                             } else {
                               const stock = typeof sizeData === "object" && sizeData !== null && sizeData.quantity !== undefined ? sizeData.quantity : (typeof sizeData === "number" ? sizeData : 0);
                               const batches = getBatchList(typeof sizeData === "object" && sizeData !== null ? sizeData : null);
+                              if (!shouldShowStockRow(stock, batches)) return;
+
                               const dynamicSku = generateDynamicSku(baseSku, null, size);
 
                               rows.push(
@@ -730,6 +754,19 @@ const ViewProductModal = ({
                               );
                             }
                           });
+
+                          if (rows.length === 0) {
+                            rows.push(
+                              <tr key="no-visible-options">
+                                <td
+                                  colSpan={showPerBatchColumn ? 4 : 5}
+                                  className={`px-4 py-6 text-center text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}
+                                >
+                                  No options with stock or batch history yet. Stock in to add inventory for a variant.
+                                </td>
+                              </tr>
+                            );
+                          }
 
                           return rows;
                         })()}
