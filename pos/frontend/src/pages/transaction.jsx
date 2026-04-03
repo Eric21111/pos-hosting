@@ -34,7 +34,7 @@ import PrintReceiptModal from "../components/transaction/PrintReceiptModal";
 import RemittanceModal from "../components/transaction/RemittanceModal";
 import ReturnItemsModal from "../components/transaction/ReturnItemsModal";
 import ViewTransactionModal from "../components/transaction/ViewTransactionModal";
-import { API_BASE_URL } from "../config/api";
+import { API_BASE_URL, API_ENDPOINTS } from "../config/api";
 import { useAuth } from "../context/AuthContext";
 import { useDataCache } from "../context/DataCacheContext";
 import { useTheme } from "../context/ThemeContext";
@@ -109,6 +109,17 @@ const statusIcon = {
   Voided: <FaExclamationTriangle className="text-red-500" />
 };
 
+const normalizeDropdownOptions = (options) => {
+  if (!options?.length) return [];
+  if (typeof options[0] === "object" && options[0] !== null && "value" in options[0]) {
+    return options.map((o) => ({
+      value: String(o.value),
+      label: o.label ?? String(o.value)
+    }));
+  }
+  return options.map((o) => ({ value: o, label: o }));
+};
+
 const Dropdown = ({
   label,
   options,
@@ -119,6 +130,11 @@ const Dropdown = ({
 }) => {
   const dropdownRef = React.useRef(null);
   const { theme } = useTheme();
+  const normalizedOptions = React.useMemo(
+    () => normalizeDropdownOptions(options),
+    [options]
+  );
+  const selectedLabel = normalizedOptions.find((o) => o.value === selected)?.label ?? selected;
 
   React.useEffect(() => {
     const handleClickOutside = (event) => {
@@ -155,7 +171,7 @@ const Dropdown = ({
         }>
 
         <span className="text-sm font-medium">
-          {selected === "All" ? label : selected}
+          {selected === "All" ? label : selectedLabel}
         </span>
         <FaChevronDown
           className={`text-xs text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`} />
@@ -173,21 +189,21 @@ const Dropdown = ({
             }
             onClick={(e) => e.stopPropagation()}>
 
-            {options.map((option) =>
+            {normalizedOptions.map((option) =>
               <li
-                key={option}
+                key={option.value}
                 onClick={() => {
-                  onSelect(option);
+                  onSelect(option.value);
                   setIsOpen(false);
                 }}
-                className={`px-4 py-2 text-sm cursor-pointer transition-colors ${option === selected ?
+                className={`px-4 py-2 text-sm cursor-pointer transition-colors ${option.value === selected ?
                   "bg-[#F6EEE7] text-[#76462B] font-semibold" :
                   theme === "dark" ?
                     "text-gray-300 hover:bg-[#352F2A]" :
                     "text-gray-700 hover:bg-gray-50"}`
                 }>
 
-                {option}
+                {option.label}
               </li>
             )}
           </motion.ul>
@@ -234,11 +250,26 @@ const Transaction = () => {
   const [selectedTransactionIds, setSelectedTransactionIds] = useState([]);
   const [isExportSelectionMode, setIsExportSelectionMode] = useState(false);
   const [showRemittanceModal, setShowRemittanceModal] = useState(false);
+  const [staffList, setStaffList] = useState([]);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 350);
     return () => clearTimeout(timer);
   }, [search]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(API_ENDPOINTS.employees);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          setStaffList(data.data.filter((e) => e.status === "Active"));
+        }
+      } catch (err) {
+        console.error("Failed to load employees:", err);
+      }
+    })();
+  }, []);
 
   const isInitialMount = useRef(true);
   const hasLoaded = useRef(false);
@@ -429,9 +460,17 @@ const Transaction = () => {
       const matchesStatus =
         filters.status === "All" || trx.status === filters.status;
 
+      const selectedEmp =
+        filters.user !== "All" ?
+          staffList.find((e) => String(e._id) === filters.user) :
+          null;
+      const selectedEmpName = selectedEmp ?
+        (selectedEmp.name || `${selectedEmp.firstName || ""} ${selectedEmp.lastName || ""}`).trim() :
+        "";
       const matchesUser =
-        filters.user === "All" || trx.performedByName === filters.user;
-
+        filters.user === "All" ||
+        String(trx.performedById || "") === filters.user ||
+        (selectedEmpName && trx.performedByName === selectedEmpName);
 
       let matchesDate = true;
       if (filters.date === "Custom") {
@@ -491,7 +530,7 @@ const Transaction = () => {
       const dateB = new Date(b.checkedOutAt || b.createdAt || b.updatedAt || 0);
       return dateB - dateA;
     });
-  }, [transactions, search, filters, startDate, endDate]);
+  }, [transactions, search, filters, startDate, endDate, staffList]);
 
   const paginatedTransactions = useMemo(() => {
     const startIndex = (currentPage - 1) * rowsPerPage;
@@ -553,14 +592,24 @@ const Transaction = () => {
 
 
   const userDropdownOptions = useMemo(() => {
-    const uniqueUsers = new Set();
+    const fromStaff = staffList
+      .map((e) => ({
+        value: String(e._id),
+        label: (e.name || `${e.firstName || ""} ${e.lastName || ""}`).trim() || "Unknown"
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+    const seen = new Set(fromStaff.map((r) => r.value));
+    const fromTx = [];
     transactions.forEach((t) => {
-      if (t.performedByName) {
-        uniqueUsers.add(t.performedByName);
+      const id = t.performedById ? String(t.performedById) : "";
+      if (id && t.performedByName && !seen.has(id)) {
+        fromTx.push({ value: id, label: t.performedByName });
+        seen.add(id);
       }
     });
-    return ["All", ...Array.from(uniqueUsers).sort()];
-  }, [transactions]);
+    fromTx.sort((a, b) => a.label.localeCompare(b.label));
+    return [{ value: "All", label: "All" }, ...fromStaff, ...fromTx];
+  }, [staffList, transactions]);
 
   const handleRowClick = (trx) => {
     setSelectedTransaction(trx);
@@ -1346,9 +1395,10 @@ const Transaction = () => {
                   label="User"
                   options={userDropdownOptions}
                   selected={filters.user}
-                  onSelect={(value) =>
-                    setFilters((prev) => ({ ...prev, user: value }))
-                  }
+                  onSelect={(value) => {
+                    setFilters((prev) => ({ ...prev, user: value }));
+                    setCurrentPage(1);
+                  }}
                   isOpen={dropdownOpen.user}
                   setIsOpen={(value) =>
                     setDropdownOpen((prev) => ({ ...prev, user: value }))
