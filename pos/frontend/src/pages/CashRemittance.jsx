@@ -261,6 +261,8 @@ const CashRemittance = () => {
     const [dateRange, setDateRange] = useState([null, null]);
     const [pickerOpen, setPickerOpen] = useState(false);
     const [selectedRemittance, setSelectedRemittance] = useState(null);
+    const [userFilter, setUserFilter] = useState("");
+    const [staffList, setStaffList] = useState([]);
 
     // Global Opening Float
     const [globalFloat, setGlobalFloat] = useState(2000);
@@ -321,7 +323,21 @@ const CashRemittance = () => {
         }
     };
 
-    useEffect(() => { fetchRemittances(); fetchGlobalFloat(); }, []);
+    useEffect(() => {
+        fetchRemittances();
+        fetchGlobalFloat();
+        (async () => {
+            try {
+                const res = await fetch(API_ENDPOINTS.employees);
+                const data = await res.json();
+                if (data.success && Array.isArray(data.data)) {
+                    setStaffList(data.data.filter((e) => e.status === "Active"));
+                }
+            } catch (err) {
+                console.error("Error fetching employees:", err);
+            }
+        })();
+    }, []);
 
     const [startDate, endDate] = dateRange;
 
@@ -339,6 +355,28 @@ const CashRemittance = () => {
         return remittances.filter((remit) => isWithinDayBounds(remit, bounds.start, bounds.end));
     }, [remittances, datePreset, startDate, endDate]);
 
+    const userDropdownOptions = useMemo(() => {
+        const map = new Map();
+        staffList.forEach((e) => {
+            if (e?._id) {
+                const label = (e.name || `${e.firstName || ""} ${e.lastName || ""}`).trim() || "Unknown";
+                map.set(String(e._id), label);
+            }
+        });
+        remittances.forEach((r) => {
+            const id = r.employeeId ? String(r.employeeId) : "";
+            if (id && r.employeeName && !map.has(id)) map.set(id, r.employeeName);
+        });
+        return Array.from(map.entries())
+            .map(([id, name]) => ({ id, name }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+    }, [staffList, remittances]);
+
+    const userFilterLabel = useMemo(() => {
+        if (!userFilter) return "";
+        return userDropdownOptions.find((o) => o.id === userFilter)?.name || "";
+    }, [userFilter, userDropdownOptions]);
+
     const baseFiltered = useMemo(() => {
         const q = searchTerm.trim().toLowerCase();
         return dateFilteredRemittances.filter((remit) => {
@@ -347,15 +385,20 @@ const CashRemittance = () => {
                 remit.employeeName?.toLowerCase().includes(q) ||
                 remit._id.slice(-6).toLowerCase().includes(q);
 
+            const matchesUser =
+                !userFilter ||
+                String(remit.employeeId || "") === userFilter ||
+                (!remit.employeeId && userFilterLabel && remit.employeeName === userFilterLabel);
+
             const variance = remit.variance || 0;
             let matchesStatus = true;
             if (statusFilter === "BALANCED") matchesStatus = variance === 0;
             if (statusFilter === "OVER") matchesStatus = variance > 0;
             if (statusFilter === "SHORT") matchesStatus = variance < 0;
 
-            return matchesSearch && matchesStatus;
+            return matchesSearch && matchesUser && matchesStatus;
         });
-    }, [dateFilteredRemittances, searchTerm, statusFilter]);
+    }, [dateFilteredRemittances, searchTerm, statusFilter, userFilter, userFilterLabel]);
 
     const displayRows = useMemo(() => {
         if (salesSort === "highest") {
@@ -367,9 +410,29 @@ const CashRemittance = () => {
         return baseFiltered;
     }, [baseFiltered, salesSort]);
 
-    // ─── KPIs: same filters as table (date + search + status), not sort order ──────────────
+    const kpiPeriodLabel = useMemo(() => {
+        if (datePreset === "all") return "All dates";
+        if (datePreset === "custom" && !startDate) return "Select a range in the calendar";
+        if (datePreset === "custom" && startDate && endDate) {
+            const lo = startOfDay(startDate) <= startOfDay(endDate) ? startDate : endDate;
+            const hi = startOfDay(startDate) <= startOfDay(endDate) ? endDate : startDate;
+            const s = lo.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+            const e = hi.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+            return startOfDay(lo).getTime() === startOfDay(hi).getTime() ? s : `${s} – ${e}`;
+        }
+        if (datePreset === "custom" && startDate) {
+            return startDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+        }
+        if (datePreset === "today") return "Today";
+        if (datePreset === "yesterday") return "Yesterday";
+        if (datePreset === "week") return "This week";
+        if (datePreset === "month") return "This month";
+        return "All dates";
+    }, [datePreset, startDate, endDate]);
+
+    // ─── KPIs: date/range only (all loaded remittances when preset is "all"); table still uses search/status ──────────────
     const kpis = useMemo(() => {
-        const targetList = baseFiltered;
+        const targetList = dateFilteredRemittances;
         const totalNetSales = targetList.reduce((sum, r) => sum + (r.netSales || 0), 0);
         const totalRemitted = targetList.reduce((sum, r) => sum + (r.cashToRemit || 0), 0);
         const totalVariance = targetList.reduce((sum, r) => sum + (r.variance || 0), 0);
@@ -382,7 +445,7 @@ const CashRemittance = () => {
             unremittedCash: unremittedCash > 0 ? unremittedCash : 0,
             count: targetList.length
         };
-    }, [baseFiltered]);
+    }, [dateFilteredRemittances]);
 
     useEffect(() => {
         if (displayRows.length === 0) {
@@ -445,7 +508,9 @@ const CashRemittance = () => {
             {/* ═══════ ROW 1: KPIs (left) | Opening Float (right) ═══════ */}
             <div className="flex gap-6 items-start mb-6 mt-4">
                 {/* Left: 4 KPI Cards */}
-                <div className="flex-1 grid grid-cols-4 gap-3 min-w-0">
+                <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-400 mb-2">Totals — {kpiPeriodLabel}</p>
+                    <div className="grid grid-cols-4 gap-3 min-w-0">
                     <KpiCard
                         icon={FaChartLine}
                         label="Total Net Sales"
@@ -482,6 +547,7 @@ const CashRemittance = () => {
                         iconColor="text-red-500"
                         textColor="text-red-500"
                     />
+                    </div>
                 </div>
 
                 {/* Right: Opening Float — white card matching reference */}
@@ -570,9 +636,13 @@ const CashRemittance = () => {
                         </select>
                         <select
                             className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-300 cursor-pointer appearance-none pr-7 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M6%208L1%203h10z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[right_8px_center]"
-                            defaultValue=""
+                            value={userFilter}
+                            onChange={(e) => setUserFilter(e.target.value)}
                         >
-                            <option value="">By User</option>
+                            <option value="">All users</option>
+                            {userDropdownOptions.map(({ id, name }) => (
+                                <option key={id} value={id}>{name}</option>
+                            ))}
                         </select>
                         <select
                             className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-300 cursor-pointer appearance-none pr-7 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M6%208L1%203h10z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[right_8px_center]"
@@ -589,7 +659,7 @@ const CashRemittance = () => {
                             value={datePreset}
                             onChange={handleDatePresetChange}
                         >
-                            <option value="all">By Date</option>
+                            <option value="all">All dates</option>
                             <option value="today">Today</option>
                             <option value="yesterday">Yesterday</option>
                             <option value="week">This Week</option>
@@ -663,7 +733,7 @@ const CashRemittance = () => {
                                                 </div>
                                                 <h3 className="text-sm font-bold text-gray-800 mb-1">No Remittances Found</h3>
                                                 <p className="text-xs text-gray-500">
-                                                    {searchTerm || statusFilter !== 'ALL' || datePreset !== 'all'
+                                                    {searchTerm || statusFilter !== 'ALL' || datePreset !== 'all' || userFilter
                                                         ? "Try adjusting your filters."
                                                         : "No cash remittances have been submitted yet."}
                                                 </p>

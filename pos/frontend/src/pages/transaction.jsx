@@ -1231,7 +1231,7 @@ const Transaction = () => {
                   Ready to Remit?
                 </p>
                 <p className={`text-xs mt-0.5 ${theme === "dark" ? "text-blue-400/70" : "text-[#5a7a9a]"}`}>
-                  You can submit your remittance anytime
+                  Submit you remittance by the end of the day.
                 </p>
                 <button
                   className="mt-2 bg-[#1a3a5c] hover:bg-[#0f2a4a] text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center gap-2 transition-colors cursor-pointer"
