@@ -258,7 +258,7 @@ const CashRemittance = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("ALL");
     const [salesSort, setSalesSort] = useState("");
-    const [datePreset, setDatePreset] = useState("all");
+    const [datePreset, setDatePreset] = useState("today");
     const [dateRange, setDateRange] = useState([null, null]);
     const [pickerOpen, setPickerOpen] = useState(false);
     const [selectedRemittance, setSelectedRemittance] = useState(null);
@@ -619,6 +619,11 @@ const CashRemittance = () => {
                         valueColor="text-red-600"
                     />
                     </div>
+                    {datePreset === "all" && (
+                        <p className="text-[10px] text-gray-400 mt-2 leading-snug">
+                            All dates: totals include every sale and every slip in the system. Outstanding is max(0, net sales − remitted); it never shows negative.
+                        </p>
+                    )}
                 </div>
 
                 {/* Right: Opening Float — white card matching reference */}

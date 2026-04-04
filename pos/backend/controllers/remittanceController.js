@@ -156,7 +156,7 @@ exports.createRemittance = async (req, res) => {
  * GET /api/remittances/kpi-stats?startMs=&endMs=&employeeId=
  * Total Net Sales = sum of POS transaction totals (Completed / Partially Returned, excl. returns); opening float is not in transactions.
  * Total Remitted = sum of cashToRemit. Total Variance = sum of variance. Outstanding = max(0, net sales - remitted).
- * Prefer startMs/endMs (browser local window, epoch ms) — avoids TZ bugs from ISO + setHours on the server.
+ * Prefer startMs/endMs (browser local window, epoch ms). No date params = all-time (no artificial end date; includes null checkedOutAt via createdAt).
  */
 exports.getRemittanceKpiStats = async (req, res) => {
     try {
@@ -164,6 +164,7 @@ exports.getRemittanceKpiStats = async (req, res) => {
 
         let lo;
         let hi;
+        let allTime = false;
 
         if (startMs != null && endMs != null && String(startMs).trim() !== '' && String(endMs).trim() !== '') {
             const sm = Number(startMs);
@@ -183,32 +184,43 @@ exports.getRemittanceKpiStats = async (req, res) => {
                 return res.status(400).json({ success: false, message: 'Invalid endDate' });
             }
         } else {
-            lo = new Date(0);
-            hi = new Date(8640000000000000);
+            allTime = true;
         }
 
         const empIdStr =
             employeeId && String(employeeId).trim() ? String(employeeId).trim() : null;
 
-        const dateOr = {
-            $or: [
-                { checkedOutAt: { $gte: lo, $lte: hi } },
-                { checkedOutAt: { $exists: false }, createdAt: { $gte: lo, $lte: hi } }
-            ]
-        };
+        const transactionDateOr = allTime
+            ? null
+            : {
+                  $or: [
+                      { checkedOutAt: { $gte: lo, $lte: hi } },
+                      {
+                          $and: [
+                              {
+                                  $or: [
+                                      { checkedOutAt: { $exists: false } },
+                                      { checkedOutAt: null }
+                                  ]
+                              },
+                              { createdAt: { $gte: lo, $lte: hi } }
+                          ]
+                      }
+                  ]
+              };
 
         const salesMatch = {
-            ...dateOr,
             status: { $in: ['Completed', 'Partially Returned'] },
-            paymentMethod: { $ne: 'return' }
+            paymentMethod: { $ne: 'return' },
+            ...(transactionDateOr || {})
         };
         if (empIdStr) {
             salesMatch.performedById = empIdStr;
         }
 
         const returnMatch = {
-            ...dateOr,
-            paymentMethod: 'return'
+            paymentMethod: 'return',
+            ...(transactionDateOr || {})
         };
         if (empIdStr) {
             returnMatch.performedById = empIdStr;
@@ -218,9 +230,10 @@ exports.getRemittanceKpiStats = async (req, res) => {
             SalesTransaction.find(salesMatch).select('totalAmount').lean(),
             SalesTransaction.find(returnMatch).select('totalAmount').lean(),
             (() => {
-                const shiftMatch = {
-                    shiftDate: { $gte: lo, $lte: hi }
-                };
+                const shiftMatch = {};
+                if (!allTime) {
+                    shiftMatch.shiftDate = { $gte: lo, $lte: hi };
+                }
                 if (empIdStr && mongoose.Types.ObjectId.isValid(empIdStr)) {
                     shiftMatch.employeeId = new mongoose.Types.ObjectId(empIdStr);
                 }
