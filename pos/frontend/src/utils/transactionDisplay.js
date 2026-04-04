@@ -1,3 +1,24 @@
+const VARIANT_ONLY_SIZE_KEY = "__VARIANT_ONLY__";
+
+/** Strip placeholder suffix from itemName (e.g. "Name (__VARIANT_ONLY__)"). */
+export function cleanItemNameForDisplay(item) {
+  let name = String(item?.itemName || "").trim();
+  name = name.replace(/\s*\([^)]*__VARIANT_ONLY__[^)]*\)\s*$/i, "").trim();
+  return name || "Item";
+}
+
+/** Variant + size label for receipts/modals (hides internal size key). */
+export function formatItemVariantSizeLabel(item) {
+  const size = item?.selectedSize || item?.size || "";
+  const variant = String(item?.variant || item?.selectedVariation || "").trim();
+  if (size === VARIANT_ONLY_SIZE_KEY) {
+    return variant || "";
+  }
+  if (size && variant) return `${variant} / ${size}`;
+  if (size) return size;
+  return variant;
+}
+
 /** Line subtotal from item prices × qty (pre-discount). */
 export function lineSubtotalFromItems(transaction) {
   if (!transaction?.items?.length) return 0;

@@ -1,5 +1,7 @@
 import { FaPrint, FaTimes } from 'react-icons/fa';
 import {
+  cleanItemNameForDisplay,
+  formatItemVariantSizeLabel,
   lineSubtotalFromItems,
   resolveTransactionDiscount
 } from '../../utils/transactionDisplay';
@@ -159,6 +161,7 @@ const ViewTransactionModal = ({ isOpen, onClose, transaction, onReturnItems, onP
 
                 const displayQty = item.quantity;
                 const returnedQty = item.returnedQuantity || returnInfo?.quantity || 0;
+                const variantLabel = formatItemVariantSizeLabel(item);
 
                 return (
                   <div key={idx}>
@@ -172,8 +175,10 @@ const ViewTransactionModal = ({ isOpen, onClose, transaction, onReturnItems, onP
                       
                         {}
                         <div className={`col-span-4 text-sm ${isFullyReturned ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
-                          {item.itemName}
-                          {item.selectedSize && <span className="text-gray-500 text-xs ml-1">({item.selectedSize})</span>}
+                          {cleanItemNameForDisplay(item)}
+                          {variantLabel ?
+                          <span className="text-gray-500 text-xs ml-1">({variantLabel})</span> :
+                          null}
                         </div>
 
                         {}

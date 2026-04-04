@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaTimes, FaExclamationTriangle, FaMinus, FaPlus, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
-
-const VARIANT_ONLY_SIZE_KEY = "__VARIANT_ONLY__";
+import {
+  cleanItemNameForDisplay,
+  formatItemVariantSizeLabel
+} from '../../utils/transactionDisplay';
 
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A';
@@ -9,25 +11,6 @@ const formatDate = (dateString) => {
   const options = { year: 'numeric', month: 'long', day: 'numeric' };
   const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
   return `${date.toLocaleDateString('en-US', options)} at ${date.toLocaleTimeString('en-US', timeOptions)}`;
-};
-
-/** Strip placeholder-only suffix from itemName if present. */
-const cleanReturnItemName = (item) => {
-  let name = (item?.itemName || "").trim();
-  name = name.replace(/\s*\([^)]*__VARIANT_ONLY__[^)]*\)\s*$/i, "").trim();
-  return name || "Item";
-};
-
-/** Variant + size for display (same idea as receipt / void modals). */
-const formatVariantLabel = (item) => {
-  const size = item.selectedSize || item.size || "";
-  const variant = (item.variant || item.selectedVariation || "").trim();
-  if (size === VARIANT_ONLY_SIZE_KEY) {
-    return variant || "";
-  }
-  if (size && variant) return `${variant} / ${size}`;
-  if (size) return size;
-  return variant;
 };
 
 const returnReasons = [
@@ -337,7 +320,7 @@ const ReturnItemsModal = ({ isOpen, onClose, transaction, onConfirm }) => {
                 const isPartiallyReturned = item.returnStatus === 'Partially Returned';
                 const canReturn = !isFullyReturned && item.quantity > 0;
                 const availableQty = item.quantity;
-                const variantLabel = formatVariantLabel(item);
+                const variantLabel = formatItemVariantSizeLabel(item);
 
                 return (
                   <div
@@ -362,7 +345,7 @@ const ReturnItemsModal = ({ isOpen, onClose, transaction, onConfirm }) => {
                         className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed" />
                       
                         <span className={`text-sm truncate ${isFullyReturned ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
-                          {cleanReturnItemName(item)}
+                          {cleanItemNameForDisplay(item)}
                           {variantLabel ? (
                             <span className="text-gray-500 text-xs ml-1">({variantLabel})</span>
                           ) : null}
