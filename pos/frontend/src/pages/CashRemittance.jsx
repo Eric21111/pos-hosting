@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, forwardRef } from "react";
-import { startOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
+import { startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useAuth } from "../context/AuthContext";
@@ -431,21 +431,24 @@ const CashRemittance = () => {
         return "All dates";
     }, [datePreset, startDate, endDate]);
 
-    /** Same date window as KPI API (POS + remittance aggregates), aligned with date preset. */
+    /** Same local calendar window as the table; send ms so the server matches without TZ drift from toISOString+setHours. */
     const kpiQueryKey = useMemo(() => {
         if (datePreset === "all") return { all: true };
         if (datePreset === "custom" && !startDate) return { all: true };
         if (datePreset === "custom") {
             const end = endDate || startDate;
-            const lo = startOfDay(startDate) <= startOfDay(end) ? startOfDay(startDate) : startOfDay(end);
-            const hi = startOfDay(startDate) <= startOfDay(end) ? startOfDay(end) : startOfDay(startDate);
-            return { startDate: lo.toISOString(), endDate: hi.toISOString() };
+            const first = startOfDay(startDate) <= startOfDay(end) ? startDate : end;
+            const last = startOfDay(startDate) <= startOfDay(end) ? endDate || startDate : startDate;
+            return {
+                startMs: startOfDay(first).getTime(),
+                endMs: endOfDay(last).getTime()
+            };
         }
         const b = getPresetBounds(datePreset);
         if (!b) return { all: true };
         return {
-            startDate: startOfDay(b.start).toISOString(),
-            endDate: startOfDay(b.end).toISOString()
+            startMs: startOfDay(b.start).getTime(),
+            endMs: endOfDay(b.end).getTime()
         };
     }, [datePreset, startDate, endDate]);
 
@@ -464,8 +467,8 @@ const CashRemittance = () => {
             try {
                 const params = new URLSearchParams();
                 if (!kpiQueryKey.all) {
-                    if (kpiQueryKey.startDate) params.set("startDate", kpiQueryKey.startDate);
-                    if (kpiQueryKey.endDate) params.set("endDate", kpiQueryKey.endDate);
+                    params.set("startMs", String(kpiQueryKey.startMs));
+                    params.set("endMs", String(kpiQueryKey.endMs));
                 }
                 if (userFilter) params.set("employeeId", userFilter);
                 const qs = params.toString();
@@ -607,7 +610,7 @@ const CashRemittance = () => {
                     />
                     <KpiCard
                         icon={FaClock}
-                        label="Unremitted"
+                        label="Outstanding (Unremitted)"
                         value={kpiLoading ? "…" : formatCurrency(kpiStats.unremittedCash)}
                         barGradient="linear-gradient(180deg, #B91C1C 0%, #EF4444 100%)"
                         iconBg="bg-red-50"

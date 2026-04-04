@@ -153,31 +153,38 @@ exports.createRemittance = async (req, res) => {
 };
 
 /**
- * GET /api/remittances/kpi-stats?startDate=&endDate=&employeeId=
- * POS net sales from transactions vs remittance slips — for dashboard KPIs.
- * Omit startDate/endDate for all-time (epoch → now).
+ * GET /api/remittances/kpi-stats?startMs=&endMs=&employeeId=
+ * Total Net Sales = sum of POS transaction totals (Completed / Partially Returned, excl. returns); opening float is not in transactions.
+ * Total Remitted = sum of cashToRemit. Total Variance = sum of variance. Outstanding = max(0, net sales - remitted).
+ * Prefer startMs/endMs (browser local window, epoch ms) — avoids TZ bugs from ISO + setHours on the server.
  */
 exports.getRemittanceKpiStats = async (req, res) => {
     try {
-        const { startDate, endDate, employeeId } = req.query;
+        const { startMs, endMs, startDate, endDate, employeeId } = req.query;
 
-        let lo = new Date(0);
-        let hi = new Date();
-        hi.setHours(23, 59, 59, 999);
+        let lo;
+        let hi;
 
-        if (startDate) {
-            lo = new Date(startDate);
+        if (startMs != null && endMs != null && String(startMs).trim() !== '' && String(endMs).trim() !== '') {
+            const sm = Number(startMs);
+            const em = Number(endMs);
+            if (!Number.isFinite(sm) || !Number.isFinite(em)) {
+                return res.status(400).json({ success: false, message: 'Invalid startMs or endMs' });
+            }
+            lo = new Date(sm);
+            hi = new Date(em);
+        } else if (startDate || endDate) {
+            lo = startDate ? new Date(startDate) : new Date(0);
+            hi = endDate ? new Date(endDate) : new Date(8640000000000000);
             if (Number.isNaN(lo.getTime())) {
                 return res.status(400).json({ success: false, message: 'Invalid startDate' });
             }
-            lo.setHours(0, 0, 0, 0);
-        }
-        if (endDate) {
-            hi = new Date(endDate);
             if (Number.isNaN(hi.getTime())) {
                 return res.status(400).json({ success: false, message: 'Invalid endDate' });
             }
-            hi.setHours(23, 59, 59, 999);
+        } else {
+            lo = new Date(0);
+            hi = new Date(8640000000000000);
         }
 
         const empIdStr =
