@@ -1,4 +1,8 @@
 import { FaPrint, FaTimes } from 'react-icons/fa';
+import {
+  lineSubtotalFromItems,
+  resolveTransactionDiscount
+} from '../../utils/transactionDisplay';
 
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A';
@@ -50,28 +54,24 @@ const ViewTransactionModal = ({ isOpen, onClose, transaction, onReturnItems, onP
   }
 
 
-  const subtotal = transaction.items?.reduce((sum, item) => {
-    return sum + (item.price || item.itemPrice || 0) * (item.quantity || 1);
-  }, 0) || transaction.totalAmount || 0;
-
-
-  const discountAmount = transaction.discountAmount || 0;
-
+  const subtotal = lineSubtotalFromItems(transaction) || transaction.totalAmount || 0;
 
   const totalReturned = transaction.returnTransactions?.reduce((sum, returnTrx) => {
     return sum + (returnTrx.totalAmount || 0);
   }, 0) || 0;
 
+  const canReturn = transaction.status === 'Completed' || transaction.status === 'Partially Returned';
+  const hasReturns = (transaction.returnTransactions?.length || 0) > 0;
+
+  const discountAmount = resolveTransactionDiscount(transaction, subtotal, {
+    skipInference: hasReturns
+  });
 
   const originalTotal = subtotal - discountAmount;
   const adjustedTotal = originalTotal - totalReturned;
 
-
   const amountPaid = transaction.amountReceived || 0;
   const change = transaction.changeGiven || 0;
-
-  const canReturn = transaction.status === 'Completed' || transaction.status === 'Partially Returned';
-  const hasReturns = totalReturned > 0;
 
 
   const getItemReturnInfo = (item) => {

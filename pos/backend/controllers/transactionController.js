@@ -251,7 +251,11 @@ exports.createTransaction = async (req, res) => {
       pwdId: pwdId || null,
       referenceNo: referenceNo || null,
       originalTransactionId: originalTransactionId || null,
-      checkedOutAt: checkedOutAt || new Date()
+      checkedOutAt: checkedOutAt || new Date(),
+      appliedDiscountIds:
+        Array.isArray(appliedDiscountIds) && appliedDiscountIds.length > 0 ?
+          appliedDiscountIds.map((id) => toObjectId(id)).filter(Boolean) :
+          undefined
     };
 
     // Validate that we have at least one valid item
