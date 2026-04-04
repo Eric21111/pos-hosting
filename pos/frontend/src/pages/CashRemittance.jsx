@@ -621,7 +621,7 @@ const CashRemittance = () => {
                     </div>
                     {datePreset === "all" && (
                         <p className="text-[10px] text-gray-400 mt-2 leading-snug">
-                            All dates: totals include every sale and every slip in the system. Outstanding is max(0, net sales − remitted); it never shows negative.
+                            All dates: totals include every sale and every slip in the system.
                         </p>
                     )}
                 </div>
