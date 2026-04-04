@@ -183,6 +183,11 @@ const CashTurnOverSlipModal = ({
                                                 </div>
                                             ))}
                                         </div>
+                                    ) : totalCashOnHand > 0 ? (
+                                        <p className="text-xs text-gray-600">
+                                            Quick total: <span className="font-semibold">{formatCurrency(totalCashOnHand)}</span>
+                                            {" "}(no per-denomination breakdown).
+                                        </p>
                                     ) : (
                                         <p className="text-xs text-gray-400 italic">No cash counted.</p>
                                     )}
