@@ -1,5 +1,5 @@
 /**
- * Human-readable rows for Manage Data → PDF / Excel only.
+ * Human-readable rows for Manage Data → PDF / CSV only.
  * Full JSON backup remains unchanged for import/restore.
  */
 
@@ -35,7 +35,7 @@ function shortRef(id) {
   return s.length > 10 ? s.slice(-8) : s;
 }
 
-/** Plain PHP amounts for Excel/PDF (avoids ₱/encoding issues). */
+/** Plain PHP amounts for CSV/PDF (avoids ₱/encoding issues). */
 function formatPhp(n) {
   const x = Number(n);
   if (!Number.isFinite(x)) return "0.00";

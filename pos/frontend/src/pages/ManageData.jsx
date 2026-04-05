@@ -21,7 +21,6 @@ import {
   FaTrash } from
 "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import * as XLSX from "xlsx";
 import SuccessModal from "../components/inventory/SuccessModal";
 import Header from "../components/shared/header";
 import { API_BASE_URL as API_BASE } from "../config/api";
@@ -196,7 +195,7 @@ const DataSelectionModal = memo(
     showFormatPicker
   }) => {
     const [selected, setSelected] = useState({});
-    const [exportFormat, setExportFormat] = useState("excel");
+    const [exportFormat, setExportFormat] = useState("csv");
     const isDark = theme === "dark";
 
     useEffect(() => {
@@ -204,7 +203,7 @@ const DataSelectionModal = memo(
         const initial = {};
         collections.forEach((c) => initial[c.key] = false);
         setSelected(initial);
-        setExportFormat("excel");
+        setExportFormat("csv");
       }
     }, [isOpen, collections]);
 
@@ -321,9 +320,9 @@ const DataSelectionModal = memo(
               </label>
               <div className="flex gap-3">
                 <button
-                onClick={() => setExportFormat("excel")}
+                onClick={() => setExportFormat("csv")}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all border-2 ${
-                exportFormat === "excel" ?
+                exportFormat === "csv" ?
                 "border-green-500 bg-green-50 text-green-700 shadow-md shadow-green-100" :
                 isDark ?
                 "border-gray-600 bg-[#1E1B18] text-gray-400 hover:border-gray-500" :
@@ -331,7 +330,7 @@ const DataSelectionModal = memo(
                 }>
                 
                   <FaFileExcel className="w-4 h-4" />
-                  Excel (.xlsx)
+                  CSV (.csv)
                 </button>
                 <button
                 onClick={() => setExportFormat("pdf")}
@@ -636,8 +635,8 @@ const ManageDataInner = ({ verifiedPin }) => {
       const timestamp = new Date().toISOString().split("T")[0];
 
       try {
-        if (format === "excel") {
-          exportToExcel(data, timestamp);
+        if (format === "csv") {
+          exportToCsv(data, timestamp);
         } else {
           exportToPdf(data, timestamp);
         }
@@ -707,12 +706,23 @@ const ManageDataInner = ({ verifiedPin }) => {
     join(" ");
   };
 
-  const exportToExcel = (data, timestamp) => {
-    const wb = XLSX.utils.book_new();
+  const csvEscape = (value) => {
+    const s = String(value ?? "");
+    if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+    return s;
+  };
+
+  /**
+   * Same sections/rows for CSV and PDF (business export + filters).
+   * @returns {{ sections: { key: string, name: string, flatRecords: Record<string, unknown>[] }[], exportedCounts: Record<string, number> }}
+   */
+  const buildExportSections = (data) => {
     /** @type {Record<string, number>} */
     const exportedCounts = {};
+    /** @type { { key: string, name: string, flatRecords: Record<string, unknown>[] }[] } */
+    const sections = [];
 
-    Object.entries(data.data).forEach(([key, records]) => {
+    Object.entries(data.data || {}).forEach(([key, records]) => {
       if (!records || records.length === 0) return;
       const businessRows = recordsForBusinessExport(key, records);
       let flatRecords;
@@ -726,75 +736,75 @@ const ManageDataInner = ({ verifiedPin }) => {
         flatRecords = records.map((record) => flattenObject(record));
       }
       exportedCounts[key] = flatRecords.length;
-      const ws = XLSX.utils.json_to_sheet(flatRecords);
-
-      const colWidths = Object.keys(flatRecords[0] || {}).map((key) => {
-        const maxLen = Math.max(
-          key.length,
-          ...flatRecords.map((r) => String(r[key] || "").length)
-        );
-        return { wch: Math.min(maxLen + 2, 50) };
-      });
-      ws["!cols"] = colWidths;
-
-      const collectionName =
-      collections.find((c) => c.key === key)?.name || key;
-      const sheetName = collectionName.substring(0, 31);
-      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      const name = collections.find((c) => c.key === key)?.name || key;
+      sections.push({ key, name, flatRecords });
     });
 
-    const summaryData = data.summary.map((s) => ({
-      Collection: s.name,
-      "Records Exported": exportedCounts[s.key] ?? s.count
-    }));
+    return { sections, exportedCounts };
+  };
+
+  const exportToCsv = (data, timestamp) => {
+    const { sections, exportedCounts } = buildExportSections(data);
+    const lines = [];
+    lines.push("POS Data Export");
+    lines.push(`Exported: ${new Date().toLocaleString()}`);
+    lines.push("");
+
+    sections.forEach(({ name, flatRecords }) => {
+      lines.push(`=== ${name} (${flatRecords.length} records) ===`);
+      if (flatRecords.length === 0) {
+        lines.push("");
+        return;
+      }
+      const headers = Object.keys(flatRecords[0] || {});
+      lines.push(headers.map(csvEscape).join(","));
+      flatRecords.forEach((row) => {
+        lines.push(headers.map((h) => csvEscape(row[h])).join(","));
+      });
+      lines.push("");
+    });
+
+    lines.push("=== Export Summary ===");
+    lines.push(["Collection", "Records Exported"].map(csvEscape).join(","));
     const totalExported = data.summary.reduce(
       (sum, s) => sum + (exportedCounts[s.key] ?? s.count),
       0
     );
-    summaryData.push({
-      Collection: "TOTAL",
-      "Records Exported": totalExported
+    data.summary.forEach((s) => {
+      const n = exportedCounts[s.key] ?? s.count;
+      lines.push([csvEscape(s.name), csvEscape(String(n))].join(","));
     });
-    const summaryWs = XLSX.utils.json_to_sheet(summaryData);
-    summaryWs["!cols"] = [{ wch: 30 }, { wch: 20 }];
-    XLSX.utils.book_append_sheet(wb, summaryWs, "Export Summary");
+    lines.push([csvEscape("TOTAL"), csvEscape(String(totalExported))].join(","));
 
-    XLSX.writeFile(wb, `POS_Data_Export_${timestamp}.xlsx`);
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + lines.join("\r\n")], {
+      type: "text/csv;charset=utf-8;"
+    });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `POS_Data_Export_${timestamp}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
   };
 
   const exportToPdf = (data, timestamp) => {
+    const { sections, exportedCounts } = buildExportSections(data);
     const doc = new jsPDF({
       orientation: "landscape",
       unit: "mm",
       format: "a4"
     });
     let isFirstPage = true;
-    /** @type {Record<string, number>} */
-    const exportedCounts = {};
 
-    Object.entries(data.data).forEach(([key, records]) => {
-      if (!records || records.length === 0) return;
-      const businessRows = recordsForBusinessExport(key, records);
-      let flatRecords;
-      if (hasBusinessExportSchema(key)) {
-        if (businessRows.length === 0) {
-          exportedCounts[key] = 0;
-          return;
-        }
-        flatRecords = businessRows;
-      } else {
-        flatRecords = records.map((record) => flattenObject(record));
-      }
-      exportedCounts[key] = flatRecords.length;
-
+    sections.forEach(({ name: collectionName, flatRecords }) => {
       if (!isFirstPage) doc.addPage();
       isFirstPage = false;
 
-      const collectionName =
-      collections.find((c) => c.key === key)?.name || key;
       const headers = Object.keys(flatRecords[0] || {});
-      const importantHeaders = headers.slice(0, 12);
-      const colWidth = (297 - 28) / importantHeaders.length;
+      const nCols = Math.max(headers.length, 1);
+      const colWidth = (297 - 28) / nCols;
       const startY = 28;
 
       doc.setFontSize(16);
@@ -804,13 +814,20 @@ const ManageDataInner = ({ verifiedPin }) => {
       doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
       doc.text(`Exported: ${new Date().toLocaleString()}`, 14, 21);
+      doc.setFontSize(7);
+      doc.setTextColor(120, 120, 120);
+      doc.text(
+        "Same columns and rows as CSV export; long values may wrap.",
+        14,
+        25
+      );
 
       doc.setFillColor(173, 127, 101);
       doc.rect(14, startY, 297 - 28, 8, "F");
-      doc.setFontSize(7);
+      doc.setFontSize(6);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(255, 255, 255);
-      importantHeaders.forEach((h, i) => {
+      headers.forEach((h, i) => {
         doc.text(formatHeaderName(h), 15 + i * colWidth, startY + 5.5, {
           maxWidth: colWidth - 2
         });
@@ -828,9 +845,9 @@ const ManageDataInner = ({ verifiedPin }) => {
           doc.rect(14, y, 297 - 28, 5, "F");
         }
 
-        doc.setFontSize(6);
-        importantHeaders.forEach((h, colIdx) => {
-          const value = String(record[h] ?? "").substring(0, 40);
+        doc.setFontSize(5);
+        headers.forEach((h, colIdx) => {
+          const value = String(record[h] ?? "");
           doc.text(value, 15 + colIdx * colWidth, y + 3.5, {
             maxWidth: colWidth - 2
           });
@@ -841,14 +858,16 @@ const ManageDataInner = ({ verifiedPin }) => {
         doc.setFontSize(7);
         doc.setTextColor(150, 150, 150);
         doc.text(
-          `... and ${flatRecords.length - maxRows} more records (see Excel export for complete data)`,
+          `... and ${flatRecords.length - maxRows} more rows (see CSV for full data)`,
           14,
           200
         );
       }
     });
 
-    doc.addPage();
+    if (sections.length > 0) {
+      doc.addPage();
+    }
     doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(60, 60, 60);
@@ -1034,7 +1053,7 @@ const ManageDataInner = ({ verifiedPin }) => {
               <p
               className={`text-sm mb-6 flex-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
               
-                Export all your data as PDF or Excel. Select which collections
+                Export all your data as PDF or CSV. Select which collections
                 to export. A JSON backup is always included.
               </p>
               <button
