@@ -1530,6 +1530,11 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
       transparent
       animationType="slide"
       onRequestClose={handleClose}
+      supportedOrientations={
+        Platform.OS === "ios"
+          ? ["portrait", "portrait-upside-down"]
+          : undefined
+      }
     >
       <View style={s.overlay}>
         <View style={s.card}>

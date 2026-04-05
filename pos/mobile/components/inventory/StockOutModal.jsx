@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -261,6 +262,11 @@ const StockOutModal = ({ visible, onClose, product, onConfirm, loading }) => {
       transparent
       animationType="slide"
       onRequestClose={handleClose}
+      supportedOrientations={
+        Platform.OS === "ios"
+          ? ["portrait", "portrait-upside-down"]
+          : undefined
+      }
     >
       <View style={styles.overlay}>
         <View style={styles.card}>

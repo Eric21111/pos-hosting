@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Picker } from "@react-native-picker/picker";
 import * as ExpoFileSystem from "expo-file-system/legacy";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
@@ -26,6 +25,7 @@ import {
 } from "react-native";
 import AddBrandModal from "../components/AddBrandModal";
 import AddCategoryModal from "../components/AddCategoryModal";
+import FormSelect from "../components/FormSelect";
 import {
   COMMON_COLORS,
   VARIANT_ONLY_KEY,
@@ -43,6 +43,9 @@ import {
 import { brandPartnerAPI, categoryAPI, productAPI } from "../services/api";
 
 const ADD_PRODUCT_DRAFT_KEY = "addProductFormDraftMobile";
+
+/** Android: hint text defaults can match white backgrounds; set explicitly. */
+const PLACEHOLDER_PH = "#9ca3af";
 
 const STEPS = [
   { id: 1, label: "Basic Info" },
@@ -236,6 +239,46 @@ export default function AddItem({ onBack, item, isEditing = false }) {
     form.brandName &&
     form.brandName !== "Default" &&
     !partnerNames.includes(form.brandName);
+
+  const categorySelectItems = useMemo(
+    () => [
+      { label: "Select category", value: "" },
+      ...parentCategories.map((c) => ({ label: c, value: c })),
+    ],
+    []
+  );
+
+  const subcategorySelectItems = useMemo(
+    () => [
+      { label: "Select subcategory", value: "" },
+      ...subcategoryOptions.map((s) => ({ label: s, value: s })),
+      { label: "+ Add Subcategory", value: "__add_new__" },
+    ],
+    [subcategoryOptions]
+  );
+
+  const brandSelectItems = useMemo(() => {
+    const items = [
+      { label: "Default", value: "Default" },
+      ...partnerNames.map((n) => ({ label: n, value: n })),
+      { label: "+ Add Brand", value: "__add_new__" },
+    ];
+    if (legacyBrandSelected) {
+      items.push({
+        label: `${form.brandName} (Inactive)`,
+        value: form.brandName,
+      });
+    }
+    return items;
+  }, [partnerNames, legacyBrandSelected, form.brandName]);
+
+  const unitSelectItems = useMemo(
+    () => [
+      { label: "Select unit", value: "" },
+      ...UNIT_OPTIONS.map((u) => ({ label: u.label, value: u.value })),
+    ],
+    []
+  );
 
   const variantStr = useMemo(
     () => selectedVariants.filter(Boolean).join(", "),
@@ -815,95 +858,71 @@ export default function AddItem({ onBack, item, isEditing = false }) {
       <Text style={styles.label}>Product Name *</Text>
       <TextInput
         style={styles.input}
+        placeholderTextColor={PLACEHOLDER_PH}
+        placeholder="Enter product name"
         value={form.itemName}
         onChangeText={(t) => setForm((f) => ({ ...f, itemName: t }))}
+        underlineColorAndroid="transparent"
       />
       <Text style={styles.label}>Category *</Text>
-      <View style={styles.pickerWrap}>
-        <Picker
-          selectedValue={form.category}
-          onValueChange={(v) =>
-            setForm((f) => ({ ...f, category: v, subCategory: "" }))
-          }
-        >
-          <Picker.Item label="Select category" value="" />
-          {parentCategories.map((c) => (
-            <Picker.Item key={c} label={c} value={c} />
-          ))}
-        </Picker>
-      </View>
+      <FormSelect
+        items={categorySelectItems}
+        selectedValue={form.category}
+        onValueChange={(v) =>
+          setForm((f) => ({ ...f, category: v, subCategory: "" }))
+        }
+      />
       <Text style={styles.label}>Subcategory *</Text>
-      <View style={styles.pickerWrap}>
-        <Picker
-          selectedValue={form.subCategory}
-          enabled={!!form.category}
-          onValueChange={(v) => {
-            if (v === "__add_new__") {
-              setCategoryModalForSub(true);
-              setShowAddCategoryModal(true);
-              return;
-            }
-            setForm((f) => ({ ...f, subCategory: v }));
-          }}
-        >
-          <Picker.Item label="Select subcategory" value="" />
-          {subcategoryOptions.map((s) => (
-            <Picker.Item key={s} label={s} value={s} />
-          ))}
-          <Picker.Item label="+ Add Subcategory" value="__add_new__" />
-        </Picker>
-      </View>
+      <FormSelect
+        items={subcategorySelectItems}
+        selectedValue={form.subCategory}
+        enabled={!!form.category}
+        onValueChange={(v) => {
+          if (v === "__add_new__") {
+            setCategoryModalForSub(true);
+            setShowAddCategoryModal(true);
+            return;
+          }
+          setForm((f) => ({ ...f, subCategory: v }));
+        }}
+      />
       <Text style={styles.label}>Brand Partner *</Text>
-      <View style={styles.pickerWrap}>
-        <Picker
-          selectedValue={form.brandName}
-          onValueChange={(v) => {
-            if (v === "__add_new__") {
-              setShowAddBrandModal(true);
-              return;
-            }
-            setForm((f) => ({ ...f, brandName: v }));
-          }}
-        >
-          <Picker.Item label="Default" value="Default" />
-          {partnerNames.map((n) => (
-            <Picker.Item key={n} label={n} value={n} />
-          ))}
-          <Picker.Item label="+ Add Brand" value="__add_new__" />
-          {legacyBrandSelected && (
-            <Picker.Item
-              label={`${form.brandName} (Inactive)`}
-              value={form.brandName}
-            />
-          )}
-        </Picker>
-      </View>
+      <FormSelect
+        items={brandSelectItems}
+        selectedValue={form.brandName}
+        onValueChange={(v) => {
+          if (v === "__add_new__") {
+            setShowAddBrandModal(true);
+            return;
+          }
+          setForm((f) => ({ ...f, brandName: v }));
+        }}
+      />
       <Text style={styles.label}>Unit of measure *</Text>
-      <View style={styles.pickerWrap}>
-        <Picker
-          selectedValue={form.unitOfMeasure}
-          onValueChange={(v) => setForm((f) => ({ ...f, unitOfMeasure: v }))}
-        >
-          {UNIT_OPTIONS.map((u) => (
-            <Picker.Item key={u.value} label={u.label} value={u.value} />
-          ))}
-        </Picker>
-      </View>
+      <FormSelect
+        items={unitSelectItems}
+        selectedValue={form.unitOfMeasure}
+        onValueChange={(v) => setForm((f) => ({ ...f, unitOfMeasure: v }))}
+      />
       <Text style={styles.label}>Cost / Selling (simple product)</Text>
       <View style={styles.row2}>
         <TextInput
           style={[styles.input, styles.flex1]}
           keyboardType="decimal-pad"
-          placeholder="Cost"
+          placeholderTextColor={PLACEHOLDER_PH}
+          placeholder="Cost (₱)"
           value={String(form.costPrice)}
           onChangeText={(t) => setForm((f) => ({ ...f, costPrice: t }))}
+          underlineColorAndroid="transparent"
         />
         <TextInput
           style={[styles.input, styles.flex1]}
           keyboardType="decimal-pad"
-          placeholder="Selling"
+          placeholderTextColor={PLACEHOLDER_PH}
+          placeholder="Selling price (₱)"
           value={String(form.itemPrice)}
           onChangeText={(t) => setForm((f) => ({ ...f, itemPrice: t }))}
+          underlineColorAndroid="transparent"
         />
       </View>
       <View style={styles.switchRow}>
@@ -964,6 +983,7 @@ export default function AddItem({ onBack, item, isEditing = false }) {
                       <TextInput
                         style={[styles.input, styles.flex1]}
                         keyboardType="decimal-pad"
+                        placeholderTextColor={PLACEHOLDER_PH}
                         placeholder="Cost"
                         value={String(sd.costPrice ?? "")}
                         onChangeText={(t) =>
@@ -972,10 +992,12 @@ export default function AddItem({ onBack, item, isEditing = false }) {
                             [size]: { ...p[size], costPrice: t },
                           }))
                         }
+                        underlineColorAndroid="transparent"
                       />
                       <TextInput
                         style={[styles.input, styles.flex1]}
                         keyboardType="decimal-pad"
+                        placeholderTextColor={PLACEHOLDER_PH}
                         placeholder="Price"
                         value={String(sd.price ?? "")}
                         onChangeText={(t) =>
@@ -984,6 +1006,7 @@ export default function AddItem({ onBack, item, isEditing = false }) {
                             [size]: { ...p[size], price: t },
                           }))
                         }
+                        underlineColorAndroid="transparent"
                       />
                     </View>
                   )}
@@ -1012,86 +1035,56 @@ export default function AddItem({ onBack, item, isEditing = false }) {
           <Text style={styles.label}>Product Name *</Text>
           <TextInput
             style={styles.input}
-            placeholder="Product name"
+            placeholderTextColor={PLACEHOLDER_PH}
+            placeholder="Enter product name"
             value={form.itemName}
             onChangeText={(t) => setForm((f) => ({ ...f, itemName: t }))}
+            underlineColorAndroid="transparent"
           />
           <Text style={styles.label}>Category *</Text>
-          <View style={styles.pickerWrap}>
-            <Picker
-              selectedValue={form.category}
-              onValueChange={(v) =>
-                setForm((f) => ({ ...f, category: v, subCategory: "" }))
-              }
-            >
-              <Picker.Item label="Select category" value="" />
-              {parentCategories.map((c) => (
-                <Picker.Item key={c} label={c} value={c} />
-              ))}
-            </Picker>
-          </View>
+          <FormSelect
+            items={categorySelectItems}
+            selectedValue={form.category}
+            onValueChange={(v) =>
+              setForm((f) => ({ ...f, category: v, subCategory: "" }))
+            }
+          />
           <Text style={styles.label}>Subcategory *</Text>
-          <View style={styles.pickerWrap}>
-            <Picker
-              selectedValue={form.subCategory}
-              enabled={!!form.category}
-              onValueChange={(v) => {
-                if (v === "__add_new__") {
-                  setCategoryModalForSub(true);
-                  setShowAddCategoryModal(true);
-                  return;
-                }
-                setForm((f) => ({ ...f, subCategory: v }));
-                setSelectedVariants([]);
-                setVariantQuantities({});
-                setVariantPrices({});
-                setVariantCostPrices({});
-              }}
-            >
-              <Picker.Item label="Select subcategory" value="" />
-              {subcategoryOptions.map((s) => (
-                <Picker.Item key={s} label={s} value={s} />
-              ))}
-              <Picker.Item label="+ Add Subcategory" value="__add_new__" />
-            </Picker>
-          </View>
+          <FormSelect
+            items={subcategorySelectItems}
+            selectedValue={form.subCategory}
+            enabled={!!form.category}
+            onValueChange={(v) => {
+              if (v === "__add_new__") {
+                setCategoryModalForSub(true);
+                setShowAddCategoryModal(true);
+                return;
+              }
+              setForm((f) => ({ ...f, subCategory: v }));
+              setSelectedVariants([]);
+              setVariantQuantities({});
+              setVariantPrices({});
+              setVariantCostPrices({});
+            }}
+          />
           <Text style={styles.label}>Brand Partner *</Text>
-          <View style={styles.pickerWrap}>
-            <Picker
-              selectedValue={form.brandName}
-              onValueChange={(v) => {
-                if (v === "__add_new__") {
-                  setShowAddBrandModal(true);
-                  return;
-                }
-                setForm((f) => ({ ...f, brandName: v }));
-              }}
-            >
-              <Picker.Item label="Default" value="Default" />
-              {partnerNames.map((n) => (
-                <Picker.Item key={n} label={n} value={n} />
-              ))}
-              <Picker.Item label="+ Add Brand" value="__add_new__" />
-              {legacyBrandSelected && (
-                <Picker.Item
-                  label={`${form.brandName} (Inactive)`}
-                  value={form.brandName}
-                />
-              )}
-            </Picker>
-          </View>
+          <FormSelect
+            items={brandSelectItems}
+            selectedValue={form.brandName}
+            onValueChange={(v) => {
+              if (v === "__add_new__") {
+                setShowAddBrandModal(true);
+                return;
+              }
+              setForm((f) => ({ ...f, brandName: v }));
+            }}
+          />
           <Text style={styles.label}>Unit of measure *</Text>
-          <View style={styles.pickerWrap}>
-            <Picker
-              selectedValue={form.unitOfMeasure}
-              onValueChange={(v) => setForm((f) => ({ ...f, unitOfMeasure: v }))}
-            >
-              <Picker.Item label="Select unit" value="" />
-              {UNIT_OPTIONS.map((u) => (
-                <Picker.Item key={u.value} label={u.label} value={u.value} />
-              ))}
-            </Picker>
-          </View>
+          <FormSelect
+            items={unitSelectItems}
+            selectedValue={form.unitOfMeasure}
+            onValueChange={(v) => setForm((f) => ({ ...f, unitOfMeasure: v }))}
+          />
           <Text style={styles.label}>Product images</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <TouchableOpacity style={styles.addImgBox} onPress={pickImage}>
@@ -1130,7 +1123,9 @@ export default function AddItem({ onBack, item, isEditing = false }) {
             style={styles.input}
             value={optionGroup1Name}
             onChangeText={setOptionGroup1Name}
+            placeholderTextColor={PLACEHOLDER_PH}
             placeholder="e.g. Color"
+            underlineColorAndroid="transparent"
           />
           <TouchableOpacity
             style={styles.dropdown}
@@ -1173,10 +1168,12 @@ export default function AddItem({ onBack, item, isEditing = false }) {
             ))}
             <TextInput
               style={styles.chipInput}
+              placeholderTextColor={PLACEHOLDER_PH}
               placeholder="Add"
               value={customColorInput}
               onChangeText={setCustomColorInput}
               onSubmitEditing={addCustomColor}
+              underlineColorAndroid="transparent"
             />
           </View>
           <Text style={[styles.sectionTitle, { marginTop: 20 }]}>
@@ -1186,7 +1183,9 @@ export default function AddItem({ onBack, item, isEditing = false }) {
             style={styles.input}
             value={optionGroup2Name}
             onChangeText={setOptionGroup2Name}
+            placeholderTextColor={PLACEHOLDER_PH}
             placeholder="e.g. Size"
+            underlineColorAndroid="transparent"
           />
           <TouchableOpacity
             style={styles.dropdown}
@@ -1229,6 +1228,7 @@ export default function AddItem({ onBack, item, isEditing = false }) {
             ))}
             <TextInput
               style={styles.chipInput}
+              placeholderTextColor={PLACEHOLDER_PH}
               placeholder="Add"
               value={customSizeValue}
               onChangeText={setCustomSizeValue}
@@ -1240,6 +1240,7 @@ export default function AddItem({ onBack, item, isEditing = false }) {
                   setCustomSizeValue("");
                 }
               }}
+              underlineColorAndroid="transparent"
             />
           </View>
         </View>
@@ -1253,24 +1254,30 @@ export default function AddItem({ onBack, item, isEditing = false }) {
               <View style={styles.fillAll}>
                 <TextInput
                   style={[styles.input, styles.fillField]}
-                  placeholder="Cost ₱"
+                  placeholderTextColor={PLACEHOLDER_PH}
+                  placeholder="Cost (₱)"
                   keyboardType="decimal-pad"
                   value={fillAllCost}
                   onChangeText={setFillAllCost}
+                  underlineColorAndroid="transparent"
                 />
                 <TextInput
                   style={[styles.input, styles.fillField]}
-                  placeholder="Sell ₱"
+                  placeholderTextColor={PLACEHOLDER_PH}
+                  placeholder="Sell (₱)"
                   keyboardType="decimal-pad"
                   value={fillAllPrice}
                   onChangeText={setFillAllPrice}
+                  underlineColorAndroid="transparent"
                 />
                 <TextInput
                   style={[styles.input, styles.fillField]}
-                  placeholder="Qty"
+                  placeholderTextColor={PLACEHOLDER_PH}
+                  placeholder="Quantity"
                   keyboardType="number-pad"
                   value={fillAllQty}
                   onChangeText={setFillAllQty}
+                  underlineColorAndroid="transparent"
                 />
                 <TouchableOpacity
                   style={styles.fillBtn}
@@ -1290,7 +1297,8 @@ export default function AddItem({ onBack, item, isEditing = false }) {
                   </Text>
                   <TextInput
                     style={[styles.input, styles.comboInput]}
-                    placeholder="Cost"
+                    placeholderTextColor={PLACEHOLDER_PH}
+                    placeholder="Cost (₱)"
                     keyboardType="decimal-pad"
                     value={
                       v && s
@@ -1305,10 +1313,12 @@ export default function AddItem({ onBack, item, isEditing = false }) {
                         setSizeCost(s, t);
                       else setForm((p) => ({ ...p, costPrice: t }));
                     }}
+                    underlineColorAndroid="transparent"
                   />
                   <TextInput
                     style={[styles.input, styles.comboInput]}
-                    placeholder="Sell"
+                    placeholderTextColor={PLACEHOLDER_PH}
+                    placeholder="Sell (₱)"
                     keyboardType="decimal-pad"
                     value={
                       v && s
@@ -1323,9 +1333,11 @@ export default function AddItem({ onBack, item, isEditing = false }) {
                         setSizePrice(s, t);
                       else setForm((p) => ({ ...p, itemPrice: t }));
                     }}
+                    underlineColorAndroid="transparent"
                   />
                   <TextInput
                     style={[styles.input, styles.comboInput]}
+                    placeholderTextColor={PLACEHOLDER_PH}
                     placeholder="Qty"
                     keyboardType="number-pad"
                     value={
@@ -1340,6 +1352,7 @@ export default function AddItem({ onBack, item, isEditing = false }) {
                       else if (s && s !== VARIANT_ONLY_KEY) setSizeQty(s, t);
                       else setForm((p) => ({ ...p, currentStock: t }));
                     }}
+                    underlineColorAndroid="transparent"
                   />
                 </View>
               ))}
@@ -1352,10 +1365,13 @@ export default function AddItem({ onBack, item, isEditing = false }) {
                   <TextInput
                     style={styles.input}
                     keyboardType="decimal-pad"
+                    placeholderTextColor={PLACEHOLDER_PH}
+                    placeholder="e.g. 100.00"
                     value={String(form.costPrice)}
                     onChangeText={(t) =>
                       setForm((f) => ({ ...f, costPrice: t }))
                     }
+                    underlineColorAndroid="transparent"
                   />
                 </View>
                 <View style={styles.flex1}>
@@ -1363,10 +1379,13 @@ export default function AddItem({ onBack, item, isEditing = false }) {
                   <TextInput
                     style={styles.input}
                     keyboardType="decimal-pad"
+                    placeholderTextColor={PLACEHOLDER_PH}
+                    placeholder="e.g. 149.00"
                     value={String(form.itemPrice)}
                     onChangeText={(t) =>
                       setForm((f) => ({ ...f, itemPrice: t }))
                     }
+                    underlineColorAndroid="transparent"
                   />
                 </View>
               </View>
@@ -1374,10 +1393,13 @@ export default function AddItem({ onBack, item, isEditing = false }) {
               <TextInput
                 style={styles.input}
                 keyboardType="number-pad"
+                placeholderTextColor={PLACEHOLDER_PH}
+                placeholder="Units in stock"
                 value={String(form.currentStock)}
                 onChangeText={(t) =>
                   setForm((f) => ({ ...f, currentStock: t }))
                 }
+                underlineColorAndroid="transparent"
               />
             </View>
           )}
@@ -1403,11 +1425,13 @@ export default function AddItem({ onBack, item, isEditing = false }) {
           <TextInput
             style={styles.input}
             keyboardType="number-pad"
+            placeholderTextColor={PLACEHOLDER_PH}
+            placeholder="e.g. 23"
             value={String(form.reorderNumber)}
             onChangeText={(t) =>
               setForm((f) => ({ ...f, reorderNumber: t }))
             }
-            placeholder="e.g. 23"
+            underlineColorAndroid="transparent"
           />
           <Text style={[styles.sectionTitle, { marginTop: 16 }]}>
             Opening batch
@@ -1715,6 +1739,7 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: "#fff",
     fontSize: 15,
+    color: "#111827",
   },
   pickerWrap: {
     borderWidth: 1,
@@ -1841,9 +1866,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     fontSize: 12,
+    color: "#111827",
   },
   fillAll: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 12 },
-  fillField: { width: "30%", minWidth: 90 },
+  fillField: { width: "30%", minWidth: 90, minHeight: 44 },
   fillBtn: {
     backgroundColor: "#09A046",
     paddingHorizontal: 12,
@@ -1864,7 +1890,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   comboLabel: { width: "100%", fontSize: 13, marginBottom: 4 },
-  comboInput: { flex: 1, minWidth: 80 },
+  comboInput: { flex: 1, minWidth: 80, minHeight: 44 },
   batchBig: { fontSize: 20, fontWeight: "800", marginVertical: 8 },
   reviewImgBox: {
     height: 160,

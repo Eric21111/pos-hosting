@@ -20,6 +20,7 @@ import {
     ScrollView,
     StyleSheet,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -36,6 +37,7 @@ const InventoryTable = ({
   loadingMore,
 }) => {
   const [menuVisible, setMenuVisible] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Stock Modal States
   const [showStockIn, setShowStockIn] = useState(false);
@@ -73,6 +75,44 @@ const InventoryTable = ({
       })();
     };
   }, []);
+
+  // Stock In / Stock Out: use portrait so modals are vertical; restore landscape for the table.
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+
+    const modalOpen = showStockIn || showStockOut;
+
+    (async () => {
+      try {
+        if (ScreenOrientation && typeof ScreenOrientation.lockAsync === "function") {
+          await ScreenOrientation.lockAsync(
+            modalOpen
+              ? ScreenOrientation.OrientationLock.PORTRAIT
+              : ScreenOrientation.OrientationLock.LANDSCAPE,
+          );
+        }
+      } catch (e) {
+        console.warn("Stock modal orientation:", e?.message || e);
+      }
+    })();
+  }, [showStockIn, showStockOut]);
+
+  const filteredItems = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter((row) => {
+      const sku = String(row.sku ?? "").toLowerCase();
+      const name = String(row.name ?? row.itemName ?? "").toLowerCase();
+      const brand = String(row.brand ?? row.brandName ?? "").toLowerCase();
+      const category = String(row.category ?? "").toLowerCase();
+      return (
+        sku.includes(q) ||
+        name.includes(q) ||
+        brand.includes(q) ||
+        category.includes(q)
+      );
+    });
+  }, [items, searchQuery]);
 
   const menuItems = [
     {
@@ -387,6 +427,34 @@ const InventoryTable = ({
         </TouchableOpacity>
       </View>
 
+      <View style={styles.tableSearchWrap}>
+        <Ionicons
+          name="search"
+          size={20}
+          color="#6b7280"
+          style={styles.tableSearchIcon}
+        />
+        <TextInput
+          style={styles.tableSearchInput}
+          placeholder="Search by SKU, name, brand, or category…"
+          placeholderTextColor="#9ca3af"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCorrect={false}
+          autoCapitalize="none"
+          clearButtonMode="while-editing"
+        />
+        {searchQuery.length > 0 ? (
+          <TouchableOpacity
+            onPress={() => setSearchQuery("")}
+            style={styles.tableSearchClear}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="close-circle" size={20} color="#9ca3af" />
+          </TouchableOpacity>
+        ) : null}
+      </View>
+
       <View style={styles.tableHeaderRow}>
         <Text style={[styles.tableHeaderCell, { flex: 0.7 }]}>SKU</Text>
         <Text style={[styles.tableHeaderCell, { flex: 1.3 }]}>Item Name</Text>
@@ -409,7 +477,7 @@ const InventoryTable = ({
         </View>
       ) : (
         <FlatList
-          data={items}
+          data={filteredItems}
           renderItem={renderItem}
           keyExtractor={(item) =>
             (item?._id || item?.id || Math.random()).toString()
@@ -417,6 +485,15 @@ const InventoryTable = ({
           contentContainerStyle={{ paddingBottom: 20 }}
           onEndReached={onEndReached}
           onEndReachedThreshold={0.5}
+          ListEmptyComponent={
+            !loading && items.length > 0 && filteredItems.length === 0 ? (
+              <View style={styles.tableSearchEmpty}>
+                <Text style={styles.tableSearchEmptyText}>
+                  No products match &quot;{searchQuery.trim()}&quot;
+                </Text>
+              </View>
+            ) : null
+          }
           ListFooterComponent={
             loadingMore ? (
               <View style={{ padding: 10 }}>
@@ -994,6 +1071,39 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  tableSearchWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f9fafb",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  tableSearchIcon: {
+    marginRight: 8,
+  },
+  tableSearchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: "#111827",
+    paddingVertical: Platform.OS === "ios" ? 10 : 8,
+    paddingHorizontal: 4,
+    minHeight: 40,
+  },
+  tableSearchClear: {
+    marginLeft: 4,
+    padding: 4,
+  },
+  tableSearchEmpty: {
+    padding: 24,
+    alignItems: "center",
+  },
+  tableSearchEmptyText: {
+    fontSize: 14,
+    color: "#6b7280",
+    textAlign: "center",
   },
   tableHeaderRow: {
     flexDirection: "row",
