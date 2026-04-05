@@ -24,10 +24,12 @@ exports.getRemittanceSummary = async (req, res) => {
         const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
 
-        // Get all completed transactions for this employee today
+        // POS sales (non-return): include Returned so fully refunded originals (totalAmount 0) are in the set.
+        // Net sales = sum of those totalAmounts (already reduced when items were returned).
+        // Return paymentMethod rows record refunds; gross for the slip = net + returns so Gross − Returns = Net.
         const completedTransactions = await SalesTransaction.find({
             performedById: employeeId,
-            status: { $in: ['Completed', 'Partially Returned'] },
+            status: { $in: ['Completed', 'Partially Returned', 'Returned'] },
             checkedOutAt: { $gte: startOfDay, $lt: endOfDay },
             paymentMethod: { $ne: 'return' }
         }).lean();
@@ -45,10 +47,10 @@ exports.getRemittanceSummary = async (req, res) => {
             .sort({ submittedAt: -1 })
             .lean();
 
-        const grossSales = completedTransactions.reduce((sum, t) => sum + (t.totalAmount || 0), 0);
+        const netSales = completedTransactions.reduce((sum, t) => sum + (t.totalAmount || 0), 0);
         const returns = returnTransactions.reduce((sum, t) => sum + Math.abs(t.totalAmount || 0), 0);
-        const netSales = grossSales - returns;
-        const noOfSales = completedTransactions.length;
+        const grossSales = netSales + returns;
+        const noOfSales = completedTransactions.filter((t) => t.status !== 'Returned').length;
 
         res.json({
             success: true,
@@ -154,9 +156,8 @@ exports.createRemittance = async (req, res) => {
 
 /**
  * GET /api/remittances/kpi-stats?startMs=&endMs=&employeeId=
- * Total Net Sales = sum of POS transaction totals (Completed / Partially Returned, excl. returns); opening float is not in transactions.
- * Total Remitted = sum of cashToRemit. Total Variance = sum of variance. Outstanding = max(0, net sales - remitted).
- * Prefer startMs/endMs (browser local window, epoch ms). No date params = all-time (no artificial end date; includes null checkedOutAt via createdAt).
+ * posNetSales = sum of POS totals (Completed / Partially Returned / Returned, excl. paymentMethod return); refunds already reduce totalAmount on originals.
+ * grossSales = posNetSales + returns (return rows). Total Remitted = sum of cashToRemit. Outstanding = max(0, posNetSales - remitted).
  */
 exports.getRemittanceKpiStats = async (req, res) => {
     try {
@@ -210,7 +211,7 @@ exports.getRemittanceKpiStats = async (req, res) => {
               };
 
         const salesMatch = {
-            status: { $in: ['Completed', 'Partially Returned'] },
+            status: { $in: ['Completed', 'Partially Returned', 'Returned'] },
             paymentMethod: { $ne: 'return' },
             ...(transactionDateOr || {})
         };
@@ -251,7 +252,7 @@ exports.getRemittanceKpiStats = async (req, res) => {
             })()
         ]);
 
-        const grossSales = completedTransactions.reduce(
+        const posNetSales = completedTransactions.reduce(
             (s, t) => s + (Number(t.totalAmount) || 0),
             0
         );
@@ -259,7 +260,7 @@ exports.getRemittanceKpiStats = async (req, res) => {
             (s, t) => s + Math.abs(Number(t.totalAmount) || 0),
             0
         );
-        const posNetSales = grossSales - returns;
+        const grossSales = posNetSales + returns;
 
         const row = remitAgg[0] || {
             totalRemitted: 0,
