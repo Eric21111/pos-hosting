@@ -13,7 +13,6 @@ import {
   FaDownload,
   FaExclamationTriangle,
   FaFileExcel,
-  FaFileImport,
   FaFilePdf,
   FaLock,
   FaSpinner,
@@ -29,6 +28,7 @@ import { API_BASE_URL as API_BASE } from "../config/api";
 import { useAuth } from "../context/AuthContext";
 import { SidebarContext } from "../context/SidebarContext";
 import { useTheme } from "../context/ThemeContext";
+import { recordsForBusinessExport } from "../utils/manageDataExport";
 
 
 const PinModal = memo(({ isOpen, onClose, onVerified, theme }) => {
@@ -536,13 +536,10 @@ const ManageDataInner = ({ verifiedPin }) => {
   const [showExportModal, setShowExportModal] = useState(false);
   const [clearLoading, setClearLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
-  const [importLoading, setImportLoading] = useState(false);
   const [pendingClearKeys, setPendingClearKeys] = useState([]);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [error, setError] = useState("");
-
-  const fileInputRef = useRef(null);
 
   const fetchCollections = useCallback(async () => {
     setCollectionsLoading(true);
@@ -651,7 +648,7 @@ const ManageDataInner = ({ verifiedPin }) => {
 
       setShowExportModal(false);
       setSuccessMessage(
-        `Data exported successfully as ${format.toUpperCase()}! A JSON backup file was also saved for importing later.`
+        `Data exported successfully as ${format.toUpperCase()}! A JSON backup file was also saved.`
       );
       setShowSuccessModal(true);
     } catch (err) {
@@ -712,7 +709,11 @@ const ManageDataInner = ({ verifiedPin }) => {
 
     Object.entries(data.data).forEach(([key, records]) => {
       if (!records || records.length === 0) return;
-      const flatRecords = records.map((record) => flattenObject(record));
+      const businessRows = recordsForBusinessExport(key, records);
+      const flatRecords =
+        businessRows.length > 0 ?
+          businessRows :
+          records.map((record) => flattenObject(record));
       const ws = XLSX.utils.json_to_sheet(flatRecords);
 
       const colWidths = Object.keys(flatRecords[0] || {}).map((key) => {
@@ -760,9 +761,13 @@ const ManageDataInner = ({ verifiedPin }) => {
 
       const collectionName =
       collections.find((c) => c.key === key)?.name || key;
-      const flatRecords = records.map((record) => flattenObject(record));
+      const businessRows = recordsForBusinessExport(key, records);
+      const flatRecords =
+        businessRows.length > 0 ?
+          businessRows :
+          records.map((record) => flattenObject(record));
       const headers = Object.keys(flatRecords[0] || {});
-      const importantHeaders = headers.slice(0, 8);
+      const importantHeaders = headers.slice(0, 12);
       const colWidth = (297 - 28) / importantHeaders.length;
       const startY = 28;
 
@@ -870,95 +875,6 @@ const ManageDataInner = ({ verifiedPin }) => {
     document.body.removeChild(link);
   };
 
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleImportFile = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = "";
-
-    if (!file.name.endsWith(".json")) {
-      setError("Please select a valid JSON backup file (.json)");
-      return;
-    }
-
-    setImportLoading(true);
-    setError("");
-
-    try {
-      const text = await file.text();
-      let parsed;
-      try {
-        parsed = JSON.parse(text);
-      } catch (parseError) {
-        console.error("JSON parse error:", parseError);
-        setError("Invalid JSON file. Please select a valid backup file.");
-        setImportLoading(false);
-        return;
-      }
-
-      if (!parsed.data || typeof parsed.data !== "object") {
-        setError(
-          "Invalid backup file format. Please use a file exported from this system."
-        );
-        setImportLoading(false);
-        return;
-      }
-
-
-      const validKeys = Object.keys(parsed.data).filter(
-        (key) => Array.isArray(parsed.data[key]) && parsed.data[key].length > 0
-      );
-      if (validKeys.length === 0) {
-        setError("No valid data found in the backup file to import.");
-        setImportLoading(false);
-        return;
-      }
-
-      const res = await fetch(`${API_BASE}/api/data-management/import`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: parsed.data, pin: verifiedPin })
-      });
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error("Import API error:", res.status, errorText);
-        setError(`Import failed: Server returned ${res.status}`);
-        setImportLoading(false);
-        return;
-      }
-
-      let result;
-      try {
-        result = await res.json();
-      } catch (parseError) {
-        console.error("Response parse error:", parseError);
-        setError("Import failed: Invalid response from server");
-        setImportLoading(false);
-        return;
-      }
-
-      if (result.success) {
-        setSuccessMessage(result.message);
-        setShowSuccessModal(true);
-        fetchCollections();
-      } else {
-        setError(result.message || "Import failed");
-      }
-    } catch (err) {
-      console.error("Import error:", err);
-      setError(
-        `Failed to import data: ${err.message || "Please check your connection and try again."}`
-      );
-    } finally {
-      setImportLoading(false);
-    }
-  };
-
   const pendingClearNames = pendingClearKeys.
   map((key) => collections.find((c) => c.key === key)?.name || key).
   filter(Boolean);
@@ -1044,7 +960,7 @@ const ManageDataInner = ({ verifiedPin }) => {
         }
 
           {}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {}
             <div
             className={`rounded-3xl shadow-lg p-6 flex flex-col ${isDark ? "bg-[#2A2724]" : "bg-white"}`}>
@@ -1101,51 +1017,6 @@ const ManageDataInner = ({ verifiedPin }) => {
                 <FaDownload className="w-3.5 h-3.5" />
                 Export Data
               </button>
-            </div>
-
-            {}
-            <div
-            className={`rounded-3xl shadow-lg p-6 flex flex-col ${isDark ? "bg-[#2A2724]" : "bg-white"}`}>
-            
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white">
-                  <FaFileImport className="w-4 h-4" />
-                </div>
-                <h3
-                className={`text-base font-bold ${isDark ? "text-white" : "text-gray-800"}`}>
-                
-                  Import Data
-                </h3>
-              </div>
-              <p
-              className={`text-sm mb-6 flex-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-              
-                Restore data from a previously exported JSON backup file. All
-                collections in the file will be imported.
-              </p>
-              <button
-              onClick={handleImportClick}
-              disabled={importLoading}
-              className="w-full py-3 rounded-xl font-bold text-sm text-white bg-emerald-600 hover:bg-emerald-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-              
-                {importLoading ?
-              <>
-                    <FaSpinner className="w-3.5 h-3.5 animate-spin" />{" "}
-                    Importing...
-                  </> :
-
-              <>
-                    <FaFileImport className="w-3.5 h-3.5" /> Import Data
-                  </>
-              }
-              </button>
-              <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json"
-              onChange={handleImportFile}
-              className="hidden" />
-            
             </div>
           </div>
         </div>
