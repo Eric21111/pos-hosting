@@ -28,7 +28,10 @@ import { API_BASE_URL as API_BASE } from "../config/api";
 import { useAuth } from "../context/AuthContext";
 import { SidebarContext } from "../context/SidebarContext";
 import { useTheme } from "../context/ThemeContext";
-import { recordsForBusinessExport } from "../utils/manageDataExport";
+import {
+  hasBusinessExportSchema,
+  recordsForBusinessExport
+} from "../utils/manageDataExport";
 
 
 const PinModal = memo(({ isOpen, onClose, onVerified, theme }) => {
@@ -706,14 +709,23 @@ const ManageDataInner = ({ verifiedPin }) => {
 
   const exportToExcel = (data, timestamp) => {
     const wb = XLSX.utils.book_new();
+    /** @type {Record<string, number>} */
+    const exportedCounts = {};
 
     Object.entries(data.data).forEach(([key, records]) => {
       if (!records || records.length === 0) return;
       const businessRows = recordsForBusinessExport(key, records);
-      const flatRecords =
-        businessRows.length > 0 ?
-          businessRows :
-          records.map((record) => flattenObject(record));
+      let flatRecords;
+      if (hasBusinessExportSchema(key)) {
+        if (businessRows.length === 0) {
+          exportedCounts[key] = 0;
+          return;
+        }
+        flatRecords = businessRows;
+      } else {
+        flatRecords = records.map((record) => flattenObject(record));
+      }
+      exportedCounts[key] = flatRecords.length;
       const ws = XLSX.utils.json_to_sheet(flatRecords);
 
       const colWidths = Object.keys(flatRecords[0] || {}).map((key) => {
@@ -733,11 +745,15 @@ const ManageDataInner = ({ verifiedPin }) => {
 
     const summaryData = data.summary.map((s) => ({
       Collection: s.name,
-      "Records Exported": s.count
+      "Records Exported": exportedCounts[s.key] ?? s.count
     }));
+    const totalExported = data.summary.reduce(
+      (sum, s) => sum + (exportedCounts[s.key] ?? s.count),
+      0
+    );
     summaryData.push({
       Collection: "TOTAL",
-      "Records Exported": data.summary.reduce((sum, s) => sum + s.count, 0)
+      "Records Exported": totalExported
     });
     const summaryWs = XLSX.utils.json_to_sheet(summaryData);
     summaryWs["!cols"] = [{ wch: 30 }, { wch: 20 }];
@@ -753,19 +769,29 @@ const ManageDataInner = ({ verifiedPin }) => {
       format: "a4"
     });
     let isFirstPage = true;
+    /** @type {Record<string, number>} */
+    const exportedCounts = {};
 
     Object.entries(data.data).forEach(([key, records]) => {
       if (!records || records.length === 0) return;
+      const businessRows = recordsForBusinessExport(key, records);
+      let flatRecords;
+      if (hasBusinessExportSchema(key)) {
+        if (businessRows.length === 0) {
+          exportedCounts[key] = 0;
+          return;
+        }
+        flatRecords = businessRows;
+      } else {
+        flatRecords = records.map((record) => flattenObject(record));
+      }
+      exportedCounts[key] = flatRecords.length;
+
       if (!isFirstPage) doc.addPage();
       isFirstPage = false;
 
       const collectionName =
       collections.find((c) => c.key === key)?.name || key;
-      const businessRows = recordsForBusinessExport(key, records);
-      const flatRecords =
-        businessRows.length > 0 ?
-          businessRows :
-          records.map((record) => flattenObject(record));
       const headers = Object.keys(flatRecords[0] || {});
       const importantHeaders = headers.slice(0, 12);
       const colWidth = (297 - 28) / importantHeaders.length;
@@ -774,7 +800,7 @@ const ManageDataInner = ({ verifiedPin }) => {
       doc.setFontSize(16);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(60, 60, 60);
-      doc.text(`${collectionName} (${records.length} records)`, 14, 15);
+      doc.text(`${collectionName} (${flatRecords.length} records)`, 14, 15);
       doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
       doc.text(`Exported: ${new Date().toLocaleString()}`, 14, 21);
@@ -792,7 +818,7 @@ const ManageDataInner = ({ verifiedPin }) => {
 
       doc.setFont("helvetica", "normal");
       doc.setTextColor(60, 60, 60);
-      const maxRows = Math.min(records.length, 35);
+      const maxRows = Math.min(flatRecords.length, 35);
       flatRecords.slice(0, maxRows).forEach((record, rowIdx) => {
         const y = startY + 8 + rowIdx * 5;
         if (y > 195) return;
@@ -811,11 +837,11 @@ const ManageDataInner = ({ verifiedPin }) => {
         });
       });
 
-      if (records.length > maxRows) {
+      if (flatRecords.length > maxRows) {
         doc.setFontSize(7);
         doc.setTextColor(150, 150, 150);
         doc.text(
-          `... and ${records.length - maxRows} more records (see Excel export for complete data)`,
+          `... and ${flatRecords.length - maxRows} more records (see Excel export for complete data)`,
           14,
           200
         );
@@ -832,12 +858,17 @@ const ManageDataInner = ({ verifiedPin }) => {
     doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 28);
 
     let summaryY = 38;
+    const pdfTotal = data.summary.reduce(
+      (sum, s) => sum + (exportedCounts[s.key] ?? s.count),
+      0
+    );
     data.summary.forEach((s) => {
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
       doc.text(s.name, 14, summaryY);
       doc.setFont("helvetica", "normal");
-      doc.text(`${s.count.toLocaleString()} records`, 120, summaryY);
+      const n = exportedCounts[s.key] ?? s.count;
+      doc.text(`${n.toLocaleString()} records`, 120, summaryY);
       summaryY += 7;
     });
 
@@ -845,11 +876,7 @@ const ManageDataInner = ({ verifiedPin }) => {
     doc.setFontSize(11);
     summaryY += 5;
     doc.text("Total Records:", 14, summaryY);
-    doc.text(
-      data.summary.reduce((sum, s) => sum + s.count, 0).toLocaleString(),
-      120,
-      summaryY
-    );
+    doc.text(pdfTotal.toLocaleString(), 120, summaryY);
 
     doc.save(`POS_Data_Export_${timestamp}.pdf`);
   };

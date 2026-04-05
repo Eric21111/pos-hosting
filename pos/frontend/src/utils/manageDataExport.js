@@ -35,9 +35,10 @@ function shortRef(id) {
   return s.length > 10 ? s.slice(-8) : s;
 }
 
-function formatMoney(n) {
+/** Plain PHP amounts for Excel/PDF (avoids ₱/encoding issues). */
+function formatPhp(n) {
   const x = Number(n);
-  if (!Number.isFinite(x)) return "";
+  if (!Number.isFinite(x)) return "0.00";
   return x.toLocaleString("en-PH", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
@@ -48,14 +49,15 @@ function formatTransactionItems(items) {
   if (!Array.isArray(items) || items.length === 0) return "";
   return items
     .map((i) => {
-      const name = (i.itemName || "Item").trim();
-      const q = i.quantity ?? 1;
-      const p = i.price ?? i.itemPrice ?? 0;
-      const line = `${name} ×${q} @ ₱${formatMoney(p)}`;
-      if (i.returnStatus === "Returned") return `${line} [returned]`;
-      if (i.returnStatus === "Partially Returned") {
-        const rq = i.returnedQuantity != null ? i.returnedQuantity : "";
-        return `${line} [partial return${rq !== "" ? `: ${rq}` : ""}]`;
+      const name = (i.itemName || "Item").trim().replace(/\s+/g, " ");
+      const q = Math.max(0, Number(i.quantity ?? 1)) || 1;
+      const unit = Number(i.price ?? i.itemPrice ?? 0) || 0;
+      const lineTotal = Math.round(unit * q * 100) / 100;
+      let line = `${q}x ${name}; unit PHP ${formatPhp(unit)}; line PHP ${formatPhp(lineTotal)}`;
+      if (i.returnStatus === "Returned") line += "; returned";
+      else if (i.returnStatus === "Partially Returned") {
+        const rq = i.returnedQuantity != null ? String(i.returnedQuantity) : "";
+        line += rq ? `; partial return (${rq})` : "; partial return";
       }
       return line;
     })
@@ -66,10 +68,11 @@ function formatVoidItems(items) {
   if (!Array.isArray(items) || items.length === 0) return "";
   return items
     .map((i) => {
-      const name = (i.itemName || "Item").trim();
-      const q = i.quantity ?? 1;
-      const p = i.price ?? 0;
-      return `${name} ×${q} @ ₱${formatMoney(p)}`;
+      const name = (i.itemName || "Item").trim().replace(/\s+/g, " ");
+      const q = Math.max(0, Number(i.quantity ?? 1)) || 1;
+      const unit = Number(i.price ?? 0) || 0;
+      const lineTotal = Math.round(unit * q * 100) / 100;
+      return `${q}x ${name}; unit PHP ${formatPhp(unit)}; line PHP ${formatPhp(lineTotal)}`;
     })
     .join(" | ");
 }
@@ -78,11 +81,19 @@ function formatCartItems(items) {
   if (!Array.isArray(items) || items.length === 0) return "";
   return items
     .map((i) => {
-      const name = (i.itemName || "Item").trim();
-      const q = i.quantity ?? 1;
-      return `${name} ×${q}`;
+      const name = (i.itemName || "Item").trim().replace(/\s+/g, " ");
+      const q = Math.max(0, Number(i.quantity ?? 1)) || 1;
+      return `${q}x ${name}`;
     })
     .join(" | ");
+}
+
+/** Sales export excludes void rows (see Void Logs sheet / collection). */
+function isVoidSalesRow(r) {
+  const st = String(r.status || "").toLowerCase();
+  if (st === "voided") return true;
+  if (String(r.paymentMethod || "").toLowerCase() === "void") return true;
+  return false;
 }
 
 function hasVariantMatrix(sizes) {
@@ -276,7 +287,16 @@ export function recordsForBusinessExport(collectionKey, records) {
   if (!Array.isArray(records) || records.length === 0) return [];
   const fn = TRANSFORMERS[collectionKey];
   if (!fn) return [];
-  return records.map((rec) => fn(rec));
+  let list = records;
+  if (collectionKey === "transactions") {
+    list = records.filter((rec) => !isVoidSalesRow(rec));
+  }
+  if (list.length === 0) return [];
+  return list.map((rec) => fn(rec));
+}
+
+export function hasBusinessExportSchema(collectionKey) {
+  return Object.prototype.hasOwnProperty.call(TRANSFORMERS, collectionKey);
 }
 
 export { TRANSFORMERS };
