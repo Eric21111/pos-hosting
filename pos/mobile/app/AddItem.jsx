@@ -79,6 +79,8 @@ const defaultForm = () => ({
   foodSubtype: "",
   displayInTerminal: true,
   expirationDate: "",
+  /** Opening batch — aligns with web Add Product step 4 */
+  dateReceived: "",
   batchNumber: "",
 });
 
@@ -208,6 +210,7 @@ export default function AddItem({ onBack, item, isEditing = false }) {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [editableSizePrices, setEditableSizePrices] = useState({});
   const [showExpiryPicker, setShowExpiryPicker] = useState(false);
+  const [showDateReceivedPicker, setShowDateReceivedPicker] = useState(false);
 
   const toastTranslate = useRef(new Animated.Value(-60)).current;
   const toastOpacity = useRef(new Animated.Value(0)).current;
@@ -632,6 +635,27 @@ export default function AddItem({ onBack, item, isEditing = false }) {
     });
   };
 
+  const totalReviewStock = useMemo(() => {
+    if (!hasAnyCombos) return parseInt(form.currentStock, 10) || 0;
+    let t = 0;
+    combos.forEach(({ variant: v, size: s }) => {
+      if (v && s) {
+        t += parseInt(variantQuantities[s]?.[v], 10) || 0;
+      } else if (s) {
+        t += parseInt(form.sizeQuantities[s], 10) || 0;
+      } else {
+        t += parseInt(form.currentStock, 10) || 0;
+      }
+    });
+    return t;
+  }, [
+    hasAnyCombos,
+    combos,
+    variantQuantities,
+    form.sizeQuantities,
+    form.currentStock,
+  ]);
+
   const isStepValid = (step) => {
     if (isEditing) return true;
     switch (step) {
@@ -653,6 +677,7 @@ export default function AddItem({ onBack, item, isEditing = false }) {
           return false;
         return true;
       case 4:
+        if (totalReviewStock > 0 && !form.dateReceived?.trim()) return false;
         return true;
       default:
         return true;
@@ -826,27 +851,6 @@ export default function AddItem({ onBack, item, isEditing = false }) {
       setCustomColorInput("");
     }
   };
-
-  const totalReviewStock = useMemo(() => {
-    if (!hasAnyCombos) return parseInt(form.currentStock, 10) || 0;
-    let t = 0;
-    combos.forEach(({ variant: v, size: s }) => {
-      if (v && s) {
-        t += parseInt(variantQuantities[s]?.[v], 10) || 0;
-      } else if (s) {
-        t += parseInt(form.sizeQuantities[s], 10) || 0;
-      } else {
-        t += parseInt(form.currentStock, 10) || 0;
-      }
-    });
-    return t;
-  }, [
-    hasAnyCombos,
-    combos,
-    variantQuantities,
-    form.sizeQuantities,
-    form.currentStock,
-  ]);
 
   const renderEditMode = () => (
     <ScrollView
@@ -1419,9 +1423,13 @@ export default function AddItem({ onBack, item, isEditing = false }) {
       );
     }
     if (currentStep === 4) {
+      const hasOpening = totalReviewStock > 0;
       return (
         <View>
           <Text style={styles.label}>Reorder level (per SKU)</Text>
+          <Text style={styles.hintMuted}>
+            System alerts when any SKU falls below this level.
+          </Text>
           <TextInput
             style={styles.input}
             keyboardType="number-pad"
@@ -1436,40 +1444,100 @@ export default function AddItem({ onBack, item, isEditing = false }) {
           <Text style={[styles.sectionTitle, { marginTop: 16 }]}>
             Opening batch
           </Text>
-          <Text style={styles.batchBig}>{generatedBatchNumber}</Text>
-          <Text style={styles.label}>Expiring date</Text>
-          <Pressable
-            style={styles.input}
-            onPress={() => setShowExpiryPicker(true)}
-          >
-            <Text>{form.expirationDate || "Select date"}</Text>
-          </Pressable>
-          {showExpiryPicker && (
-            <DateTimePicker
-              value={
-                form.expirationDate
-                  ? new Date(form.expirationDate + "T12:00:00")
-                  : new Date()
-              }
-              mode="date"
-              display={Platform.OS === "ios" ? "spinner" : "default"}
-              onChange={(event, d) => {
-                if (Platform.OS === "android") {
-                  setShowExpiryPicker(false);
-                }
-                if (event?.type === "dismissed") {
-                  setShowExpiryPicker(false);
-                  return;
-                }
-                if (d) {
-                  setForm((f) => ({
-                    ...f,
-                    expirationDate: d.toISOString().slice(0, 10),
-                  }));
-                }
-              }}
-            />
-          )}
+          <Text style={styles.hintMuted}>
+            {hasOpening
+              ? "Batch 1 for this opening stock. Add more lots via Stock In."
+              : "No batch until you receive stock — use Stock In."}
+          </Text>
+          {hasOpening ? (
+            <>
+              <Text style={styles.batchBig}>{generatedBatchNumber}</Text>
+              <Text style={styles.label}>
+                Date received <Text style={styles.reqMark}>*</Text>
+              </Text>
+              <Pressable
+                style={styles.input}
+                onPress={() => setShowDateReceivedPicker(true)}
+              >
+                <Text
+                  style={
+                    form.dateReceived
+                      ? styles.datePressTxt
+                      : styles.datePressPlaceholder
+                  }
+                >
+                  {form.dateReceived || "Select date"}
+                </Text>
+              </Pressable>
+              {showDateReceivedPicker && (
+                <DateTimePicker
+                  value={
+                    form.dateReceived
+                      ? new Date(form.dateReceived + "T12:00:00")
+                      : new Date()
+                  }
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={(event, d) => {
+                    if (Platform.OS === "android") {
+                      setShowDateReceivedPicker(false);
+                    }
+                    if (event?.type === "dismissed") {
+                      setShowDateReceivedPicker(false);
+                      return;
+                    }
+                    if (d) {
+                      setForm((f) => ({
+                        ...f,
+                        dateReceived: d.toISOString().slice(0, 10),
+                      }));
+                    }
+                  }}
+                />
+              )}
+              <Text style={styles.label}>Expiration date (optional)</Text>
+              <Pressable
+                style={styles.input}
+                onPress={() => setShowExpiryPicker(true)}
+              >
+                <Text
+                  style={
+                    form.expirationDate
+                      ? styles.datePressTxt
+                      : styles.datePressPlaceholder
+                  }
+                >
+                  {form.expirationDate || "Select date (optional)"}
+                </Text>
+              </Pressable>
+              {showExpiryPicker && (
+                <DateTimePicker
+                  value={
+                    form.expirationDate
+                      ? new Date(form.expirationDate + "T12:00:00")
+                      : new Date()
+                  }
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={(event, d) => {
+                    if (Platform.OS === "android") {
+                      setShowExpiryPicker(false);
+                    }
+                    if (event?.type === "dismissed") {
+                      setShowExpiryPicker(false);
+                      return;
+                    }
+                    if (d) {
+                      setForm((f) => ({
+                        ...f,
+                        expirationDate: d.toISOString().slice(0, 10),
+                      }));
+                    }
+                  }}
+                />
+              )}
+            </>
+          ) : null}
         </View>
       );
     }
@@ -1958,4 +2026,8 @@ const styles = StyleSheet.create({
   },
   bold: { fontWeight: "700" },
   hint: { fontSize: 12, color: "#6b7280" },
+  hintMuted: { fontSize: 11, color: "#6b7280", marginBottom: 8 },
+  reqMark: { color: "#ef4444" },
+  datePressTxt: { fontSize: 15, color: "#111827" },
+  datePressPlaceholder: { fontSize: 15, color: "#9ca3af" },
 });

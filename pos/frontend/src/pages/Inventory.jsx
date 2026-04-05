@@ -180,7 +180,8 @@ const Inventory = () => {
     differentPricesPerSize: false,
     foodSubtype: "",
     displayInTerminal: true,
-    expirationDate: ""
+    expirationDate: "",
+    dateReceived: ""
   };
 
 
@@ -755,7 +756,8 @@ const Inventory = () => {
       differentPricesPerSize: false,
       foodSubtype: "",
       displayInTerminal: true,
-      expirationDate: ""
+      expirationDate: "",
+      dateReceived: ""
     });
     setEditingProduct(null);
 

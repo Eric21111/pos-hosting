@@ -13,6 +13,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import {
+  PLACEHOLDER_PH,
+  PICKER_ITEM_COLOR,
+  nativePickerProps,
+} from "./nativePickerProps";
 
 const VARIANT_ONLY_SIZE_KEY = "__VARIANT_ONLY__";
 
@@ -304,6 +309,7 @@ const StockOutModal = ({ visible, onClose, product, onConfirm, loading }) => {
                   </Text>
                   <View style={styles.pickerWrap}>
                     <Picker
+                      {...nativePickerProps}
                       selectedValue={selectedBatch}
                       onValueChange={(v) => {
                         setSelectedBatch(v);
@@ -311,12 +317,17 @@ const StockOutModal = ({ visible, onClose, product, onConfirm, loading }) => {
                         setComboQuantities({});
                       }}
                     >
-                      <Picker.Item label="Select Batch" value="" color="#9CA3AF" />
+                      <Picker.Item
+                        label="Select Batch"
+                        value=""
+                        color={PICKER_ITEM_COLOR}
+                      />
                       {batchList.map((b) => (
                         <Picker.Item
                           key={b.slotIndex}
                           label={`Batch ${b.slotIndex + 1}${b.code ? ` (${b.code})` : ""} (${b.totalQty})`}
                           value={String(b.slotIndex)}
+                          color={PICKER_ITEM_COLOR}
                         />
                       ))}
                     </Picker>
@@ -394,8 +405,9 @@ const StockOutModal = ({ visible, onClose, product, onConfirm, loading }) => {
                             keyboardType="number-pad"
                             value={val}
                             onChangeText={(t) => handleQtyChange(key, t)}
-                            placeholder="0"
-                            placeholderTextColor="#9CA3AF"
+                            placeholderTextColor={PLACEHOLDER_PH}
+                            placeholder="Qty out"
+                            underlineColorAndroid="transparent"
                           />
                         </View>
                       </View>
@@ -416,8 +428,9 @@ const StockOutModal = ({ visible, onClose, product, onConfirm, loading }) => {
                   keyboardType="number-pad"
                   value={quantity}
                   onChangeText={setQuantity}
+                  placeholderTextColor={PLACEHOLDER_PH}
                   placeholder="Enter quantity"
-                  placeholderTextColor="#9CA3AF"
+                  underlineColorAndroid="transparent"
                 />
               </View>
             )}
@@ -428,15 +441,25 @@ const StockOutModal = ({ visible, onClose, product, onConfirm, loading }) => {
               </Text>
               <View style={styles.pickerWrap}>
                 <Picker
+                  {...nativePickerProps}
                   selectedValue={reason}
                   onValueChange={(v) => {
                     setReason(v);
                     if (v !== "Other") setOtherReason("");
                   }}
                 >
-                  <Picker.Item label="EG. Damaged" value="" color="#9CA3AF" />
+                  <Picker.Item
+                    label="Select reason"
+                    value=""
+                    color={PICKER_ITEM_COLOR}
+                  />
                   {reasons.map((r) => (
-                    <Picker.Item key={r} label={r} value={r} />
+                    <Picker.Item
+                      key={r}
+                      label={r}
+                      value={r}
+                      color={PICKER_ITEM_COLOR}
+                    />
                   ))}
                 </Picker>
               </View>
@@ -445,8 +468,9 @@ const StockOutModal = ({ visible, onClose, product, onConfirm, loading }) => {
                   style={[styles.input, { marginTop: 8 }]}
                   value={otherReason}
                   onChangeText={setOtherReason}
+                  placeholderTextColor={PLACEHOLDER_PH}
                   placeholder="Please specify the reason"
-                  placeholderTextColor="#9CA3AF"
+                  underlineColorAndroid="transparent"
                 />
               )}
             </View>
@@ -639,6 +663,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: "center",
     backgroundColor: "#fff",
+    color: "#111827",
   },
   block: { marginBottom: 14 },
   hint: { fontSize: 11, color: "#9ca3af", marginBottom: 6 },
@@ -650,6 +675,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 14,
     backgroundColor: "#fff",
+    color: "#111827",
   },
   footer: {
     flexDirection: "row",

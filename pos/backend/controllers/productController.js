@@ -270,7 +270,16 @@ exports.createProduct = async (req, res) => {
 
     // Opening stock = first FIFO batch when qty was set at create (otherwise first batch comes from stock-in)
     if (productData.sizes && typeof productData.sizes === "object") {
-      const openingTs = new Date().toISOString();
+      const dr = productData.dateReceived;
+      const openingTs =
+        dr && String(dr).trim()
+          ? new Date(
+              `${String(dr).slice(0, 10)}T12:00:00`,
+            ).toISOString()
+          : new Date().toISOString();
+      const openingExp = productData.expirationDate
+        ? String(productData.expirationDate).slice(0, 10)
+        : "";
       const attachOpeningBatches = (sizes) => {
         for (const sizeKey of Object.keys(sizes)) {
           const sd = sizes[sizeKey];
@@ -291,6 +300,7 @@ exports.createProduct = async (req, res) => {
                     price: parseFloat(v.price) || 0,
                     costPrice: parseFloat(v.costPrice) || 0,
                     createdAt: openingTs,
+                    ...(openingExp ? { expirationDate: openingExp } : {}),
                   },
                 ],
               };
@@ -309,6 +319,7 @@ exports.createProduct = async (req, res) => {
                     price: parseFloat(sd.price) || 0,
                     costPrice: parseFloat(sd.costPrice) || 0,
                     createdAt: openingTs,
+                    ...(openingExp ? { expirationDate: openingExp } : {}),
                   },
                 ],
               };
@@ -333,6 +344,7 @@ exports.createProduct = async (req, res) => {
     delete productData.variantCostPrices;
     delete productData.sizeMultiVariants;
     delete productData.multipleVariantsPerSize;
+    delete productData.dateReceived;
 
     if (!productData.dateAdded) {
       productData.dateAdded = Date.now();

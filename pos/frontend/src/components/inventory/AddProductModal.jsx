@@ -247,8 +247,13 @@ const AddProductModal = ({
         }
           if (!newProduct.itemPrice || parseFloat(newProduct.itemPrice) <= 0) return false;
         return true;
-      case 4:
+      case 4: {
+        const opening = getOpeningStockTotal();
+        if (opening > 0 && !String(newProduct.dateReceived || "").trim()) {
+          return false;
+        }
         return true;
+      }
       default:
         return true;
     }
@@ -1277,8 +1282,8 @@ const AddProductModal = ({
                                 <label className={`block text-xs font-bold uppercase tracking-wide mb-1.5 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Expiration Date</label>
                                 <input
                                   type="date"
-                                  name="expiryDate"
-                                  value={newProduct.expiryDate || ""}
+                                  name="expirationDate"
+                                  value={newProduct.expirationDate || ""}
                                   min={todayISO}
                                   onChange={handleInputChange}
                                   className={`w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#09A046] focus:border-transparent ${theme === "dark" ? "bg-[#2A2724] border-gray-600 text-white" : "bg-white border-gray-300"}`}

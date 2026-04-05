@@ -16,6 +16,11 @@ import {
   View,
 } from "react-native";
 import { brandPartnerAPI } from "../../services/api";
+import {
+  PLACEHOLDER_PH,
+  PICKER_ITEM_COLOR,
+  nativePickerProps,
+} from "./nativePickerProps";
 
 const VARIANT_ONLY_SIZE_KEY = "__VARIANT_ONLY__";
 
@@ -913,7 +918,9 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
                       onChangeText={(t) =>
                         handleVariantQuantityChange(size, variant, t)
                       }
-                      placeholder="0"
+                      placeholderTextColor={PLACEHOLDER_PH}
+                      placeholder="Qty"
+                      underlineColorAndroid="transparent"
                     />
                     <TextInput
                       style={[s.tinyIn, { width: 52 }]}
@@ -930,6 +937,9 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
                           t,
                         )
                       }
+                      placeholderTextColor={PLACEHOLDER_PH}
+                      placeholder="Cost"
+                      underlineColorAndroid="transparent"
                     />
                     <TextInput
                       style={[s.tinyIn, { width: 52 }]}
@@ -941,6 +951,9 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
                       onChangeText={(t) =>
                         handleStockVariantPriceChange(size, variant, "price", t)
                       }
+                      placeholderTextColor={PLACEHOLDER_PH}
+                      placeholder="Sell"
+                      underlineColorAndroid="transparent"
                     />
                   </View>
                 );
@@ -978,6 +991,9 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
                       onChangeText={(t) =>
                         handleVariantQuantityChange(size, variant, t)
                       }
+                      placeholderTextColor={PLACEHOLDER_PH}
+                      placeholder="Qty"
+                      underlineColorAndroid="transparent"
                     />
                     <TextInput
                       style={[s.tinyIn, { width: 52 }]}
@@ -994,6 +1010,9 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
                           t,
                         )
                       }
+                      placeholderTextColor={PLACEHOLDER_PH}
+                      placeholder="Cost"
+                      underlineColorAndroid="transparent"
                     />
                     <TextInput
                       style={[s.tinyIn, { width: 52 }]}
@@ -1005,6 +1024,9 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
                       onChangeText={(t) =>
                         handleStockVariantPriceChange(size, variant, "price", t)
                       }
+                      placeholderTextColor={PLACEHOLDER_PH}
+                      placeholder="Sell"
+                      underlineColorAndroid="transparent"
                     />
                   </View>
                 );
@@ -1014,24 +1036,30 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
               <Text style={s.fillLbl}>FILL</Text>
               <TextInput
                 style={s.tinyIn}
+                placeholderTextColor={PLACEHOLDER_PH}
                 placeholder="Qty"
                 keyboardType="number-pad"
                 value={fillAllQtySI}
                 onChangeText={setFillAllQtySI}
+                underlineColorAndroid="transparent"
               />
               <TextInput
                 style={s.tinyIn}
+                placeholderTextColor={PLACEHOLDER_PH}
                 placeholder="Cost"
                 keyboardType="decimal-pad"
                 value={fillAllCostSI}
                 onChangeText={setFillAllCostSI}
+                underlineColorAndroid="transparent"
               />
               <TextInput
                 style={s.tinyIn}
+                placeholderTextColor={PLACEHOLDER_PH}
                 placeholder="Sell"
                 keyboardType="decimal-pad"
                 value={fillAllSellSI}
                 onChangeText={setFillAllSellSI}
+                underlineColorAndroid="transparent"
               />
               <TouchableOpacity onPress={handleFillAllSI}>
                 <Text style={s.fillBtn}>Fill All</Text>
@@ -1056,6 +1084,7 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
                     <Text style={s.vCardTitle}>VARIANT 1 – Colors</Text>
                     <View style={s.pickerWrap}>
                       <Picker
+                        {...nativePickerProps}
                         selectedValue={v1PickerKey}
                         onValueChange={(val) => {
                           setV1PickerKey("");
@@ -1063,10 +1092,19 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
                             setNewV1Tags((p) => [...p, val]);
                         }}
                       >
-                        <Picker.Item label="Select color..." value="" />
+                        <Picker.Item
+                          label="Select color..."
+                          value=""
+                          color={PICKER_ITEM_COLOR}
+                        />
                         {COLOR_OPTIONS.filter((c) => !newV1Tags.includes(c)).map(
                           (c) => (
-                            <Picker.Item key={c} label={c} value={c} />
+                            <Picker.Item
+                              key={c}
+                              label={c}
+                              value={c}
+                              color={PICKER_ITEM_COLOR}
+                            />
                           ),
                         )}
                       </Picker>
@@ -1088,6 +1126,7 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
                         style={s.tagInput}
                         value={newV1Input}
                         onChangeText={setNewV1Input}
+                        placeholderTextColor={PLACEHOLDER_PH}
                         placeholder="Add +"
                         onSubmitEditing={() => {
                           const v = newV1Input.trim();
@@ -1096,6 +1135,7 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
                             setNewV1Input("");
                           }
                         }}
+                        underlineColorAndroid="transparent"
                       />
                     </View>
                   </View>
@@ -1106,6 +1146,7 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
                     </Text>
                     <View style={s.pickerWrap}>
                       <Picker
+                        {...nativePickerProps}
                         selectedValue={v2PickerKey}
                         onValueChange={(val) => {
                           setV2PickerKey("");
@@ -1113,11 +1154,20 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
                             setNewV2Tags((p) => [...p, val]);
                         }}
                       >
-                        <Picker.Item label="Select size..." value="" />
+                        <Picker.Item
+                          label="Select size..."
+                          value=""
+                          color={PICKER_ITEM_COLOR}
+                        />
                         {V2_SIZE_OPTIONS.filter(
                           (sz) => !newV2Tags.includes(sz),
                         ).map((sz) => (
-                          <Picker.Item key={sz} label={sz} value={sz} />
+                          <Picker.Item
+                            key={sz}
+                            label={sz}
+                            value={sz}
+                            color={PICKER_ITEM_COLOR}
+                          />
                         ))}
                       </Picker>
                     </View>
@@ -1138,6 +1188,7 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
                         style={s.tagInput}
                         value={newV2Input}
                         onChangeText={setNewV2Input}
+                        placeholderTextColor={PLACEHOLDER_PH}
                         placeholder="Add +"
                         onSubmitEditing={() => {
                           const v = newV2Input.trim();
@@ -1146,6 +1197,7 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
                             setNewV2Input("");
                           }
                         }}
+                        underlineColorAndroid="transparent"
                       />
                     </View>
                   </View>
@@ -1173,6 +1225,7 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
                             <TextInput
                               style={s.prevIn}
                               keyboardType="decimal-pad"
+                              placeholderTextColor={PLACEHOLDER_PH}
                               placeholder="Cost"
                               value={newComboData[k]?.cost || ""}
                               onChangeText={(t) =>
@@ -1181,10 +1234,12 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
                                   [k]: { ...(p[k] || {}), cost: t },
                                 }))
                               }
+                              underlineColorAndroid="transparent"
                             />
                             <TextInput
                               style={s.prevIn}
                               keyboardType="decimal-pad"
+                              placeholderTextColor={PLACEHOLDER_PH}
                               placeholder="Sell"
                               value={newComboData[k]?.sell || ""}
                               onChangeText={(t) =>
@@ -1193,10 +1248,12 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
                                   [k]: { ...(p[k] || {}), sell: t },
                                 }))
                               }
+                              underlineColorAndroid="transparent"
                             />
                             <TextInput
                               style={s.prevIn}
                               keyboardType="number-pad"
+                              placeholderTextColor={PLACEHOLDER_PH}
                               placeholder="Qty"
                               value={newComboData[k]?.qty || ""}
                               onChangeText={(t) =>
@@ -1205,6 +1262,7 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
                                   [k]: { ...(p[k] || {}), qty: t },
                                 }))
                               }
+                              underlineColorAndroid="transparent"
                             />
                           </View>
                         );
@@ -1261,7 +1319,9 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
                     keyboardType="number-pad"
                     value={String(sizeQuantities[size] ?? "")}
                     onChangeText={(t) => handleSizeQuantityChange(size, t)}
+                    placeholderTextColor={PLACEHOLDER_PH}
                     placeholder="Qty"
+                    underlineColorAndroid="transparent"
                   />
                 </View>
               ))}
@@ -1278,7 +1338,9 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
             keyboardType="number-pad"
             value={quantity}
             onChangeText={setQuantity}
+            placeholderTextColor={PLACEHOLDER_PH}
             placeholder="Enter quantity to add"
+            underlineColorAndroid="transparent"
           />
         </View>
       )}
@@ -1293,12 +1355,22 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
       </Text>
       <View style={s.pickerWrap}>
         <Picker
+          {...nativePickerProps}
           selectedValue={stockInBrandPartner}
           onValueChange={setStockInBrandPartner}
         >
-          <Picker.Item label="Select Brand Partner" value="" color="#9CA3AF" />
+          <Picker.Item
+            label="Select Brand Partner"
+            value=""
+            color={PICKER_ITEM_COLOR}
+          />
           {brandNameOptions.map((name) => (
-            <Picker.Item key={name} label={name} value={name} />
+            <Picker.Item
+              key={name}
+              label={name}
+              value={name}
+              color={PICKER_ITEM_COLOR}
+            />
           ))}
         </Picker>
       </View>
@@ -1310,7 +1382,9 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
         style={s.datePress}
         onPress={() => setShowDateReceivedPicker(true)}
       >
-        <Text>{dateReceived || "Select date"}</Text>
+        <Text style={dateReceived ? s.datePressTxt : s.datePressPlaceholder}>
+          {dateReceived || "Select date"}
+        </Text>
       </Pressable>
       {showDateReceivedPicker && (
         <DateTimePicker
@@ -1339,6 +1413,7 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
       {hasSizes ? (
         <View style={s.pickerWrap}>
           <Picker
+            {...nativePickerProps}
             selectedValue={stockInBatchChoice}
             onValueChange={(v) => {
               setStockInBatchChoice(v);
@@ -1361,12 +1436,14 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
             <Picker.Item
               label={`New batch${stockInBatchChoice === "new" && batchCode ? ` (${batchCode})` : ""}`}
               value="new"
+              color={PICKER_ITEM_COLOR}
             />
             {stockInBatchList.map((b) => (
               <Picker.Item
                 key={b.slotIndex}
                 label={`Batch ${b.slotIndex + 1}${b.code ? ` (${b.code})` : ""} · ${b.totalQty} pcs`}
                 value={String(b.slotIndex)}
+                color={PICKER_ITEM_COLOR}
               />
             ))}
           </Picker>
@@ -1377,7 +1454,13 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
 
       <Text style={s.label}>EXPIRING DATE (IF APPLICABLE)</Text>
       <Pressable style={s.datePress} onPress={() => setShowExpiryPicker(true)}>
-        <Text>{batchExpirationDate || "Select date"}</Text>
+        <Text
+          style={
+            batchExpirationDate ? s.datePressTxt : s.datePressPlaceholder
+          }
+        >
+          {batchExpirationDate || "Select date (optional)"}
+        </Text>
       </Pressable>
       {showExpiryPicker && (
         <DateTimePicker
@@ -1405,6 +1488,7 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
       <Text style={s.label}>REASON</Text>
       <View style={s.pickerWrap}>
         <Picker
+          {...nativePickerProps}
           selectedValue={reason}
           onValueChange={(v) => {
             setReason(v);
@@ -1412,7 +1496,12 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
           }}
         >
           {reasons.map((r) => (
-            <Picker.Item key={r} label={r} value={r} />
+            <Picker.Item
+              key={r}
+              label={r}
+              value={r}
+              color={PICKER_ITEM_COLOR}
+            />
           ))}
         </Picker>
       </View>
@@ -1421,7 +1510,9 @@ const StockInModal = ({ visible, onClose, product, onConfirm, loading }) => {
           style={[s.input, { marginTop: 8 }]}
           value={otherReason}
           onChangeText={setOtherReason}
+          placeholderTextColor={PLACEHOLDER_PH}
           placeholder="Please specify the reason"
+          underlineColorAndroid="transparent"
         />
       )}
     </View>
@@ -1844,6 +1935,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 4,
     fontSize: 11,
     minHeight: 28,
+    color: "#111827",
   },
   fillRow: {
     flexDirection: "row",
@@ -1931,6 +2023,7 @@ const s = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: "#d1d5db",
     paddingVertical: 2,
+    color: "#111827",
   },
   previewCount: {
     fontSize: 10,
@@ -1972,6 +2065,7 @@ const s = StyleSheet.create({
     borderRadius: 6,
     padding: 4,
     fontSize: 10,
+    color: "#111827",
   },
   addComboBtn: {
     backgroundColor: "#09A046",
@@ -2001,6 +2095,7 @@ const s = StyleSheet.create({
     borderRadius: 8,
     padding: 8,
     fontSize: 14,
+    color: "#111827",
   },
   input: {
     borderWidth: 1,
@@ -2008,6 +2103,7 @@ const s = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     fontSize: 14,
+    color: "#111827",
   },
   label: {
     fontSize: 10,
@@ -2025,6 +2121,8 @@ const s = StyleSheet.create({
     padding: 12,
     marginBottom: 4,
   },
+  datePressTxt: { fontSize: 14, color: "#111827" },
+  datePressPlaceholder: { fontSize: 14, color: "#9ca3af" },
   batchBig: { fontSize: 16, fontWeight: "700", marginVertical: 6 },
   emptyReview: {
     textAlign: "center",
