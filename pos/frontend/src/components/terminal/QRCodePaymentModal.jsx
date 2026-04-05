@@ -157,7 +157,11 @@ const QRCodePaymentModal = ({
       quantity: item.quantity || 1,
       price: item.itemPrice || item.price || 0,
       itemPrice: item.itemPrice || item.price || 0,
-      total: (item.itemPrice || item.price || 0) * (item.quantity || 1)
+      total: (item.itemPrice || item.price || 0) * (item.quantity || 1),
+      selectedSize: item.selectedSize || item.size || '',
+      size: item.selectedSize || item.size || '',
+      selectedVariation: item.selectedVariation || item.variant || '',
+      variant: item.selectedVariation || item.variant || ''
     }));
     paymentAmountsRef.current = {
       subtotal: subtotalAmount || totalAmount + discountAmount,
@@ -393,7 +397,11 @@ const QRCodePaymentModal = ({
           name: item.itemName || item.name || "Item",
           qty: item.quantity || 1,
           price: item.itemPrice || item.price || 0,
-          total: (item.itemPrice || item.price || 0) * (item.quantity || 1)
+          total: (item.itemPrice || item.price || 0) * (item.quantity || 1),
+          selectedSize: item.selectedSize || item.size || "",
+          size: item.selectedSize || item.size || "",
+          selectedVariation: item.selectedVariation || item.variant || "",
+          variant: item.selectedVariation || item.variant || ""
         })),
         paymentMethod: "GCASH",
         subtotal: snapshotAmounts.subtotal || subtotalAmount || totalAmount + discountAmount,

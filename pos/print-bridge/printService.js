@@ -24,6 +24,19 @@ const DEFAULT_BT_ADDRESS = process.env.PRINTER_BT_ADDRESS || '00:00:00:00:00:00'
 const DEFAULT_BT_CHANNEL = Number(process.env.PRINTER_BT_CHANNEL || 1);
 const MAX_LINE_CHARS = Number(process.env.PRINTER_LINE_CHARS || 32); // 58 mm 
 
+const VARIANT_ONLY_SIZE_KEY = '__VARIANT_ONLY__';
+
+const formatReceiptVariantSizeLine = item => {
+  const rawSize = item?.selectedSize || item?.size || '';
+  const size =
+    rawSize === VARIANT_ONLY_SIZE_KEY ? '' : String(rawSize).trim();
+  const variant = String(item?.variant || item?.selectedVariation || '').trim();
+  const parts = [];
+  if (variant) parts.push(variant);
+  if (size) parts.push(size);
+  return parts.join(' | ');
+};
+
 // Format currency for receipt
 const formatCurrency = value => `PHP ${Number(value || 0).toFixed(2)}`;
 
@@ -86,16 +99,11 @@ const buildReceiptLines = receipt => {
     
     const qty = item.qty || item.quantity || 1;
     const price = item.price || item.itemPrice || 0;
-    const size = item.size || item.selectedSize || '';
-    const variant = item.selectedVariation || item.variant || '';
+    const variantSizeLine = formatReceiptVariantSizeLine(item);
 
     lines.push(itemName);
-    // Add size/color info if available
-    if (size || variant) {
-      const parts = [];
-      if (size) parts.push(`Size: ${size}`);
-      if (variant) parts.push(`Variant: ${variant}`);
-      lines.push(parts.join(' | '));
+    if (variantSizeLine) {
+      lines.push(variantSizeLine);
     }
     lines.push(`${qty} x P${Number(price).toFixed(2)}`);
   });

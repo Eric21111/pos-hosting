@@ -5,6 +5,7 @@ import PrintingModal from './PrintingModal';
 import PrintCompleteModal from './PrintCompleteModal';
 import '../../styles/print.css';
 import { sendReceiptToPrinter } from '../../utils/printBridge';
+import { formatReceiptVariantSizeLine } from '../../utils/transactionDisplay';
 import { useTheme } from '../../context/ThemeContext';
 
 const ReceiptModal = ({
@@ -230,12 +231,18 @@ const ReceiptModal = ({
             {}
             <div className={`border-t pt-4 mb-4 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
               {receipt.items && receipt.items.length > 0 ?
-              receipt.items.map((item, index) =>
+              receipt.items.map((item, index) => {
+                const variantSizeLine = formatReceiptVariantSizeLine(item);
+                return (
               <div key={index} className="mb-3">
                     <p className={`text-sm font-semibold ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{item.name}</p>
+                    {variantSizeLine &&
+                    <p className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>{variantSizeLine}</p>
+                    }
                     <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>{item.qty} x PHP {item.price.toFixed(2)}</p>
                   </div>
-              ) :
+                );
+              }) :
 
               <p className="text-center text-gray-500 py-4">No items in this transaction</p>
               }

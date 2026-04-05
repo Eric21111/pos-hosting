@@ -19,6 +19,18 @@ export function formatItemVariantSizeLabel(item) {
   return variant;
 }
 
+/** One line for printed receipts: "Variant | Size" (omits empty parts and placeholder size key). */
+export function formatReceiptVariantSizeLine(item) {
+  const rawSize = item?.selectedSize || item?.size || "";
+  const size =
+    rawSize === VARIANT_ONLY_SIZE_KEY ? "" : String(rawSize).trim();
+  const variant = String(item?.variant || item?.selectedVariation || "").trim();
+  const parts = [];
+  if (variant) parts.push(variant);
+  if (size) parts.push(size);
+  return parts.join(" | ");
+}
+
 /** Line subtotal from item prices × qty (pre-discount). Excludes fully returned lines (qty is not zeroed in DB). */
 export function lineSubtotalFromItems(transaction) {
   if (!transaction?.items?.length) return 0;

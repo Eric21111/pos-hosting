@@ -3,10 +3,9 @@ import { FaTimes, FaPrint } from 'react-icons/fa';
 import { sendReceiptToPrinter } from '../../utils/printBridge';
 import {
   lineSubtotalFromItems,
-  resolveTransactionDiscount
+  resolveTransactionDiscount,
+  formatReceiptVariantSizeLine
 } from '../../utils/transactionDisplay';
-
-const VARIANT_ONLY_SIZE_KEY = "__VARIANT_ONLY__";
 
 const formatCurrency = (value = 0) =>
 new Intl.NumberFormat('en-PH', {
@@ -73,10 +72,10 @@ const PrintReceiptModal = ({ isOpen, onClose, transaction }) => {
           quantity: item.quantity || 1,
           price: item.price || item.itemPrice || 0,
           itemPrice: item.price || item.itemPrice || 0,
-          size:
-            (item.selectedSize || item.size || '') === VARIANT_ONLY_SIZE_KEY
-              ? ''
-              : (item.selectedSize || item.size || '')
+          selectedSize: item.selectedSize || item.size || '',
+          size: item.selectedSize || item.size || '',
+          selectedVariation: item.selectedVariation || item.variant || '',
+          variant: item.selectedVariation || item.variant || ''
         })) || [],
         subtotal: subtotal,
         discount: discountAmount,
@@ -170,18 +169,20 @@ const PrintReceiptModal = ({ isOpen, onClose, transaction }) => {
             <div className="border-t border-gray-300 py-3 my-3">
               <div className="space-y-2">
                 {transaction.items && transaction.items.length > 0 ?
-                transaction.items.map((item, idx) =>
+                transaction.items.map((item, idx) => {
+                  const variantSizeLine = formatReceiptVariantSizeLine(item);
+                  return (
                 <div key={idx} className="text-xs">
                       <p className="font-medium text-gray-800">{item.itemName}</p>
-                      {item.selectedSize &&
-                    item.selectedSize !== VARIANT_ONLY_SIZE_KEY &&
-                    <p className="text-gray-500">Size: {item.selectedSize}</p>
+                      {variantSizeLine &&
+                      <p className="text-gray-500">{variantSizeLine}</p>
                   }
                       <p className="text-gray-500">
                         {item.quantity} x {formatCurrency(item.price || item.itemPrice)}
                       </p>
                     </div>
-                ) :
+                );
+                }) :
 
                 <p className="text-center text-gray-500">No items</p>
                 }

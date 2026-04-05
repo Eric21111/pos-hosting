@@ -104,7 +104,11 @@ const CashPaymentModal = ({
           name: item.itemName || item.name || "Item",
           qty: item.quantity || 1,
           price: item.itemPrice || item.price || 0,
-          total: (item.itemPrice || item.price || 0) * (item.quantity || 1)
+          total: (item.itemPrice || item.price || 0) * (item.quantity || 1),
+          selectedSize: item.selectedSize || item.size || "",
+          size: item.selectedSize || item.size || "",
+          selectedVariation: item.selectedVariation || item.variant || "",
+          variant: item.selectedVariation || item.variant || ""
         })),
         paymentMethod: "CASH",
         cashierName: cashierName || "Staff",
